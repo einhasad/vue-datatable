@@ -58,8 +58,12 @@ jobs:
           PACKAGE_VERSION=$(node -p "require('./package.json').version")
           TAG_VERSION=${GITHUB_REF#refs/tags/v}
 
+          echo "Package version: $PACKAGE_VERSION"
+          echo "Tag version: $TAG_VERSION"
+
           if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
             echo "❌ Version mismatch: package.json ($PACKAGE_VERSION) vs tag ($TAG_VERSION)"
+            echo "To fix: npm version $TAG_VERSION"
             exit 1
           fi
 
