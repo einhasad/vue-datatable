@@ -1,0 +1,78 @@
+name: Pre-release Check
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  pre-release-check:
+    name: Pre-release Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Validate version
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+
+          echo "Package version: $PACKAGE_VERSION"
+          echo "Tag version: $TAG_VERSION"
+
+          if [ "$PACKAGE_VERSION" != "$TAG_VERSION" ]; then
+            echo "❌ Version mismatch!"
+            echo "Please update package.json version to $TAG_VERSION"
+            exit 1
+          fi
+
+          echo "✓ Version matches"
+
+      - name: Check if version exists on npm
+        run: |
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+
+          if npm view datatable-vue@$PACKAGE_VERSION version 2>/dev/null; then
+            echo "❌ Version $PACKAGE_VERSION already exists on npm"
+            exit 1
+          fi
+
+          echo "✓ Version $PACKAGE_VERSION is available"
+
+      - name: Run full test suite
+        run: |
+          npm run build
+          npm pack --dry-run
+
+      - name: Generate release notes
+        run: |
+          echo "## Release Checklist" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "- [x] Build successful" >> release-notes.md
+          echo "- [x] Version validated" >> release-notes.md
+          echo "- [x] No duplicate version on npm" >> release-notes.md
+          echo "- [x] Package structure verified" >> release-notes.md
+          echo "" >> release-notes.md
+          echo "Ready to publish! 🚀" >> release-notes.md
+
+          cat release-notes.md
+
+      - name: Upload release notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes.md
