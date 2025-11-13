@@ -1,0 +1,40 @@
+# Source files (only ship built files)
+*.ts
+*.vue
+!*.d.ts
+
+# Config files
+tsconfig.json
+vite.config.ts
+vite.config.d.ts
+.gitignore
+dist/vite.config.d.ts*
+dist/node_modules/
+
+# Development
+node_modules/
+example/
+doc/
+*.spec.ts
+*.test.ts
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs
+*.log
+
+# Testing
+coverage/
+.nyc_output
+
+# Misc
+.cache/
+*.tmp
+*.tgz

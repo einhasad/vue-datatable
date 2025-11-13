@@ -1,0 +1,254 @@
+<template>
+  <div
+    class="grid"
+    data-qa="grid"
+  >
+    <slot
+      name="toolbar"
+      :refresh="refresh"
+      :loading="loading"
+    />
+
+    <slot
+      name="search"
+      :provider="dataProvider"
+      :refresh="refresh"
+      :loading="loading"
+    />
+
+    <slot
+      name="table"
+      :items="items"
+      :loading="loading"
+      :columns="columns"
+      :row-options="rowOptions"
+      :on-row-click="onRowClick"
+      :on-sort="handleSort"
+      :sort-state="sortState"
+    >
+      <GridTable
+        :columns="columns"
+        :items="items"
+        :loading="loading"
+        :show-loader="showLoader"
+        :show-footer="showFooter"
+        :empty-text="emptyText"
+        :row-options="rowOptions"
+        :on-row-click="onRowClick"
+        :on-sort="handleSort"
+        :sort-state="sortState"
+        :row-key-field="rowKeyField"
+      >
+        <template
+          v-if="$slots.filters"
+          #filters
+        >
+          <slot
+            name="filters"
+            :provider="dataProvider"
+          />
+        </template>
+
+        <template
+          v-if="$slots.row"
+          #row="{ items }"
+        >
+          <slot
+            name="row"
+            :items="items"
+          />
+        </template>
+
+        <template
+          v-if="$slots.empty"
+          #empty
+        >
+          <slot name="empty" />
+        </template>
+
+        <template
+          v-if="$slots.loader"
+          #loader
+        >
+          <slot name="loader" />
+        </template>
+      </GridTable>
+    </slot>
+
+    <slot
+      name="pagination"
+      :pagination="pagination"
+      :has-more="hasMore"
+      :loading="loading"
+      :load-more="loadMore"
+      :set-page="setPage"
+      :mode="paginationMode"
+    >
+      <GridPagination
+        v-if="dataProvider.config.pagination"
+        :mode="paginationMode"
+        :pagination="pagination"
+        :has-more="hasMore"
+        :loading="loading"
+        :show-summary="showPaginationSummary"
+        :hide-prev-next-on-edge="hidePrevNextOnEdge"
+        :max-visible-pages="maxVisiblePages"
+        :on-load-more="loadMore"
+        :on-page-change="setPage"
+      />
+    </slot>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import type { DataProvider, Column, RowOptions, PaginationData, SortState, PaginationMode } from './types'
+import GridTable from './GridTable.vue'
+import GridPagination from './GridPagination.vue'
+
+const props = withDefaults(defineProps<{
+  dataProvider: DataProvider
+  columns: Column[]
+  rowOptions?: (model: any) => RowOptions
+  onRowClick?: (model: any) => void
+  showLoader?: boolean
+  showFooter?: boolean
+  emptyText?: string
+  autoLoad?: boolean
+  rowKeyField?: string
+  showPaginationSummary?: boolean
+  hidePrevNextOnEdge?: boolean
+  maxVisiblePages?: number
+}>(), {
+  showLoader: true,
+  showFooter: true,
+  emptyText: 'No results found',
+  autoLoad: true,
+  rowKeyField: 'id',
+  showPaginationSummary: true,
+  hidePrevNextOnEdge: true,
+  maxVisiblePages: 5
+})
+
+const emit = defineEmits<{
+  loaded: [items: any[]]
+  error: [error: Error]
+}>()
+
+const items = ref<any[]>([])
+const loading = ref(false)
+const pagination = ref<PaginationData | null>(null)
+
+const paginationMode = computed<PaginationMode>(() => {
+  return props.dataProvider.config.paginationMode
+})
+
+const hasMore = computed(() => {
+  return props.dataProvider.hasMore()
+})
+
+const sortState = computed<SortState | null>(() => {
+  return props.dataProvider.getSort()
+})
+
+async function loadData() {
+  loading.value = true
+  try {
+    const result = await props.dataProvider.load()
+    items.value = result.items
+    pagination.value = result.pagination || null
+    emit('loaded', result.items)
+  } catch (error) {
+    emit('error', error as Error)
+    throw error
+  } finally {
+    loading.value = false
+  }
+}
+
+async function loadMore() {
+  if (!hasMore.value || loading.value) {
+    return
+  }
+
+  loading.value = true
+  try {
+    const result = await props.dataProvider.loadMore()
+    items.value = result.items
+    pagination.value = result.pagination || null
+    emit('loaded', result.items)
+  } catch (error) {
+    emit('error', error as Error)
+    throw error
+  } finally {
+    loading.value = false
+  }
+}
+
+// Note: Do NOT provide context here - the wrapper Grid.vue handles that
+// Providing here would overwrite the wrapper's provide and break functionality
+
+async function refresh() {
+  loading.value = true
+  try {
+    const result = await props.dataProvider.refresh()
+    items.value = result.items
+    pagination.value = result.pagination || null
+    emit('loaded', result.items)
+  } catch (error) {
+    emit('error', error as Error)
+    throw error
+  } finally {
+    loading.value = false
+  }
+}
+
+async function setPage(page: number) {
+  if (paginationMode.value !== 'page') {
+    console.warn('setPage() is only available for page-based pagination')
+    return
+  }
+
+  if (!props.dataProvider.setPage) {
+    console.warn('DataProvider does not support setPage()')
+    return
+  }
+
+  loading.value = true
+  try {
+    const result = await props.dataProvider.setPage(page)
+    items.value = result.items
+    pagination.value = result.pagination || null
+    emit('loaded', result.items)
+  } catch (error) {
+    emit('error', error as Error)
+    throw error
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleSort(field: string, order: 'asc' | 'desc') {
+  props.dataProvider.setSort(field, order)
+  await refresh()
+}
+
+onMounted(async () => {
+  if (props.autoLoad) {
+    await loadData()
+  }
+})
+
+// Note: Do NOT provide context here - the wrapper Grid.vue handles that
+// If we provide here, it overwrites the wrapper's provide
+
+defineExpose({
+  loadData,
+  loadMore,
+  refresh,
+  setPage,
+  items,
+  loading,
+  pagination
+})
+</script>

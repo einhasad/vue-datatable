@@ -1,0 +1,294 @@
+/**
+ * Grid Base Styles
+ * Minimal styling with CSS custom properties for easy theming
+ * Consumers can override these styles or add their own
+ */
+
+:root {
+  --grid-border-color: #ddd;
+  --grid-header-bg: #f5f5f5;
+  --grid-header-color: #333;
+  --grid-row-hover-bg: #f9f9f9;
+  --grid-cell-padding: 8px 12px;
+  --grid-font-size: 14px;
+  --grid-border-radius: 4px;
+  --grid-button-bg: #fff;
+  --grid-button-border: #d9d9d9;
+  --grid-button-color: #333;
+  --grid-button-hover-bg: #f5f5f5;
+  --grid-button-active-bg: #1890ff;
+  --grid-button-active-color: #fff;
+  --grid-button-disabled-bg: #f5f5f5;
+  --grid-button-disabled-color: #999;
+  --grid-empty-color: #999;
+  --grid-loader-color: #1890ff;
+}
+
+/* Grid Container */
+.grid {
+  width: 100%;
+}
+
+/* Table Wrapper */
+.grid-table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+/* Table */
+.grid-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--grid-border-color);
+  font-size: var(--grid-font-size);
+}
+
+/* Header */
+.grid-header-row {
+  background-color: var(--grid-header-bg);
+}
+
+.grid-header-cell {
+  padding: var(--grid-cell-padding);
+  text-align: left;
+  font-weight: 600;
+  color: var(--grid-header-color);
+  border-bottom: 1px solid var(--grid-border-color);
+  border-right: 1px solid var(--grid-border-color);
+}
+
+.grid-header-cell:last-child {
+  border-right: none;
+}
+
+/* Sort Button */
+.grid-sort-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.grid-sort-button:hover {
+  color: var(--grid-loader-color);
+}
+
+.grid-sort-active {
+  color: var(--grid-loader-color);
+  font-weight: 700;
+}
+
+.grid-sort-asc::after {
+  content: ' ↑';
+}
+
+.grid-sort-desc::after {
+  content: ' ↓';
+}
+
+/* Filter Row */
+.grid-filter-row {
+  background-color: var(--grid-header-bg);
+}
+
+.grid-filter-row td {
+  padding: var(--grid-cell-padding);
+  border-bottom: 1px solid var(--grid-border-color);
+  border-right: 1px solid var(--grid-border-color);
+}
+
+.grid-filter-row td:last-child {
+  border-right: none;
+}
+
+/* Body Rows */
+.grid-row {
+  transition: background-color 0.2s;
+}
+
+.grid-row:hover {
+  background-color: var(--grid-row-hover-bg);
+}
+
+.grid-cell {
+  padding: var(--grid-cell-padding);
+  border-bottom: 1px solid var(--grid-border-color);
+  border-right: 1px solid var(--grid-border-color);
+}
+
+.grid-cell:last-child {
+  border-right: none;
+}
+
+/* Loading */
+.grid-loading-row,
+.grid-empty-row {
+  background-color: #fff;
+}
+
+.grid-loading-cell,
+.grid-empty-cell {
+  padding: 40px;
+  text-align: center;
+  color: var(--grid-empty-color);
+  font-size: var(--grid-font-size);
+}
+
+.grid-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+}
+
+/* Footer */
+.grid-footer-row {
+  background-color: var(--grid-header-bg);
+  font-weight: 600;
+}
+
+.grid-footer-cell {
+  padding: var(--grid-cell-padding);
+  border-top: 2px solid var(--grid-border-color);
+  border-right: 1px solid var(--grid-border-color);
+}
+
+.grid-footer-cell:last-child {
+  border-right: none;
+}
+
+/* Pagination */
+.grid-pagination {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Cursor Pagination */
+.grid-pagination-cursor {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.grid-load-more-button {
+  padding: 8px 16px;
+  background-color: var(--grid-button-bg);
+  border: 1px solid var(--grid-button-border);
+  border-radius: var(--grid-border-radius);
+  color: var(--grid-button-color);
+  font-size: var(--grid-font-size);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.grid-load-more-button:hover:not(:disabled) {
+  background-color: var(--grid-button-hover-bg);
+  border-color: var(--grid-loader-color);
+  color: var(--grid-loader-color);
+}
+
+.grid-load-more-button:disabled {
+  background-color: var(--grid-button-disabled-bg);
+  color: var(--grid-button-disabled-color);
+  cursor: not-allowed;
+}
+
+.grid-no-more {
+  padding: 8px 16px;
+  color: var(--grid-empty-color);
+  font-size: var(--grid-font-size);
+}
+
+/* Page Pagination */
+.grid-pagination-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+}
+
+.grid-pagination-info {
+  color: var(--grid-empty-color);
+  font-size: var(--grid-font-size);
+  text-align: center;
+  margin: 10px 0;
+}
+
+/* Bootstrap-compatible pagination list */
+.grid-pagination-page .pagination {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+  gap: 4px;
+}
+
+.grid-pagination-page .pagination li {
+  display: inline-block;
+}
+
+.grid-pagination-button {
+  padding: 6px 12px;
+  background-color: var(--grid-button-bg);
+  border: 1px solid var(--grid-button-border);
+  border-radius: var(--grid-border-radius);
+  color: var(--grid-button-color);
+  font-size: var(--grid-font-size);
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 36px;
+}
+
+.grid-pagination-button:hover:not(:disabled) {
+  background-color: var(--grid-button-hover-bg);
+  border-color: var(--grid-loader-color);
+  color: var(--grid-loader-color);
+}
+
+.grid-pagination-button:disabled {
+  background-color: var(--grid-button-disabled-bg);
+  color: var(--grid-button-disabled-color);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.grid-pagination-page .pagination li.active .grid-pagination-button {
+  background-color: var(--grid-button-active-bg);
+  border-color: var(--grid-button-active-bg);
+  color: var(--grid-button-active-color);
+}
+
+.grid-pagination-page .pagination li.active .grid-pagination-button:hover {
+  background-color: var(--grid-button-active-bg);
+  border-color: var(--grid-button-active-bg);
+  color: var(--grid-button-active-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid-table {
+    font-size: 12px;
+  }
+
+  .grid-cell,
+  .grid-header-cell,
+  .grid-footer-cell {
+    padding: 6px 8px;
+  }
+
+  .grid-pagination-button {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: 32px;
+  }
+}
