@@ -1,4 +1,4 @@
-name: Publish to npm
+name: Publish to npm (with Environment)
 
 on:
   release:
@@ -14,10 +14,11 @@ jobs:
   publish:
     name: Publish to npm
     runs-on: ubuntu-latest
-    environment: production
+    # USE YOUR ENVIRONMENT NAME HERE
+    environment: production  # ← Change this to your environment name
     permissions:
       contents: write
-      id-token: write # Required for npm provenance
+      id-token: write
 
     steps:
       - name: Checkout code
