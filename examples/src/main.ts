@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
-import '@grid-vue/grid/style.css'
+import '@grid-vue/grid/styles.css'
 import './style.css'
 
 // Import example pages
