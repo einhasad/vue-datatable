@@ -75,26 +75,57 @@ The library uses a pluggable data provider pattern defined in `src/providers/Dat
 
 **HttpDataProvider** (`src/providers/HttpDataProvider.ts`)
 - Fetches data from HTTP APIs
-- Integrates with Vue Router for URL state management
+- Delegates state management to StateProvider
 - Supports custom HTTP clients (axios, etc.)
 - Uses ResponseAdapter for different API formats
-- Query params are prefixed with `searchPrefix` (default: 'search')
+- Backward compatible: passing `router` creates QueryParamsStateProvider automatically
 
 **ArrayDataProvider** (`src/providers/ArrayDataProvider.ts`)
 - Works with client-side arrays
 - Implements client-side filtering and sorting
+- Delegates state management to StateProvider
 - Useful for demos and small datasets
 
 **DSTElasticDataProvider** (`src/providers/DSTElasticDataProvider.ts`)
 - Example of custom provider (not exported)
 - Shows how to extend for project-specific needs (e.g., Elasticsearch DSL)
 
+### State Provider Pattern
+
+The library separates state management from data fetching using the StateProvider pattern defined in `src/state/StateProvider.ts`:
+
+**InMemoryStateProvider** (`src/state/InMemoryStateProvider.ts`)
+- Stores state in memory (lost on page refresh)
+- Default when no state provider is specified
+- Useful for temporary state or testing
+
+**QueryParamsStateProvider** (`src/state/QueryParamsStateProvider.ts`)
+- Stores state in URL query parameters
+- Integrates with Vue Router
+- Default when `router` is provided to DataProvider
+- Query params prefixed (default: 'search')
+- Format: `?search-name=John&search-sort=-email`
+
+**LocalStorageStateProvider** (`src/state/LocalStorageStateProvider.ts`)
+- Stores state in browser localStorage
+- State persists across page refreshes and sessions
+- Useful for user preferences
+- Default storage key: 'grid-state'
+
+**HashStateProvider** (`src/state/HashStateProvider.ts`)
+- Stores state in URL hash
+- Integrates with Vue Router
+- Format: `#search-name=John&search-sort=email`
+- Useful for hash-based routing or when query params are unavailable
+
 ### Type System (src/types.ts)
 
 Key interfaces:
 - `DataProvider<T>` - Core provider interface with load/refresh/pagination methods
+- `StateProvider` - Interface for state persistence (filters, sorting, pagination)
 - `Column` - Column definition with value extractors, components, sorting, filtering
 - `PaginationData` - Union type supporting both cursor and page pagination
+- `SortState` - Sort field and order (asc/desc)
 - `ResponseAdapter` - Interface for adapting different API response formats
 - `ComponentOptions` - Dynamic component rendering configuration
 
@@ -114,33 +145,48 @@ All data sources implement the `DataProvider` interface, enabling:
 - Swapping between HTTP, Array, or custom providers
 - Consistent API for grid component
 - Easy testing with mock providers
+- Delegation of state management to StateProvider
 
-### 2. Response Adapters
+### 2. State Provider Separation
+State management is separated from data fetching via `StateProvider` interface:
+- **Separation of Concerns**: Data fetching vs state persistence
+- **Pluggable**: Choose InMemory, QueryParams, LocalStorage, or Hash
+- **Testable**: Easy to mock state providers in tests
+- **Flexible**: Create custom state providers for any storage mechanism
+- **Default Behavior**: InMemoryStateProvider if no state provider specified
+- **Backward Compatible**: Passing `router` creates QueryParamsStateProvider
+
+### 3. Response Adapters
 Different API formats are supported via `ResponseAdapter`:
 - `DefaultResponseAdapter` - Modern format with `items`, `nextCursor`, `hasMore`
 - `LegacyResponseAdapter` - Old format with `result` and `_meta.pagination`
 - Custom adapters can be created for any API format
 
-### 3. Dynamic Component Rendering
+### 4. Dynamic Component Rendering
 Cells and headers can render:
 - Static strings via `value` function
 - Vue components via `component` function returning `ComponentOptions`
 - RouterLink and other Vue components are supported
 
-### 4. URL State Management
-HttpDataProvider syncs state with URL query params:
-- Format: `?search-q=value&search-sort=-created_at`
-- Prefix prevents conflicts with other components
-- Integrates with Vue Router's query params
+### 5. State Persistence Strategies
+Different StateProvider implementations offer various persistence strategies:
+- **InMemory**: Temporary state, lost on refresh
+- **QueryParams**: URL-based state, shareable and SEO-friendly
+- **LocalStorage**: Browser storage, persists across sessions
+- **Hash**: Hash-based state, doesn't interfere with query params
 
 ## Important Files
 
 - `src/index.ts` - Main entry point, exports all public APIs
 - `src/types.ts` - TypeScript definitions and type guards
 - `src/styles.css` - Component styles with CSS custom properties
+- `src/state/` - StateProvider implementations (InMemory, QueryParams, LocalStorage, Hash)
+- `src/providers/` - DataProvider implementations (Http, Array)
 - `vite.config.ts` - Build configuration (UMD + ES modules)
 - `vitest.config.ts` - Test configuration with coverage thresholds
-- `__tests__/` - Unit tests for providers and utilities
+- `__tests__/` - Unit tests for providers, state providers, and utilities
+- `__tests__/Grid.integration.spec.ts` - Integration tests for Grid + DataProviders + StateProviders
+- `__tests__/examples.spec.ts` - Example component tests
 
 ## Build Output
 
@@ -156,10 +202,15 @@ External dependencies (vue, vue-router) are not bundled.
 ## Testing Strategy
 
 Tests use Vitest with happy-dom environment:
-- Provider tests verify pagination modes and data loading
-- Utility tests check value extraction and formatting
-- Type guard tests ensure correct type narrowing
-- Coverage thresholds: 50% minimum for all metrics
+- **StateProvider tests**: Verify state persistence, URL sync, localStorage operations (92 tests)
+- **DataProvider tests**: Verify pagination modes and data loading with StateProvider delegation
+- **Integration tests**: Test Grid + DataProviders + StateProviders working together (24 tests)
+- **Example tests**: Ensure all example components render correctly (50 tests)
+- **Utility tests**: Check value extraction and formatting
+- **Type guard tests**: Ensure correct type narrowing
+- **Coverage**: 90.9% overall (exceeds 50% threshold)
+
+Test count: **304 tests passing** across 11 test files
 
 ## Examples
 
@@ -172,14 +223,22 @@ The `examples/` directory contains:
 
 1. **Provider Implementation**: When creating custom providers, implement all methods from the `DataProvider` interface, even if some return null for your use case
 
-2. **Column Definitions**: The `value`, `component`, `show`, and `options` functions receive `(model, index)` - use index for row-specific logic
+2. **StateProvider Integration**: DataProviders delegate to StateProvider for state management. Access via `provider.getStateProvider()`. If no state provider is specified, InMemoryStateProvider is used by default.
 
-3. **Pagination Modes**: Always check `paginationMode` when implementing features - cursor and page modes have different data structures
+3. **Backward Compatibility**: Passing `router` to HttpDataProvider/ArrayDataProvider automatically creates a QueryParamsStateProvider with prefix='search'
 
-4. **Response Adapters**: Use type guards `isCursorPagination()` and `isPagePagination()` to narrow pagination types
+4. **Column Definitions**: The `value`, `component`, `show`, and `options` functions receive `(model, index)` - use index for row-specific logic
 
-5. **Styling**: Override CSS custom properties in `:root` for theming. Variables are prefixed with `--grid-`
+5. **Pagination Modes**: Always check `paginationMode` when implementing features - cursor and page modes have different data structures
 
-6. **Vue Router Integration**: HttpDataProvider's router integration is optional - pass `router` instance to enable URL state sync
+6. **Response Adapters**: Use type guards `isCursorPagination()` and `isPagePagination()` to narrow pagination types
 
-7. **DSTElasticDataProvider**: Not exported due to project-specific dependencies. See file for reference implementation pattern
+7. **Styling**: Override CSS custom properties in `:root` for theming. Variables are prefixed with `--grid-`
+
+8. **State Persistence**: Choose appropriate StateProvider based on requirements:
+   - **InMemory**: Testing, temporary state
+   - **QueryParams**: Shareable URLs, SEO, browser navigation
+   - **LocalStorage**: User preferences, private settings
+   - **Hash**: Hash routing, avoiding query param conflicts
+
+9. **DSTElasticDataProvider**: Not exported due to project-specific dependencies. See file for reference implementation pattern

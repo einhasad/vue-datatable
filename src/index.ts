@@ -29,6 +29,20 @@ export { ArrayDataProvider } from './providers/ArrayDataProvider'
 // Note: DSTElasticDataProvider is not exported because it has project-specific dependencies
 // See /doc/DSTElasticDataProvider.md for reference implementation
 
+// State Providers
+export type { StateProvider } from './state'
+export {
+  InMemoryStateProvider,
+  QueryParamsStateProvider,
+  LocalStorageStateProvider,
+  HashStateProvider
+} from './state'
+export type {
+  QueryParamsStateProviderConfig,
+  LocalStorageStateProviderConfig,
+  HashStateProviderConfig
+} from './state'
+
 // Types and Interfaces
 export type {
   DataProvider,

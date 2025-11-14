@@ -18,6 +18,10 @@
             <a href="#array-provider" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'array-provider' }]" @click="scrollToSection">Array Provider</a>
             <a href="#http-provider" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'http-provider' }]" @click="scrollToSection">HTTP Provider</a>
           </div>
+          <div class="nav-section">
+            <span class="nav-section-title">State Providers</span>
+            <a href="#state-providers" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'state-providers' }]" @click="scrollToSection">State Management</a>
+          </div>
           <a href="#page-pagination" :class="['nav-link', { active: activeSection === 'page-pagination' }]" @click="scrollToSection">Page Pagination</a>
           <a href="#cursor-pagination" :class="['nav-link', { active: activeSection === 'cursor-pagination' }]" @click="scrollToSection">Cursor Pagination</a>
           <a href="#sorting" :class="['nav-link', { active: activeSection === 'sorting' }]" @click="scrollToSection">Sorting</a>
@@ -44,6 +48,7 @@
               <ul class="feature-list">
                 <li>Dual Pagination Modes: Cursor-based (Load More) and page-based (1, 2, 3...)</li>
                 <li>Data Provider Pattern: Pluggable data sources (HTTP, Array, custom)</li>
+                <li>State Provider Pattern: Pluggable state management (URL, localStorage, hash, in-memory)</li>
                 <li>Framework Agnostic: No dependencies on UI frameworks</li>
                 <li>TypeScript First: Full TypeScript support</li>
                 <li>Customizable: Extensive props, slots, and CSS custom properties</li>
@@ -94,6 +99,11 @@
             <HttpExample />
           </section>
 
+          <!-- State Providers Section -->
+          <section id="state-providers" class="section">
+            <StateProvidersExample />
+          </section>
+
           <!-- Page Pagination Section -->
           <section id="page-pagination" class="section">
             <PagePaginationExample />
@@ -139,6 +149,7 @@ import BasicExample from './pages/BasicExample.vue'
 import HttpExample from './pages/HttpExample.vue'
 import ArrayProviderExample from './pages/ArrayProviderExample.vue'
 import HTTPProviderExample from './pages/HTTPProviderExample.vue'
+import StateProvidersExample from './pages/StateProvidersExample.vue'
 import PagePaginationExample from './pages/PagePaginationExample.vue'
 import CursorPaginationExample from './pages/CursorPaginationExample.vue'
 import SortingExample from './pages/SortingExample.vue'
@@ -166,6 +177,7 @@ const updateActiveSection = () => {
     'basic',
     'array-provider',
     'http-provider',
+    'state-providers',
     'page-pagination',
     'cursor-pagination',
     'sorting',

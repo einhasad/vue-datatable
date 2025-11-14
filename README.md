@@ -6,6 +6,7 @@ A flexible, configurable grid component library for Vue 3 applications with supp
 
 - ✅ **Dual Pagination Modes**: Cursor-based (Load More) and page-based (1, 2, 3...)
 - ✅ **Data Provider Pattern**: Pluggable data sources (HTTP, Array, custom)
+- ✅ **State Provider Pattern**: Pluggable state persistence (InMemory, QueryParams, LocalStorage, Hash)
 - ✅ **Framework Agnostic**: No dependencies on UI frameworks (Ant Design, Bootstrap, etc.)
 - ✅ **TypeScript First**: Full TypeScript support with comprehensive type definitions
 - ✅ **Customizable**: Extensive props, slots, and CSS custom properties
@@ -56,7 +57,7 @@ import '@grid-vue/grid/style.css'
 
 ## Quick Start
 
-### Example 1: HTTP Data Provider with Page Pagination
+### Example 1: HTTP Data Provider with URL State
 
 ```vue
 <template>
@@ -67,18 +68,24 @@ import '@grid-vue/grid/style.css'
 </template>
 
 <script setup lang="ts">
-import { Grid, HttpDataProvider, type Column } from '@grid-vue/grid'
+import { Grid, HttpDataProvider, QueryParamsStateProvider, type Column } from '@grid-vue/grid'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+
+// State Provider manages grid state (filters, sorting, pagination)
+const stateProvider = new QueryParamsStateProvider({
+  router,
+  prefix: 'search'  // URL params will be ?search-name=John&search-sort=-email
+})
 
 const provider = new HttpDataProvider({
   url: '/api/users',
   pagination: true,
   paginationMode: 'page',
   pageSize: 20,
-  searchPrefix: 'search'
-}, router)
+  stateProvider  // Grid state is persisted in URL
+})
 
 const columns: Column[] = [
   {
@@ -100,7 +107,7 @@ const columns: Column[] = [
 </script>
 ```
 
-### Example 2: Array Data Provider with Cursor Pagination
+### Example 2: Array Data Provider with LocalStorage State
 
 ```vue
 <template>
@@ -111,7 +118,7 @@ const columns: Column[] = [
 </template>
 
 <script setup lang="ts">
-import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
+import { Grid, ArrayDataProvider, LocalStorageStateProvider, type Column } from '@grid-vue/grid'
 
 const users = [
   { id: 1, name: 'John', email: 'john@example.com' },
@@ -119,11 +126,17 @@ const users = [
   // ... more items
 ]
 
+// State Provider persists grid state in localStorage
+const stateProvider = new LocalStorageStateProvider({
+  storageKey: 'my-users-grid'  // User preferences survive page refreshes
+})
+
 const provider = new ArrayDataProvider({
   items: users,
   pagination: true,
   paginationMode: 'cursor',
-  pageSize: 10
+  pageSize: 10,
+  stateProvider
 })
 
 const columns: Column[] = [
@@ -146,7 +159,8 @@ interface HttpDataProviderConfig {
   pagination: boolean                  // Enable pagination
   paginationMode: 'cursor' | 'page'    // Pagination mode
   pageSize?: number                    // Items per page (default: 20)
-  searchPrefix?: string                // Query param prefix (default: 'search')
+  stateProvider?: StateProvider        // State management (optional)
+  router?: Router                      // Creates QueryParamsStateProvider if provided
   httpClient?: HttpClient              // Custom HTTP client function
   responseAdapter?: ResponseAdapter    // Response format adapter
   headers?: Record<string, string>     // Custom headers
@@ -157,11 +171,20 @@ const provider = new HttpDataProvider({
   url: '/api/users',
   pagination: true,
   paginationMode: 'page',
+  stateProvider: new QueryParamsStateProvider({ router, prefix: 'search' }),
   httpClient: async (url) => {
     const response = await axios.get(url)
     return response.data
   }
-}, router)
+})
+
+// Backward compatibility: pass router directly
+const provider2 = new HttpDataProvider({
+  url: '/api/users',
+  pagination: true,
+  paginationMode: 'page',
+  router  // Automatically creates QueryParamsStateProvider with prefix='search'
+})
 ```
 
 ### ArrayDataProvider
@@ -174,13 +197,16 @@ interface ArrayDataProviderConfig {
   pagination: boolean                  // Enable pagination
   paginationMode: 'cursor' | 'page'    // Pagination mode
   pageSize?: number                    // Items per page (default: 20)
+  stateProvider?: StateProvider        // State management (optional)
+  router?: Router                      // Creates QueryParamsStateProvider if provided
 }
 
 const provider = new ArrayDataProvider({
   items: myData,
   pagination: true,
   paginationMode: 'page',
-  pageSize: 15
+  pageSize: 15,
+  stateProvider: new InMemoryStateProvider()  // Default if not specified
 })
 ```
 
@@ -195,6 +221,116 @@ class DSLElasticDataProvider implements DataProvider {
     // Your Elasticsearch DSL query logic
   }
   // ... other methods
+}
+```
+
+## State Providers
+
+State Providers manage grid state (filters, sorting, pagination) independently from data fetching. This separation allows you to choose where and how state is persisted.
+
+### InMemoryStateProvider
+
+Stores state in memory. State is lost on page refresh. Useful for temporary filtering/sorting or testing.
+
+```ts
+import { InMemoryStateProvider } from '@grid-vue/grid'
+
+const stateProvider = new InMemoryStateProvider()
+
+const provider = new ArrayDataProvider({
+  items: users,
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 20,
+  stateProvider
+})
+```
+
+**Use cases:**
+- Temporary state that doesn't need to persist
+- Testing and development
+- When you don't want state in URL or storage
+
+### QueryParamsStateProvider (Default)
+
+Stores state in URL query parameters with a prefix. State persists across page refreshes and can be shared via URL.
+
+```ts
+import { QueryParamsStateProvider } from '@grid-vue/grid'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const stateProvider = new QueryParamsStateProvider({
+  router,
+  prefix: 'search'  // default prefix
+})
+
+// URL will look like: ?search-name=John&search-sort=-email&search-page=2
+```
+
+**Use cases:**
+- Shareable links with filters/sorting
+- Browser back/forward navigation
+- SEO-friendly filtered pages
+- Default choice for most applications
+
+### LocalStorageStateProvider
+
+Stores state in browser localStorage. State persists across page refreshes and browser sessions.
+
+```ts
+import { LocalStorageStateProvider } from '@grid-vue/grid'
+
+const stateProvider = new LocalStorageStateProvider({
+  storageKey: 'my-grid-state'  // default: 'grid-state'
+})
+```
+
+**Use cases:**
+- User preferences that survive page refreshes
+- Private user settings (not visible in URL)
+- State that doesn't need to be shareable
+- Persisting filters across sessions
+
+### HashStateProvider
+
+Stores state in URL hash. State persists across page refreshes and can be shared via URL.
+
+```ts
+import { HashStateProvider } from '@grid-vue/grid'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const stateProvider = new HashStateProvider({
+  router,
+  prefix: 'search'  // default prefix
+})
+
+// URL will look like: #search-name=John&search-sort=email
+```
+
+**Use cases:**
+- When you don't want to affect Vue Router's query params
+- Single-page apps with hash routing
+- Shareable state without server-side routing
+
+### Custom State Provider
+
+Create your own state provider by implementing the `StateProvider` interface:
+
+```ts
+class CustomStateProvider implements StateProvider {
+  getFilter(key: string): string | null {
+    // Your custom logic
+  }
+
+  setFilter(key: string, value: string): void {
+    // Your custom logic
+  }
+
+  // ... implement all required methods
 }
 ```
 
@@ -408,7 +544,8 @@ function getRowOptions(model) {
     <input
       type="text"
       @input="(e) => {
-        provider.setQueryParam('q', e.target.value)
+        // StateProvider handles state persistence (URL, localStorage, etc.)
+        provider.getStateProvider().setFilter('q', e.target.value)
         refresh()
       }"
     />
@@ -533,19 +670,29 @@ const gridRef = ref()
 </script>
 ```
 
-### URL State Management
+### URL State Management with StateProviders
 
-The `HttpDataProvider` automatically syncs query parameters with the URL when a router is provided:
+State management is now handled by StateProviders, giving you full control over where state is persisted:
 
+**QueryParamsStateProvider** - State in URL query parameters:
 ```
-/users?search-q=john&search-sort=-created_at
+/users?search-q=john&search-sort=-created_at&search-page=2
 ```
 
-Query parameters are prefixed with `searchPrefix` (default: 'search') to avoid conflicts with other components on the same page.
+**HashStateProvider** - State in URL hash:
+```
+/users#search-q=john&search-sort=-created_at
+```
+
+**LocalStorageStateProvider** - State in browser storage (not visible in URL)
+
+**InMemoryStateProvider** - Temporary state (lost on refresh)
+
+Query parameters are prefixed (default: 'search') to avoid conflicts with other components.
 
 ### Server-Side Sorting
 
-When a sortable column header is clicked, the sort parameter is automatically added to the API request:
+When a sortable column header is clicked, the StateProvider updates the sort state and the DataProvider includes it in the API request:
 
 ```
 GET /api/users?sort=-created_at
@@ -556,7 +703,9 @@ Format: `field` for ascending, `-field` for descending
 ### Client-Side Filtering (ArrayDataProvider)
 
 ```ts
-provider.setQueryParam('status', 'active')
+// Set filter through StateProvider
+const stateProvider = provider.getStateProvider()
+stateProvider.setFilter('status', 'active')
 await provider.load()
 ```
 
@@ -573,8 +722,9 @@ While filters are project-specific and not included in the lib, here's how to in
       <!-- Your project-specific filter components -->
       <MyDateRangeFilter
         @change="(value) => {
-          provider.setQueryParam('dateFrom', value.from)
-          provider.setQueryParam('dateTo', value.to)
+          const stateProvider = provider.getStateProvider()
+          stateProvider.setFilter('dateFrom', value.from)
+          stateProvider.setFilter('dateTo', value.to)
           refresh()
         }"
       />
@@ -582,7 +732,7 @@ While filters are project-specific and not included in the lib, here's how to in
       <MySelectFilter
         :options="statusOptions"
         @change="(value) => {
-          provider.setQueryParam('status', value)
+          provider.getStateProvider().setFilter('status', value)
           refresh()
         }"
       />
@@ -591,11 +741,13 @@ While filters are project-specific and not included in the lib, here's how to in
 </template>
 ```
 
-**Filter Pattern:**
+**Filter Pattern with StateProviders:**
 1. Filter component emits value change
-2. Call `provider.setQueryParam(key, value)`
-3. Call `refresh()` to reload data
-4. DataProvider automatically includes query params in API request
+2. Get StateProvider: `provider.getStateProvider()`
+3. Set filter: `stateProvider.setFilter(key, value)`
+4. Call `refresh()` to reload data
+5. StateProvider persists the filter (URL/localStorage/etc.)
+6. DataProvider automatically includes filters in API request
 
 ## TypeScript Support
 
@@ -604,6 +756,7 @@ The library is fully typed. Import types as needed:
 ```ts
 import type {
   DataProvider,
+  StateProvider,
   Column,
   LoadResult,
   PaginationData,
