@@ -52,8 +52,8 @@ jobs:
           npm pack --dry-run
 
           echo "Checking required files..."
-          test -f dist/grid-vue.js || (echo "❌ Missing ESM bundle" && exit 1)
-          test -f dist/grid-vue.umd.cjs || (echo "❌ Missing UMD bundle" && exit 1)
+          test -f dist/grid.js || (echo "❌ Missing ESM bundle" && exit 1)
+          test -f dist/grid.umd.cjs || (echo "❌ Missing UMD bundle" && exit 1)
           test -f dist/index.d.ts || (echo "❌ Missing type declarations" && exit 1)
           test -f dist/style.css || (echo "❌ Missing stylesheet" && exit 1)
           test -f README.md || (echo "❌ Missing README" && exit 1)
@@ -89,7 +89,7 @@ jobs:
         with:
           script: |
             const version = context.payload.release.tag_name;
-            const packageName = '@do-popov/grid-vue';
+            const packageName = '@grid-vue/grid';
 
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,
