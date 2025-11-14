@@ -21,25 +21,25 @@ A flexible, configurable grid component library for Vue 3 applications with supp
 Install via npm:
 
 ```bash
-npm install datatable-vue
+npm install grid-vue
 ```
 
 Or with yarn:
 
 ```bash
-yarn add datatable-vue
+yarn add grid-vue
 ```
 
 Or with pnpm:
 
 ```bash
-pnpm add datatable-vue
+pnpm add grid-vue
 ```
 
 Then import the CSS in your main entry file (e.g., `main.ts` or `main.js`):
 
 ```ts
-import 'datatable-vue/style.css'
+import 'grid-vue/style.css'
 ```
 
 ## Quick Start
@@ -55,7 +55,7 @@ import 'datatable-vue/style.css'
 </template>
 
 <script setup lang="ts">
-import { Grid, HttpDataProvider, type Column } from 'datatable-vue'
+import { Grid, HttpDataProvider, type Column } from 'grid-vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -99,7 +99,7 @@ const columns: Column[] = [
 </template>
 
 <script setup lang="ts">
-import { Grid, ArrayDataProvider, type Column } from 'datatable-vue'
+import { Grid, ArrayDataProvider, type Column } from 'grid-vue'
 
 const users = [
   { id: 1, name: 'John', email: 'john@example.com' },
@@ -601,7 +601,7 @@ import type {
   RowOptions,
   ComponentOptions,
   ResponseAdapter
-} from 'datatable-vue'
+} from 'grid-vue'
 ```
 
 ## Browser Support

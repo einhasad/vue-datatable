@@ -26,8 +26,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'index.ts'),
-      name: 'DatatableVue',
-      fileName: (format) => format === 'es' ? 'datatable-vue.js' : 'datatable-vue.umd.cjs',
+      name: 'GridVue',
+      fileName: (format) => format === 'es' ? 'grid-vue.js' : 'grid-vue.umd.cjs',
       formats: ['es', 'umd']
     },
     rollupOptions: {
