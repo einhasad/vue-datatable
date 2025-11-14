@@ -25,7 +25,7 @@
           Stores state in memory. State is lost on page refresh. Useful for temporary filtering/sorting or testing.
         </p>
         <div class="grid-container">
-          <Grid :provider="inMemoryProvider" :columns="columns" />
+          <Grid :data-provider="inMemoryProvider" :columns="columns" />
         </div>
         <div class="code-example">
           <h4>Code Example:</h4>
@@ -54,7 +54,7 @@ const provider = new ArrayDataProvider({
           Note: This example uses router integration. Try sorting or filtering, then refresh the page - your state will be preserved!
         </p>
         <div class="grid-container">
-          <Grid :provider="queryParamsProvider" :columns="columns" />
+          <Grid :data-provider="queryParamsProvider" :columns="columns" />
         </div>
         <div class="code-example">
           <h4>Code Example:</h4>
@@ -97,7 +97,7 @@ const httpProvider = new HttpDataProvider({
           Try filtering or sorting, then refresh the page - your preferences will be restored!
         </p>
         <div class="grid-container">
-          <Grid :provider="localStorageProvider" :columns="columns" />
+          <Grid :data-provider="localStorageProvider" :columns="columns" />
         </div>
         <div class="code-example">
           <h4>Code Example:</h4>
@@ -128,7 +128,7 @@ const provider = new ArrayDataProvider({
           Watch the URL hash change as you filter and sort!
         </p>
         <div class="grid-container">
-          <Grid :provider="hashProvider" :columns="columns" />
+          <Grid :data-provider="hashProvider" :columns="columns" />
         </div>
         <div class="code-example">
           <h4>Code Example:</h4>

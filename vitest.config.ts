@@ -1,9 +1,15 @@
 import { defineConfig, mergeConfig } from 'vitest/config'
 import viteConfig from './vite.config'
+import path from 'path'
 
 export default mergeConfig(
   viteConfig,
   defineConfig({
+    resolve: {
+      alias: {
+        '@grid-vue/grid': path.resolve(__dirname, './src/index.ts')
+      }
+    },
     test: {
       globals: true,
       environment: 'happy-dom',

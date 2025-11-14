@@ -6,19 +6,35 @@ import { ref } from 'vue'
 function createMockRouter() {
   const query = ref<Record<string, string | string[]>>({})
   const hash = ref('')
+  const currentRoute = ref({
+    query: query.value,
+    hash: hash.value
+  })
 
   return {
-    currentRoute: {
-      get value() {
-        return {
-          query: query.value,
-          hash: hash.value
-        }
+    currentRoute,
+    replace: ({ query: newQuery, hash: newHash }: any) => {
+      if (newQuery !== undefined) query.value = newQuery
+      if (newHash !== undefined) hash.value = newHash
+      currentRoute.value = {
+        query: query.value,
+        hash: hash.value
       }
     },
-    replace: ({ query: newQuery, hash: newHash }: any) => {
-      query.value = newQuery || {}
-      hash.value = newHash || ''
+    // Expose internal refs for direct test manipulation
+    _setHash: (newHash: string) => {
+      hash.value = newHash
+      currentRoute.value = {
+        query: query.value,
+        hash: hash.value
+      }
+    },
+    _setQuery: (newQuery: Record<string, string | string[]>) => {
+      query.value = newQuery
+      currentRoute.value = {
+        query: query.value,
+        hash: hash.value
+      }
     }
   }
 }
@@ -53,7 +69,7 @@ describe('HashStateProvider', () => {
     })
 
     it('should parse filters from existing hash', () => {
-      mockRouter.currentRoute.value.hash = '#search-name=John&search-email=john@example.com'
+      mockRouter._setHash('#search-name=John&search-email=john@example.com')
       expect(stateProvider.getFilter('name')).toBe('John')
       expect(stateProvider.getFilter('email')).toBe('john@example.com')
     })
@@ -106,13 +122,13 @@ describe('HashStateProvider', () => {
     })
 
     it('should parse ascending sort from hash', () => {
-      mockRouter.currentRoute.value.hash = '#search-sort=email'
+      mockRouter._setHash('#search-sort=email')
       const sort = stateProvider.getSort()
       expect(sort).toEqual({ field: 'email', order: 'asc' })
     })
 
     it('should parse descending sort from hash', () => {
-      mockRouter.currentRoute.value.hash = '#search-sort=-email'
+      mockRouter._setHash('#search-sort=-email')
       const sort = stateProvider.getSort()
       expect(sort).toEqual({ field: 'email', order: 'desc' })
     })
@@ -137,12 +153,12 @@ describe('HashStateProvider', () => {
     })
 
     it('should parse page from hash', () => {
-      mockRouter.currentRoute.value.hash = '#search-page=5'
+      mockRouter._setHash('#search-page=5')
       expect(stateProvider.getPage()).toBe(5)
     })
 
     it('should return null for invalid page number', () => {
-      mockRouter.currentRoute.value.hash = '#search-page=invalid'
+      mockRouter._setHash('#search-page=invalid')
       expect(stateProvider.getPage()).toBeNull()
     })
 
@@ -166,7 +182,7 @@ describe('HashStateProvider', () => {
     })
 
     it('should parse cursor from hash', () => {
-      mockRouter.currentRoute.value.hash = '#search-cursor=xyz789'
+      mockRouter._setHash('#search-cursor=xyz789')
       expect(stateProvider.getCursor()).toBe('xyz789')
     })
 
@@ -191,7 +207,7 @@ describe('HashStateProvider', () => {
       stateProvider.setCursor('abc123')
 
       // Add non-prefixed hash param
-      mockRouter.currentRoute.value.hash = '#search-name=John&other=value'
+      mockRouter._setHash('#search-name=John&other=value')
 
       stateProvider.clear()
 
@@ -205,7 +221,7 @@ describe('HashStateProvider', () => {
     })
 
     it('should handle empty hash when clearing', () => {
-      mockRouter.currentRoute.value.hash = ''
+      mockRouter._setHash('')
       stateProvider.clear()
       expect(mockRouter.currentRoute.value.hash).toBe('')
     })
@@ -213,17 +229,17 @@ describe('HashStateProvider', () => {
 
   describe('Hash Parsing', () => {
     it('should handle hash without # prefix', () => {
-      mockRouter.currentRoute.value.hash = 'search-name=John'
+      mockRouter._setHash('search-name=John')
       expect(stateProvider.getFilter('name')).toBe('John')
     })
 
     it('should handle empty hash', () => {
-      mockRouter.currentRoute.value.hash = ''
+      mockRouter._setHash('')
       expect(stateProvider.getFilter('name')).toBeNull()
     })
 
     it('should handle hash with only #', () => {
-      mockRouter.currentRoute.value.hash = '#'
+      mockRouter._setHash('#')
       expect(stateProvider.getFilter('name')).toBeNull()
     })
 

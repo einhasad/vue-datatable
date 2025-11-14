@@ -5,18 +5,25 @@ import type { ResponseAdapter } from '../src/types'
 
 describe('HttpDataProvider', () => {
   const mockHttpClient = vi.fn()
-  const mockRouter = {
-    currentRoute: ref({
+  const createMockRouter = () => {
+    const currentRoute = ref({
       query: {},
       hash: ''
-    }),
-    replace: vi.fn()
+    })
+    return {
+      currentRoute,
+      replace: ({ query, hash }: any) => {
+        if (query !== undefined) currentRoute.value.query = query
+        if (hash !== undefined) currentRoute.value.hash = hash
+      }
+    }
   }
+  const mockRouter = createMockRouter()
 
   beforeEach(() => {
     mockHttpClient.mockClear()
-    mockRouter.replace.mockClear()
     mockRouter.currentRoute.value.query = {}
+    mockRouter.currentRoute.value.hash = ''
   })
 
   describe('Cursor-based Pagination', () => {
@@ -156,51 +163,8 @@ describe('HttpDataProvider', () => {
     })
   })
 
-  describe('Query Parameters with Router', () => {
-    let provider: HttpDataProvider
-
-    beforeEach(() => {
-      provider = new HttpDataProvider({
-        url: 'https://api.example.com/data',
-        pagination: false,
-        httpClient: mockHttpClient,
-        searchPrefix: 'search'
-      }, mockRouter)
-    })
-
-    it('should set query parameter with prefix', () => {
-      provider.setQueryParam('name', 'test')
-
-      expect(mockRouter.replace).toHaveBeenCalledWith({
-        query: { 'search-name': 'test' },
-        hash: ''
-      })
-    })
-
-    it('should get query parameter', () => {
-      mockRouter.currentRoute.value.query = { 'search-name': 'test' }
-
-      const value = provider.getRawQueryParam('name')
-      expect(value).toBe('test')
-    })
-
-    it('should clear query parameter', () => {
-      mockRouter.currentRoute.value.query = { 'search-name': 'test' }
-      provider.clearQueryParam('name')
-
-      expect(mockRouter.replace).toHaveBeenCalledWith({
-        query: {},
-        hash: ''
-      })
-    })
-
-    it('should handle array query values', () => {
-      mockRouter.currentRoute.value.query = { 'search-name': ['value1', 'value2'] }
-
-      const value = provider.getRawQueryParam('name')
-      expect(value).toBe('value1')
-    })
-  })
+  // Query parameter management is now handled by StateProvider
+  // See QueryParamsStateProvider.spec.ts for comprehensive tests
 
   describe('Sorting', () => {
     let provider: HttpDataProvider
@@ -210,16 +174,14 @@ describe('HttpDataProvider', () => {
         url: 'https://api.example.com/data',
         pagination: false,
         httpClient: mockHttpClient,
-        searchPrefix: 'search'
-      }, mockRouter)
+        router: mockRouter  // Router in config creates QueryParamsStateProvider
+      })
     })
 
     it('should set sort ascending', async () => {
       mockHttpClient.mockResolvedValue({ items: [] })
 
       provider.setSort('name', 'asc')
-      // Manually update the router query to simulate what setQueryParam would do
-      mockRouter.currentRoute.value.query = { 'search-sort': 'name' }
       await provider.load()
 
       expect(mockHttpClient).toHaveBeenCalledWith(
@@ -231,8 +193,6 @@ describe('HttpDataProvider', () => {
       mockHttpClient.mockResolvedValue({ items: [] })
 
       provider.setSort('name', 'desc')
-      // Manually update the router query to simulate what setQueryParam would do
-      mockRouter.currentRoute.value.query = { 'search-sort': '-name' }
       await provider.load()
 
       expect(mockHttpClient).toHaveBeenCalledWith(
@@ -240,15 +200,16 @@ describe('HttpDataProvider', () => {
       )
     })
 
-    it('should get sort state from URL', () => {
-      mockRouter.currentRoute.value.query = { 'search-sort': '-name' }
+    it('should get sort state from QueryParamsStateProvider', () => {
+      // Set sort via provider (which delegates to StateProvider)
+      provider.setSort('name', 'desc')
 
       const sort = provider.getSort()
       expect(sort).toEqual({ field: 'name', order: 'desc' })
     })
 
-    it('should get sort state ascending from URL', () => {
-      mockRouter.currentRoute.value.query = { 'search-sort': 'name' }
+    it('should get sort state ascending from StateProvider', () => {
+      provider.setSort('name', 'asc')
 
       const sort = provider.getSort()
       expect(sort).toEqual({ field: 'name', order: 'asc' })
@@ -437,35 +398,9 @@ describe('HttpDataProvider', () => {
     })
   })
 
-  describe('No Router', () => {
-    it('should warn when setting query param without router', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
-      const provider = new HttpDataProvider({
-        url: 'https://api.example.com/data',
-        pagination: false,
-        httpClient: mockHttpClient
-      })
-
-      provider.setQueryParam('test', 'value')
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Router not provided')
-      )
-
-      consoleSpy.mockRestore()
-    })
-
-    it('should return null when getting query param without router', () => {
-      const provider = new HttpDataProvider({
-        url: 'https://api.example.com/data',
-        pagination: false,
-        httpClient: mockHttpClient
-      })
-
-      expect(provider.getRawQueryParam('test')).toBeNull()
-    })
-  })
+  // StateProvider is now required for state management
+  // If no router/stateProvider is provided, InMemoryStateProvider is used by default
+  // See StateProvider tests for comprehensive coverage
 
   describe('Build URL', () => {
     it('should build URL with search params', async () => {

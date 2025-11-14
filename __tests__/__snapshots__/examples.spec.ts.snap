@@ -1,0 +1,800 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Example Components > ArrayProviderExample.vue > should match snapshot 1`] = `
+"<div>
+  <h2>Array Provider Example</h2>
+  <div class="example-description">
+    <p> The <strong>ArrayDataProvider</strong> is perfect for working with static, in-memory data. It supports client-side pagination, sorting, and filtering without requiring a backend API. This example demonstrates its key features including page-based pagination and sorting capabilities. </p>
+  </div>
+  <div class="example-section">
+    <h3>Demo</h3>
+    <div class="grid" data-qa="grid">
+      <div class="grid-table-wrapper">
+        <table class="grid-table">
+          <thead>
+            <tr class="grid-header-row">
+              <th class="grid-header-cell"><span>ID</span></th>
+              <th class="grid-header-cell"><span>Product Name</span></th>
+              <th class="grid-header-cell"><span>Category</span></th>
+              <th class="grid-header-cell"><span>Price ($)</span></th>
+              <th class="grid-header-cell"><span>Stock</span></th>
+            </tr>
+            <!--v-if-->
+          </thead>
+          <tbody>
+            <tr class="grid-empty-row">
+              <td colspan="5" class="grid-empty-cell">No results found</td>
+            </tr>
+            <!--v-if-->
+          </tbody>
+        </table>
+      </div>
+      <div class="grid-pagination">
+        <!-- Cursor-based pagination (Load More pattern) -->
+        <!--v-if-->
+      </div>
+    </div>
+  </div>
+  <div class="example-section">
+    <h3>Code</h3><pre class="code-block"><code>&lt;template&gt;
+  &lt;Grid
+    :data-provider="provider"
+    :columns="columns"
+  /&gt;
+&lt;/template&gt;
+
+&lt;script setup lang="ts"&gt;
+import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
+
+// Sample dataset
+const products = [
+  { id: 1, name: 'Laptop Pro', category: 'Electronics', price: 1299, stock: 45 },
+  { id: 2, name: 'Wireless Mouse', category: 'Accessories', price: 29, stock: 150 },
+  { id: 3, name: 'USB-C Cable', category: 'Accessories', price: 15, stock: 200 },
+  { id: 4, name: 'Monitor 27"', category: 'Electronics', price: 399, stock: 30 },
+  { id: 5, name: 'Keyboard Mechanical', category: 'Accessories', price: 129, stock: 75 },
+  { id: 6, name: 'Webcam HD', category: 'Electronics', price: 79, stock: 60 },
+  { id: 7, name: 'Desk Lamp', category: 'Office', price: 45, stock: 90 },
+  { id: 8, name: 'Office Chair', category: 'Office', price: 299, stock: 25 },
+  { id: 9, name: 'Headphones', category: 'Electronics', price: 199, stock: 40 },
+  { id: 10, name: 'Tablet Stand', category: 'Accessories', price: 35, stock: 100 }
+]
+
+// Configure ArrayDataProvider with pagination
+const provider = new ArrayDataProvider({
+  items: products,
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 5
+})
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID', sortable: true },
+  { key: 'name', label: 'Product Name', sortable: true },
+  { key: 'category', label: 'Category', sortable: true },
+  { key: 'price', label: 'Price ($)', sortable: true },
+  { key: 'stock', label: 'Stock', sortable: true }
+]
+&lt;/script&gt;</code></pre>
+  </div>
+  <div class="example-section">
+    <h3>Key Features</h3>
+    <ul>
+      <li><strong>Client-side pagination:</strong> No server requests needed</li>
+      <li><strong>Sorting:</strong> Click column headers to sort data</li>
+      <li><strong>In-memory processing:</strong> Fast performance for small to medium datasets</li>
+      <li><strong>Simple configuration:</strong> Just pass an array and options</li>
+    </ul>
+  </div>
+</div>"
+`;
+
+exports[`Example Components > BasicExample.vue > should match snapshot 1`] = `
+"<div>
+  <h2>Basic Example</h2>
+  <div class="example-description">
+    <p> This example demonstrates the most basic usage of Grid Vue with an ArrayDataProvider. The grid displays static data without pagination, showing how simple it is to get started. </p>
+  </div>
+  <div class="example-section">
+    <h3>Demo</h3>
+    <div class="grid" data-qa="grid">
+      <div class="grid-table-wrapper">
+        <table class="grid-table">
+          <thead>
+            <tr class="grid-header-row">
+              <th class="grid-header-cell"><span>ID</span></th>
+              <th class="grid-header-cell"><span>Name</span></th>
+              <th class="grid-header-cell"><span>Email</span></th>
+              <th class="grid-header-cell"><span>Role</span></th>
+            </tr>
+            <!--v-if-->
+          </thead>
+          <tbody>
+            <tr class="grid-empty-row">
+              <td colspan="4" class="grid-empty-cell">No results found</td>
+            </tr>
+            <!--v-if-->
+          </tbody>
+        </table>
+      </div>
+      <!--v-if-->
+    </div>
+  </div>
+  <div class="example-section">
+    <h3>Code</h3><pre class="code-block"><code>&lt;template&gt;
+  &lt;Grid
+    :data-provider="provider"
+    :columns="columns"
+  /&gt;
+&lt;/template&gt;
+
+&lt;script setup lang="ts"&gt;
+import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
+
+const users = [
+  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin' },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'User' },
+  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'User' },
+  { id: 4, name: 'Alice Brown', email: 'alice@example.com', role: 'Editor' },
+  { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', role: 'User' }
+]
+
+const provider = new ArrayDataProvider({
+  items: users,
+  pagination: false,
+  paginationMode: 'cursor'
+})
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'name', label: 'Name' },
+  { key: 'email', label: 'Email' },
+  { key: 'role', label: 'Role' }
+]
+&lt;/script&gt;</code></pre>
+  </div>
+</div>"
+`;
+
+exports[`Example Components > CursorPaginationExample.vue > should match snapshot 1`] = `
+"<div>
+  <h2>Cursor Pagination Example</h2>
+  <div class="example-description">
+    <p> This example demonstrates cursor-based pagination with a "Load More" button. This pattern is ideal for infinite scroll implementations and mobile-friendly interfaces. </p>
+  </div>
+  <div class="example-section">
+    <h3>Demo</h3>
+    <div class="grid" data-qa="grid">
+      <div class="grid-table-wrapper">
+        <table class="grid-table">
+          <thead>
+            <tr class="grid-header-row">
+              <th class="grid-header-cell"><span>ID</span></th>
+              <th class="grid-header-cell"><span>Product Name</span></th>
+              <th class="grid-header-cell"><span>Price</span></th>
+              <th class="grid-header-cell"><span>Category</span></th>
+            </tr>
+            <!--v-if-->
+          </thead>
+          <tbody>
+            <tr class="grid-empty-row">
+              <td colspan="4" class="grid-empty-cell">No results found</td>
+            </tr>
+            <!--v-if-->
+          </tbody>
+        </table>
+      </div>
+      <div class="grid-pagination">
+        <!-- Cursor-based pagination (Load More pattern) -->
+        <div class="grid-pagination-cursor"><button type="button" class="grid-load-more-button">Load More</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="example-section">
+    <h3>Code</h3><pre class="code-block"><code>&lt;script setup lang="ts"&gt;
+import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
+
+// Generate sample data
+const products = Array.from({ length: 35 }, (_, i) =&gt; ({
+  id: i + 1,
+  name: \\\`Product \\\${i + 1}\\\`,
+  price: \\\`$\\\${(Math.random() * 100 + 10).toFixed(2)}\\\`,
+  category: ['Electronics', 'Clothing', 'Books', 'Home'][i % 4]
+}))
+
+const provider = new ArrayDataProvider({
+  items: products,
+  pagination: true,
+  paginationMode: 'cursor',
+  pageSize: 8
+})
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'name', label: 'Product Name' },
+  { key: 'price', label: 'Price' },
+  { key: 'category', label: 'Category' }
+]
+&lt;/script&gt;</code></pre>
+  </div>
+</div>"
+`;
+
+exports[`Example Components > CustomColumnsExample.vue > should match snapshot 1`] = `
+"<div>
+  <h2>Custom Columns Example</h2>
+  <div class="example-description">
+    <p> This example shows how to customize column rendering using the 'value' and 'component' properties. You can format data, add badges, buttons, and any custom content. </p>
+  </div>
+  <div class="example-section">
+    <h3>Demo</h3>
+    <div class="grid" data-qa="grid">
+      <div class="grid-table-wrapper">
+        <table class="grid-table">
+          <thead>
+            <tr class="grid-header-row">
+              <th class="grid-header-cell"><span>ID</span></th>
+              <th class="grid-header-cell"><span>Task</span></th>
+              <th class="grid-header-cell"><span>Priority</span></th>
+              <th class="grid-header-cell"><span>Status</span></th>
+              <th class="grid-header-cell"><span>Progress</span></th>
+            </tr>
+            <!--v-if-->
+          </thead>
+          <tbody>
+            <tr class="grid-empty-row">
+              <td colspan="5" class="grid-empty-cell">No results found</td>
+            </tr>
+            <!--v-if-->
+          </tbody>
+        </table>
+      </div>
+      <!--v-if-->
+    </div>
+  </div>
+  <div class="example-section">
+    <h3>Code</h3><pre class="code-block"><code>&lt;script setup lang="ts"&gt;
+import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
+
+const tasks = [
+  { id: 1, title: 'Update documentation', priority: 'high', status: 'completed', progress: 100 },
+  { id: 2, title: 'Fix login bug', priority: 'critical', status: 'in_progress', progress: 75 },
+  { id: 3, title: 'Add dark mode', priority: 'medium', status: 'in_progress', progress: 40 },
+  { id: 4, title: 'Optimize performance', priority: 'low', status: 'pending', progress: 0 },
+  { id: 5, title: 'Write tests', priority: 'high', status: 'in_progress', progress: 60 }
+]
+
+const provider = new ArrayDataProvider({
+  items: tasks,
+  pagination: false,
+  paginationMode: 'cursor'
+})
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'title', label: 'Task' },
+  {
+    key: 'priority',
+    label: 'Priority',
+    component: (row) =&gt; ({
+      is: 'span',
+      props: {
+        style: {
+          padding: '0.25rem 0.5rem',
+          borderRadius: '0.25rem',
+          fontSize: '0.875rem',
+          fontWeight: 'bold',
+          background: getPriorityColor(row.priority),
+          color: 'white'
+        }
+      },
+      content: row.priority.toUpperCase()
+    })
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    value: (row) =&gt; row.status.replace('_', ' ').toUpperCase()
+  },
+  {
+    key: 'progress',
+    label: 'Progress',
+    component: (row) =&gt; ({
+      is: 'div',
+      props: { style: { width: '100%' } },
+      children: [
+        {
+          is: 'div',
+          props: {
+            style: {
+              width: '100%',
+              height: '20px',
+              background: '#e2e8f0',
+              borderRadius: '10px',
+              overflow: 'hidden'
+            }
+          },
+          children: [
+            {
+              is: 'div',
+              props: {
+                style: {
+                  width: row.progress + '%',
+                  height: '100%',
+                  background: '#667eea',
+                  transition: 'width 0.3s'
+                }
+              }
+            }
+          ]
+        },
+        {
+          is: 'span',
+          props: {
+            style: {
+              fontSize: '0.75rem',
+              color: '#4a5568',
+              marginTop: '0.25rem',
+              display: 'block'
+            }
+          },
+          content: row.progress + '%'
+        }
+      ]
+    })
+  }
+]
+
+function getPriorityColor(priority: string) {
+  const colors = {
+    critical: '#e53e3e',
+    high: '#dd6b20',
+    medium: '#d69e2e',
+    low: '#38a169'
+  }
+  return colors[priority] || '#718096'
+}
+&lt;/script&gt;</code></pre>
+  </div>
+</div>"
+`;
+
+exports[`Example Components > HTTPProviderExample.vue > should match snapshot 1`] = `
+"<div>
+  <h2>HTTP Provider Example</h2>
+  <div class="example-description">
+    <p> The <strong>HttpDataProvider</strong> is designed for fetching data from REST APIs. It supports both cursor-based and page-based pagination, custom HTTP clients, response adapters, and automatic URL parameter management. This example shows how to configure it with a mock HTTP client to simulate API responses. </p>
+  </div>
+  <div class="example-section">
+    <h3>Demo</h3>
+    <div class="grid" data-qa="grid">
+      <div class="grid-table-wrapper">
+        <table class="grid-table">
+          <thead>
+            <tr class="grid-header-row">
+              <th class="grid-header-cell"><span>ID</span></th>
+              <th class="grid-header-cell"><span>Username</span></th>
+              <th class="grid-header-cell"><span>Email</span></th>
+              <th class="grid-header-cell"><span>Status</span></th>
+            </tr>
+            <!--v-if-->
+          </thead>
+          <tbody>
+            <tr class="grid-empty-row">
+              <td colspan="4" class="grid-empty-cell">No results found</td>
+            </tr>
+            <!--v-if-->
+          </tbody>
+        </table>
+      </div>
+      <div class="grid-pagination">
+        <!-- Cursor-based pagination (Load More pattern) -->
+        <!--v-if-->
+      </div>
+    </div>
+  </div>
+  <div class="example-section">
+    <h3>Code</h3><pre class="code-block"><code>&lt;template&gt;
+  &lt;Grid
+    :data-provider="provider"
+    :columns="columns"
+  /&gt;
+&lt;/template&gt;
+
+&lt;script setup lang="ts"&gt;
+import { Grid, HttpDataProvider, type Column, type ResponseAdapter } from '@grid-vue/grid'
+
+// Custom response adapter for your API format
+const customAdapter: ResponseAdapter = {
+  extractItems: (response) =&gt; response.data || [],
+  extractPagination: (response) =&gt; ({
+    currentPage: response.page || 1,
+    pageCount: response.totalPages || 1,
+    pageSize: response.pageSize || 10,
+    totalCount: response.total || 0
+  }),
+  isSuccess: (response) =&gt; response.success === true,
+  getErrorMessage: (response) =&gt; response.error || 'Unknown error'
+}
+
+// Mock HTTP client that simulates API responses
+const mockHttpClient = async (url: string) =&gt; {
+  await new Promise(resolve =&gt; setTimeout(resolve, 500)) // Simulate network delay
+
+  const mockUsers = [
+    { id: 1, username: 'alice_smith', email: 'alice@company.com', status: 'Active' },
+    { id: 2, username: 'bob_jones', email: 'bob@company.com', status: 'Active' },
+    { id: 3, username: 'charlie_brown', email: 'charlie@company.com', status: 'Inactive' },
+    { id: 4, username: 'diana_prince', email: 'diana@company.com', status: 'Active' },
+    { id: 5, username: 'edward_norton', email: 'edward@company.com', status: 'Active' }
+  ]
+
+  return {
+    success: true,
+    data: mockUsers,
+    page: 1,
+    totalPages: 1,
+    pageSize: 10,
+    total: mockUsers.length
+  }
+}
+
+// Configure HttpDataProvider
+const provider = new HttpDataProvider({
+  url: '/api/users',
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 10,
+  httpClient: mockHttpClient,
+  responseAdapter: customAdapter,
+  headers: {
+    'Authorization': 'Bearer token123'
+  }
+})
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID', sortable: true },
+  { key: 'username', label: 'Username', sortable: true },
+  { key: 'email', label: 'Email', sortable: true },
+  { key: 'status', label: 'Status', sortable: true }
+]
+&lt;/script&gt;</code></pre>
+  </div>
+  <div class="example-section">
+    <h3>Key Features</h3>
+    <ul>
+      <li><strong>REST API integration:</strong> Fetch data from any HTTP endpoint</li>
+      <li><strong>Custom HTTP clients:</strong> Use fetch, axios, or any other HTTP library</li>
+      <li><strong>Response adapters:</strong> Transform API responses to match your data format</li>
+      <li><strong>Flexible pagination:</strong> Supports both cursor and page-based modes</li>
+      <li><strong>URL parameter sync:</strong> Automatically manages query parameters for filtering and sorting</li>
+      <li><strong>Custom headers:</strong> Add authentication tokens and other headers</li>
+    </ul>
+  </div>
+  <div class="example-section">
+    <h3>Real-World Example</h3><pre class="code-block"><code>// Using with a real API endpoint
+import axios from 'axios'
+
+const provider = new HttpDataProvider({
+  url: 'https://api.example.com/users',
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 20,
+  httpClient: async (url) =&gt; {
+    const response = await axios.get(url)
+    return response.data
+  },
+  responseAdapter: customAdapter,
+  headers: {
+    'Authorization': \`Bearer \${authToken}\`
+  }
+})</code></pre>
+  </div>
+</div>"
+`;
+
+exports[`Example Components > PagePaginationExample.vue > should match snapshot 1`] = `
+"<div>
+  <h2>Page Pagination Example</h2>
+  <div class="example-description">
+    <p> This example shows traditional page-based pagination with page numbers. Users can navigate between pages using Previous, Next, and numbered page buttons. </p>
+  </div>
+  <div class="example-section">
+    <h3>Demo</h3>
+    <div class="grid" data-qa="grid">
+      <div class="grid-table-wrapper">
+        <table class="grid-table">
+          <thead>
+            <tr class="grid-header-row">
+              <th class="grid-header-cell"><span>ID</span></th>
+              <th class="grid-header-cell"><span>Name</span></th>
+              <th class="grid-header-cell"><span>Email</span></th>
+              <th class="grid-header-cell"><span>Status</span></th>
+            </tr>
+            <!--v-if-->
+          </thead>
+          <tbody>
+            <tr class="grid-empty-row">
+              <td colspan="4" class="grid-empty-cell">No results found</td>
+            </tr>
+            <!--v-if-->
+          </tbody>
+        </table>
+      </div>
+      <div class="grid-pagination">
+        <!-- Cursor-based pagination (Load More pattern) -->
+        <!--v-if-->
+      </div>
+    </div>
+  </div>
+  <div class="example-section">
+    <h3>Code</h3><pre class="code-block"><code>&lt;script setup lang="ts"&gt;
+import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
+
+// Generate sample data
+const users = Array.from({ length: 47 }, (_, i) =&gt; ({
+  id: i + 1,
+  name: \\\`User \\\${i + 1}\\\`,
+  email: \\\`user\\\${i + 1}@example.com\\\`,
+  status: ['Active', 'Inactive'][i % 2]
+}))
+
+const provider = new ArrayDataProvider({
+  items: users,
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 10
+})
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'name', label: 'Name' },
+  { key: 'email', label: 'Email' },
+  { key: 'status', label: 'Status' }
+]
+&lt;/script&gt;</code></pre>
+  </div>
+</div>"
+`;
+
+exports[`Example Components > RowActionsExample.vue > should match snapshot 1`] = `
+"<div>
+  <h2>Row Actions Example</h2>
+  <div class="example-description">
+    <p> This example demonstrates interactive rows with click handlers and custom row styling. Try clicking on different rows to see the action handler in action. </p>
+    <!--v-if-->
+  </div>
+  <div class="example-section">
+    <h3>Demo</h3>
+    <div class="grid" data-qa="grid">
+      <div class="grid-table-wrapper">
+        <table class="grid-table">
+          <thead>
+            <tr class="grid-header-row">
+              <th class="grid-header-cell"><span>ID</span></th>
+              <th class="grid-header-cell"><span>Name</span></th>
+              <th class="grid-header-cell"><span>Email</span></th>
+              <th class="grid-header-cell"><span>Status</span></th>
+            </tr>
+            <!--v-if-->
+          </thead>
+          <tbody>
+            <tr class="grid-empty-row">
+              <td colspan="4" class="grid-empty-cell">No results found</td>
+            </tr>
+            <!--v-if-->
+          </tbody>
+        </table>
+      </div>
+      <!--v-if-->
+    </div>
+  </div>
+  <div class="example-section">
+    <h3>Code</h3><pre class="code-block"><code>&lt;template&gt;
+  &lt;div v-if="selectedUser"&gt;
+    Selected: {{ selectedUser.name }}
+  &lt;/div&gt;
+  &lt;Grid
+    :data-provider="provider"
+    :columns="columns"
+    :on-row-click="handleRowClick"
+    :row-options="getRowOptions"
+  /&gt;
+&lt;/template&gt;
+
+&lt;script setup lang="ts"&gt;
+import { ref } from 'vue'
+import { Grid, ArrayDataProvider, type Column, type RowOptions } from '@grid-vue/grid'
+
+const selectedUser = ref(null)
+
+const users = [
+  { id: 1, name: 'John Doe', email: 'john@example.com', active: true },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', active: true },
+  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', active: false },
+  { id: 4, name: 'Alice Brown', email: 'alice@example.com', active: true }
+]
+
+const provider = new ArrayDataProvider({
+  items: users,
+  pagination: false,
+  paginationMode: 'cursor'
+})
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'name', label: 'Name' },
+  { key: 'email', label: 'Email' },
+  {
+    key: 'active',
+    label: 'Status',
+    value: (row) =&gt; row.active ? 'Active' : 'Inactive'
+  }
+]
+
+function handleRowClick(user: any) {
+  selectedUser.value = user
+  console.log('Row clicked:', user)
+}
+
+function getRowOptions(user: any): RowOptions {
+  return {
+    class: {
+      'row-clickable': true,
+      'row-selected': selectedUser.value?.id === user.id,
+      'row-inactive': !user.active
+    },
+    style: {
+      cursor: 'pointer'
+    }
+  }
+}
+&lt;/script&gt;
+
+&lt;style&gt;
+.row-clickable:hover {
+  background: #f7fafc !important;
+}
+
+.row-selected {
+  background: #e6fffa !important;
+  border-left: 4px solid #38b2ac !important;
+}
+
+.row-inactive {
+  opacity: 0.6;
+}
+&lt;/style&gt;</code></pre>
+  </div>
+</div>"
+`;
+
+exports[`Example Components > SortingExample.vue > should match snapshot 1`] = `
+"<div>
+  <h2>Sorting Example</h2>
+  <div class="example-description">
+    <p> Click on column headers to sort the data. Columns with the 'sort' property enabled will display sort indicators and allow users to toggle between ascending and descending order. </p>
+  </div>
+  <div class="example-section">
+    <h3>Demo</h3>
+    <div class="grid" data-qa="grid">
+      <div class="grid-table-wrapper">
+        <table class="grid-table">
+          <thead>
+            <tr class="grid-header-row">
+              <th class="grid-header-cell"><button type="button" class="grid-sort-button">ID</button></th>
+              <th class="grid-header-cell"><button type="button" class="grid-sort-button">Name</button></th>
+              <th class="grid-header-cell"><button type="button" class="grid-sort-button">Department</button></th>
+              <th class="grid-header-cell"><button type="button" class="grid-sort-button">Salary</button></th>
+            </tr>
+            <!--v-if-->
+          </thead>
+          <tbody>
+            <tr class="grid-empty-row">
+              <td colspan="4" class="grid-empty-cell">No results found</td>
+            </tr>
+            <!--v-if-->
+          </tbody>
+        </table>
+      </div>
+      <!--v-if-->
+    </div>
+  </div>
+  <div class="example-section">
+    <h3>Code</h3><pre class="code-block"><code>&lt;script setup lang="ts"&gt;
+import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
+
+const employees = [
+  { id: 1, name: 'Alice Johnson', department: 'Engineering', salary: 95000 },
+  { id: 2, name: 'Bob Smith', department: 'Marketing', salary: 75000 },
+  { id: 3, name: 'Charlie Brown', department: 'Sales', salary: 82000 },
+  { id: 4, name: 'Diana Prince', department: 'Engineering', salary: 105000 },
+  { id: 5, name: 'Ethan Hunt', department: 'Operations', salary: 88000 },
+  { id: 6, name: 'Fiona Gallagher', department: 'Marketing', salary: 78000 },
+  { id: 7, name: 'George Miller', department: 'Engineering', salary: 98000 },
+  { id: 8, name: 'Hannah Montana', department: 'Sales', salary: 85000 }
+]
+
+const provider = new ArrayDataProvider({
+  items: employees,
+  pagination: false,
+  paginationMode: 'cursor'
+})
+
+// Add 'sort' property to enable sorting on columns
+const columns: Column[] = [
+  { key: 'id', label: 'ID', sort: 'id' },
+  { key: 'name', label: 'Name', sort: 'name' },
+  { key: 'department', label: 'Department', sort: 'department' },
+  {
+    key: 'salary',
+    label: 'Salary',
+    sort: 'salary',
+    value: (row) =&gt; \\\`$\\\${row.salary.toLocaleString()}\\\`
+  }
+]
+&lt;/script&gt;</code></pre>
+  </div>
+</div>"
+`;
+
+exports[`Example Components > StateProvidersExample.vue > should match snapshot 1`] = `
+"<div data-v-835d1dfa="">
+  <h2 data-v-835d1dfa="">State Providers</h2>
+  <p data-v-835d1dfa=""> State Providers manage grid state (filters, sorting, pagination) independently from data fetching. This separation allows you to choose where and how state is persisted. </p>
+  <div data-v-835d1dfa="" class="tabs"><button data-v-835d1dfa="" class="tab active">InMemory</button><button data-v-835d1dfa="" class="tab">Query Params (Default)</button><button data-v-835d1dfa="" class="tab">LocalStorage</button><button data-v-835d1dfa="" class="tab">Hash</button></div>
+  <div data-v-835d1dfa="" class="tab-content">
+    <!-- InMemory State Provider -->
+    <div data-v-835d1dfa="" class="example">
+      <h3 data-v-835d1dfa="">InMemoryStateProvider</h3>
+      <p data-v-835d1dfa=""> Stores state in memory. State is lost on page refresh. Useful for temporary filtering/sorting or testing. </p>
+      <div data-v-835d1dfa="" class="grid-container">
+        <div data-v-835d1dfa="" class="grid" data-qa="grid">
+          <div class="grid-table-wrapper">
+            <table class="grid-table">
+              <thead>
+                <tr class="grid-header-row">
+                  <th class="grid-header-cell"><button type="button" class="grid-sort-button">ID</button></th>
+                  <th class="grid-header-cell"><button type="button" class="grid-sort-button">Name</button></th>
+                  <th class="grid-header-cell"><button type="button" class="grid-sort-button">Email</button></th>
+                  <th class="grid-header-cell"><button type="button" class="grid-sort-button">Role</button></th>
+                  <th class="grid-header-cell"><button type="button" class="grid-sort-button">Status</button></th>
+                </tr>
+                <!--v-if-->
+              </thead>
+              <tbody>
+                <tr class="grid-empty-row">
+                  <td colspan="5" class="grid-empty-cell">No results found</td>
+                </tr>
+                <!--v-if-->
+              </tbody>
+            </table>
+          </div>
+          <div class="grid-pagination">
+            <!-- Cursor-based pagination (Load More pattern) -->
+            <!--v-if-->
+          </div>
+        </div>
+      </div>
+      <div data-v-835d1dfa="" class="code-example">
+        <h4 data-v-835d1dfa="">Code Example:</h4><pre data-v-835d1dfa=""><code data-v-835d1dfa="">import { ArrayDataProvider, InMemoryStateProvider } from '@grid-vue/grid'
+
+const stateProvider = new InMemoryStateProvider()
+
+const provider = new ArrayDataProvider({
+  items: users,
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 5,
+  stateProvider
+})</code></pre>
+      </div>
+    </div><!-- QueryParams State Provider -->
+    <!--v-if-->
+    <!-- LocalStorage State Provider -->
+    <!--v-if-->
+    <!-- Hash State Provider -->
+    <!--v-if-->
+  </div>
+</div>"
+`;

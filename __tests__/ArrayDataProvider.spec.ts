@@ -208,37 +208,9 @@ describe('ArrayDataProvider', () => {
     })
   })
 
-  describe('Query Parameters', () => {
-    let provider: ArrayDataProvider
-
-    beforeEach(() => {
-      provider = new ArrayDataProvider({
-        items: sampleData,
-        pagination: false
-      })
-    })
-
-    it('should set query parameter', () => {
-      provider.setQueryParam('filter', 'test')
-      expect(provider.getRawQueryParam('filter')).toBe('test')
-    })
-
-    it('should clear query parameter on empty value', () => {
-      provider.setQueryParam('filter', 'test')
-      provider.setQueryParam('filter', '')
-      expect(provider.getRawQueryParam('filter')).toBeNull()
-    })
-
-    it('should clear query parameter explicitly', () => {
-      provider.setQueryParam('filter', 'test')
-      provider.clearQueryParam('filter')
-      expect(provider.getRawQueryParam('filter')).toBeNull()
-    })
-
-    it('should return null for non-existent parameter', () => {
-      expect(provider.getRawQueryParam('nonexistent')).toBeNull()
-    })
-  })
+  // Query parameter management is now handled by StateProvider
+  // ArrayDataProvider works with any StateProvider (InMemory, QueryParams, LocalStorage, Hash)
+  // See StateProvider tests for comprehensive coverage
 
   describe('No Pagination', () => {
     it('should return all items without pagination', async () => {
