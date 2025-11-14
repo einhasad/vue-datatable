@@ -21,25 +21,25 @@ A flexible, configurable grid component library for Vue 3 applications with supp
 Install via npm:
 
 ```bash
-npm install @do-popov/grid-vue
+npm install @grid-vue/grid
 ```
 
 Or with yarn:
 
 ```bash
-yarn add @do-popov/grid-vue
+yarn add @grid-vue/grid
 ```
 
 Or with pnpm:
 
 ```bash
-pnpm add @do-popov/grid-vue
+pnpm add @grid-vue/grid
 ```
 
 Then import the CSS in your main entry file (e.g., `main.ts` or `main.js`):
 
 ```ts
-import '@do-popov/grid-vue/style.css'
+import '@grid-vue/grid/style.css'
 ```
 
 ## Quick Start
@@ -55,7 +55,7 @@ import '@do-popov/grid-vue/style.css'
 </template>
 
 <script setup lang="ts">
-import { Grid, HttpDataProvider, type Column } from '@do-popov/grid-vue'
+import { Grid, HttpDataProvider, type Column } from '@grid-vue/grid'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -99,7 +99,7 @@ const columns: Column[] = [
 </template>
 
 <script setup lang="ts">
-import { Grid, ArrayDataProvider, type Column } from '@do-popov/grid-vue'
+import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
 
 const users = [
   { id: 1, name: 'John', email: 'john@example.com' },
@@ -601,7 +601,7 @@ import type {
   RowOptions,
   ComponentOptions,
   ResponseAdapter
-} from '@do-popov/grid-vue'
+} from '@grid-vue/grid'
 ```
 
 ## Browser Support

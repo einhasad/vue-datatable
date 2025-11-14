@@ -26,8 +26,8 @@ export default defineConfig({
   build: {
     lib: {
       entry: resolve(__dirname, 'index.ts'),
-      name: 'GridVue',
-      fileName: (format) => format === 'es' ? 'grid-vue.js' : 'grid-vue.umd.cjs',
+      name: 'Grid',
+      fileName: (format) => format === 'es' ? 'grid.js' : 'grid.umd.cjs',
       formats: ['es', 'umd']
     },
     rollupOptions: {

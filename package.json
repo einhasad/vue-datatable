@@ -1,17 +1,17 @@
 {
-  "name": "@do-popov/grid-vue",
+  "name": "@grid-vue/grid",
   "version": "0.1.0",
   "description": "A flexible, configurable grid component library for Vue 3 applications with support for both cursor and page-based pagination, custom data providers, and extensive customization options.",
   "author": "Dima Popov",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/grid-vue.umd.cjs",
-  "module": "./dist/grid-vue.js",
+  "main": "./dist/grid.umd.cjs",
+  "module": "./dist/grid.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/grid-vue.js",
-      "require": "./dist/grid-vue.umd.cjs",
+      "import": "./dist/grid.js",
+      "require": "./dist/grid.umd.cjs",
       "types": "./dist/index.d.ts"
     },
     "./style.css": "./dist/style.css"
