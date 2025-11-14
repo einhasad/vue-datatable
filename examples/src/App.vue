@@ -13,6 +13,11 @@
       <div class="container">
         <router-link to="/" class="nav-link">Home</router-link>
         <router-link to="/basic" class="nav-link">Basic</router-link>
+        <div class="nav-section">
+          <span class="nav-section-title">Data Providers</span>
+          <router-link to="/array-provider" class="nav-link">Array Provider</router-link>
+          <router-link to="/http-provider" class="nav-link">HTTP Provider</router-link>
+        </div>
         <router-link to="/page-pagination" class="nav-link">Page Pagination</router-link>
         <router-link to="/cursor-pagination" class="nav-link">Cursor Pagination</router-link>
         <router-link to="/sorting" class="nav-link">Sorting</router-link>
@@ -88,6 +93,25 @@
   gap: 0.5rem;
   overflow-x: auto;
   padding: 0.75rem 1rem;
+  align-items: center;
+}
+
+.nav-section {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding: 0.5rem;
+  background: #f7fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.nav-section-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #667eea;
+  white-space: nowrap;
+  padding: 0 0.5rem;
 }
 
 .nav-link {

@@ -12,6 +12,8 @@ import CursorPaginationExample from './pages/CursorPaginationExample.vue'
 import SortingExample from './pages/SortingExample.vue'
 import CustomColumnsExample from './pages/CustomColumnsExample.vue'
 import RowActionsExample from './pages/RowActionsExample.vue'
+import ArrayProviderExample from './pages/ArrayProviderExample.vue'
+import HTTPProviderExample from './pages/HTTPProviderExample.vue'
 
 const router = createRouter({
   history: createWebHistory('/vue-datatable/'),
@@ -22,7 +24,9 @@ const router = createRouter({
     { path: '/cursor-pagination', component: CursorPaginationExample },
     { path: '/sorting', component: SortingExample },
     { path: '/custom-columns', component: CustomColumnsExample },
-    { path: '/row-actions', component: RowActionsExample }
+    { path: '/row-actions', component: RowActionsExample },
+    { path: '/array-provider', component: ArrayProviderExample },
+    { path: '/http-provider', component: HTTPProviderExample }
   ]
 })
 
