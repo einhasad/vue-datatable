@@ -17,7 +17,7 @@ export default mergeConfig(
           'examples/',
           '*.config.ts',
           '*.config.js',
-          'providers/DSTElasticDataProvider.ts', // Not exported
+          'src/providers/DSTElasticDataProvider.ts', // Not exported
           '**/*.d.ts',
           '**/__tests__/**',
           '**/*.spec.ts',

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { isCursorPagination, isPagePagination, DefaultResponseAdapter } from '../types'
-import type { CursorPaginationData, PagePaginationData } from '../types'
+import { isCursorPagination, isPagePagination, DefaultResponseAdapter } from '../src/types'
+import type { CursorPaginationData, PagePaginationData } from '../src/types'
 
 describe('Type Guards', () => {
   describe('isCursorPagination', () => {

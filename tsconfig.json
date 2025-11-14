@@ -22,8 +22,8 @@
     "types": ["node"]
   },
   "include": [
-    "**/*.ts",
-    "**/*.vue"
+    "src/**/*.ts",
+    "src/**/*.vue"
   ],
   "exclude": [
     "node_modules",

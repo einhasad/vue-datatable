@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { ArrayDataProvider } from '../providers/ArrayDataProvider'
+import { ArrayDataProvider } from '../src/providers/ArrayDataProvider'
 
 describe('ArrayDataProvider', () => {
   const sampleData = [

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import GridPagination from '../GridPagination.vue'
-import type { PagePaginationData, CursorPaginationData } from '../types'
+import GridPagination from '../src/GridPagination.vue'
+import type { PagePaginationData, CursorPaginationData } from '../src/types'
 
 describe('GridPagination', () => {
   describe('Cursor Pagination Mode', () => {
