@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      '@grid-vue/grid': resolve(__dirname, '../index.ts'),
+      '@grid-vue/grid': resolve(__dirname, '../src'),
       '@': resolve(__dirname, 'src')
     }
   },
