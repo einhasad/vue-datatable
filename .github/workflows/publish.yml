@@ -89,7 +89,7 @@ jobs:
         with:
           script: |
             const version = context.payload.release.tag_name;
-            const packageName = 'grid-vue';
+            const packageName = '@do-popov/grid-vue';
 
             await github.rest.repos.updateRelease({
               owner: context.repo.owner,

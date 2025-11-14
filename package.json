@@ -1,5 +1,5 @@
 {
-  "name": "grid-vue",
+  "name": "@do-popov/grid-vue",
   "version": "0.1.0",
   "description": "A flexible, configurable grid component library for Vue 3 applications with support for both cursor and page-based pagination, custom data providers, and extensive customization options.",
   "author": "Dima Popov",
