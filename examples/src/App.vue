@@ -11,14 +11,18 @@
       <!-- Left Sidebar Menu -->
       <aside class="sidebar">
         <nav class="nav">
-          <a href="#introduction" class="nav-link" @click="scrollToSection">Introduction</a>
-          <a href="#basic" class="nav-link" @click="scrollToSection">Basic Example</a>
-          <a href="#http" class="nav-link" @click="scrollToSection">HTTP Provider</a>
-          <a href="#page-pagination" class="nav-link" @click="scrollToSection">Page Pagination</a>
-          <a href="#cursor-pagination" class="nav-link" @click="scrollToSection">Cursor Pagination</a>
-          <a href="#sorting" class="nav-link" @click="scrollToSection">Sorting</a>
-          <a href="#custom-columns" class="nav-link" @click="scrollToSection">Custom Columns</a>
-          <a href="#row-actions" class="nav-link" @click="scrollToSection">Row Actions</a>
+          <a href="#introduction" :class="['nav-link', { active: activeSection === 'introduction' }]" @click="scrollToSection">Introduction</a>
+          <a href="#basic" :class="['nav-link', { active: activeSection === 'basic' }]" @click="scrollToSection">Basic Example</a>
+          <div class="nav-section">
+            <span class="nav-section-title">Data Providers</span>
+            <a href="#array-provider" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'array-provider' }]" @click="scrollToSection">Array Provider</a>
+            <a href="#http-provider" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'http-provider' }]" @click="scrollToSection">HTTP Provider</a>
+          </div>
+          <a href="#page-pagination" :class="['nav-link', { active: activeSection === 'page-pagination' }]" @click="scrollToSection">Page Pagination</a>
+          <a href="#cursor-pagination" :class="['nav-link', { active: activeSection === 'cursor-pagination' }]" @click="scrollToSection">Cursor Pagination</a>
+          <a href="#sorting" :class="['nav-link', { active: activeSection === 'sorting' }]" @click="scrollToSection">Sorting</a>
+          <a href="#custom-columns" :class="['nav-link', { active: activeSection === 'custom-columns' }]" @click="scrollToSection">Custom Columns</a>
+          <a href="#row-actions" :class="['nav-link', { active: activeSection === 'row-actions' }]" @click="scrollToSection">Row Actions</a>
         </nav>
       </aside>
 
@@ -75,6 +79,16 @@
             <BasicExample />
           </section>
 
+          <!-- Array Provider Section -->
+          <section id="array-provider" class="section">
+            <ArrayProviderExample />
+          </section>
+
+          <!-- HTTP Provider Section -->
+          <section id="http-provider" class="section">
+            <HTTPProviderExample />
+          </section>
+
           <!-- HTTP Example Section -->
           <section id="http" class="section">
             <HttpExample />
@@ -120,13 +134,18 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import BasicExample from './pages/BasicExample.vue'
 import HttpExample from './pages/HttpExample.vue'
+import ArrayProviderExample from './pages/ArrayProviderExample.vue'
+import HTTPProviderExample from './pages/HTTPProviderExample.vue'
 import PagePaginationExample from './pages/PagePaginationExample.vue'
 import CursorPaginationExample from './pages/CursorPaginationExample.vue'
 import SortingExample from './pages/SortingExample.vue'
 import CustomColumnsExample from './pages/CustomColumnsExample.vue'
 import RowActionsExample from './pages/RowActionsExample.vue'
+
+const activeSection = ref('introduction')
 
 const scrollToSection = (event: Event) => {
   event.preventDefault()
@@ -136,9 +155,43 @@ const scrollToSection = (event: Event) => {
     const element = document.getElementById(id)
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      activeSection.value = id
     }
   }
 }
+
+const updateActiveSection = () => {
+  const sections = [
+    'introduction',
+    'basic',
+    'array-provider',
+    'http-provider',
+    'page-pagination',
+    'cursor-pagination',
+    'sorting',
+    'custom-columns',
+    'row-actions'
+  ]
+
+  const scrollPosition = window.scrollY + 150
+
+  for (let i = sections.length - 1; i >= 0; i--) {
+    const section = document.getElementById(sections[i])
+    if (section && section.offsetTop <= scrollPosition) {
+      activeSection.value = sections[i]
+      break
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', updateActiveSection)
+  updateActiveSection()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', updateActiveSection)
+})
 </script>
 
 <style scoped>
@@ -194,6 +247,25 @@ const scrollToSection = (event: Event) => {
   padding: 1.5rem 0;
 }
 
+.nav-section {
+  margin: 0.5rem 0;
+}
+
+.nav-section-title {
+  display: block;
+  padding: 0.75rem 1.5rem 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #667eea;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nav-sub-link {
+  padding-left: 2.5rem !important;
+  font-size: 0.9rem;
+}
+
 .nav-link {
   display: block;
   padding: 0.75rem 1.5rem;
@@ -207,6 +279,13 @@ const scrollToSection = (event: Event) => {
   background: #edf2f7;
   color: #667eea;
   border-left-color: #667eea;
+}
+
+.nav-link.active {
+  background: #edf2f7;
+  color: #667eea;
+  border-left-color: #667eea;
+  font-weight: 600;
 }
 
 .main {
