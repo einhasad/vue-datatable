@@ -45,7 +45,8 @@
     "dev": "vite",
     "build": "vite build && npm run postbuild",
     "postbuild": "rm -rf dist/node_modules dist/vite.config.d.ts dist/vite.config.d.ts.map dist/__VLS_types.d.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepare": "npm run build"
   },
   "peerDependencies": {
     "vue": "^3.3.0"
