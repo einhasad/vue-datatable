@@ -9,7 +9,7 @@
             type="button"
             class="grid-load-more-button"
             :disabled="loading"
-            @click="onLoadMore"
+            @click="handleLoadMore"
           >
             <slot name="load-more-text">
               {{ loading ? 'Loading...' : 'Load More' }}
@@ -37,9 +37,9 @@
           :per-page="isPagePagination(pagination) ? pagination.perPage : 10"
           :total-count="isPagePagination(pagination) ? pagination.totalCount : 0"
           :pages="pageRange"
-          :on-page-change="onPageChange"
-          :on-previous="onPrevious"
-          :on-next="onNext"
+          :on-page-change="handlePageChange"
+          :on-previous="handlePrevious"
+          :on-next="handleNext"
         >
           <div
             v-if="showSummary"
@@ -59,7 +59,7 @@
                 type="button"
                 class="grid-pagination-button grid-pagination-previous"
                 :disabled="(isPagePagination(pagination) && pagination.currentPage <= 1) || loading"
-                @click="onPrevious"
+                @click="handlePrevious"
               >
                 <slot name="previous-text">
                   <span aria-hidden="true">&laquo;</span>
@@ -78,7 +78,7 @@
                 type="button"
                 class="grid-pagination-button grid-pagination-page-number"
                 :disabled="loading"
-                @click="onPageChange(page)"
+                @click="handlePageChange(page)"
               >
                 {{ page }}
               </button>
@@ -89,7 +89,7 @@
                 type="button"
                 class="grid-pagination-button grid-pagination-next"
                 :disabled="(isPagePagination(pagination) && pagination.currentPage >= pagination.pageCount) || loading"
-                @click="onNext"
+                @click="handleNext"
               >
                 <slot name="next-text">
                   <span aria-hidden="true">&raquo;</span>
@@ -163,7 +163,7 @@ const paginationSummary = computed(() => {
   return ''
 })
 
-function onLoadMore() {
+function handleLoadMore(): void {
   if (props.onLoadMore) {
     props.onLoadMore()
   } else {
@@ -171,7 +171,7 @@ function onLoadMore() {
   }
 }
 
-function onPageChange(page: number) {
+function handlePageChange(page: number): void {
   if (props.onPageChange) {
     props.onPageChange(page)
   } else {
@@ -179,20 +179,20 @@ function onPageChange(page: number) {
   }
 }
 
-function onPrevious() {
+function handlePrevious(): void {
   if (props.pagination && isPagePagination(props.pagination)) {
-    const prevPage = props.pagination.currentPage - 1
+    const prevPage: number = props.pagination.currentPage - 1
     if (prevPage >= 1) {
-      onPageChange(prevPage)
+      handlePageChange(prevPage)
     }
   }
 }
 
-function onNext() {
+function handleNext(): void {
   if (props.pagination && isPagePagination(props.pagination)) {
-    const nextPage = props.pagination.currentPage + 1
+    const nextPage: number = props.pagination.currentPage + 1
     if (nextPage <= props.pagination.pageCount) {
-      onPageChange(nextPage)
+      handlePageChange(nextPage)
     }
   }
 }

@@ -14,7 +14,7 @@ import { InMemoryStateProvider } from '../state/InMemoryStateProvider'
 /**
  * Configuration for ArrayDataProvider
  */
-export interface ArrayDataProviderConfig<T = any> extends DataProviderConfig {
+export interface ArrayDataProviderConfig<T = unknown> extends DataProviderConfig {
   items: T[]
   pageSize?: number
   stateProvider?: StateProvider
@@ -25,7 +25,7 @@ export interface ArrayDataProviderConfig<T = any> extends DataProviderConfig {
  * Client-side data provider for working with in-memory arrays
  * Uses StateProvider for state management (filters, sorting, pagination)
  */
-export class ArrayDataProvider<T = any> implements DataProvider<T> {
+export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
   public config: ArrayDataProviderConfig<T>
   private stateProvider: StateProvider
   private loading = false
@@ -55,7 +55,7 @@ export class ArrayDataProvider<T = any> implements DataProvider<T> {
     Object.entries(filters).forEach(([key, value]) => {
       if (value && value.trim()) {
         filtered = filtered.filter(item => {
-          const itemValue = (item as any)[key]
+          const itemValue = (item as Record<string, unknown>)[key]
           if (typeof itemValue === 'string') {
             return itemValue.toLowerCase().includes(value.toLowerCase())
           } else if (typeof itemValue === 'number') {
@@ -79,8 +79,8 @@ export class ArrayDataProvider<T = any> implements DataProvider<T> {
     const { field, order } = sortState
 
     return [...items].sort((a, b) => {
-      const aValue = (a as any)[field]
-      const bValue = (b as any)[field]
+      const aValue = (a as Record<string, unknown>)[field]
+      const bValue = (b as Record<string, unknown>)[field]
 
       if (aValue === bValue) return 0
 
@@ -224,7 +224,7 @@ export class ArrayDataProvider<T = any> implements DataProvider<T> {
         pagination
       }
     } else {
-      return this.setPage!(this.currentPage + 1)
+      return this.setPage(this.currentPage + 1)
     }
   }
 

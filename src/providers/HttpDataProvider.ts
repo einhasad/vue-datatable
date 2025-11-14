@@ -18,7 +18,7 @@ import { InMemoryStateProvider } from '../state/InMemoryStateProvider'
 /**
  * HTTP client function type
  */
-export type HttpClient = (url: string, options?: RequestInit) => Promise<any>
+export type HttpClient = (url: string, options?: RequestInit) => Promise<unknown>
 
 /**
  * Configuration for HttpDataProvider
@@ -27,10 +27,10 @@ export interface HttpDataProviderConfig extends DataProviderConfig {
   url: string
   pageSize?: number
   httpClient?: HttpClient
-  responseAdapter?: ResponseAdapter
+  responseAdapter?: ResponseAdapter<unknown>
   headers?: Record<string, string>
   stateProvider?: StateProvider
-  router?: any // For backward compatibility - creates QueryParamsStateProvider if provided
+  router?: unknown // For backward compatibility - creates QueryParamsStateProvider if provided
 }
 
 /**
@@ -38,7 +38,7 @@ export interface HttpDataProviderConfig extends DataProviderConfig {
  * Framework-agnostic HTTP data provider with configurable HTTP client and response adapter
  * Uses StateProvider for state management (filters, sorting, pagination)
  */
-export class HttpDataProvider<T = any> implements DataProvider<T> {
+export class HttpDataProvider<T = unknown> implements DataProvider<T> {
   public config: HttpDataProviderConfig
   private stateProvider: StateProvider
   private loading: Ref<boolean>
@@ -73,14 +73,14 @@ export class HttpDataProvider<T = any> implements DataProvider<T> {
     this.items = ref([]) as Ref<T[]>
     this.paginationData = ref<PaginationData | null>(null)
 
-    this.httpClient = config.httpClient || this.defaultHttpClient
-    this.responseAdapter = config.responseAdapter || new DefaultResponseAdapter<T>()
+    this.httpClient = config.httpClient || this.defaultHttpClient.bind(this)
+    this.responseAdapter = (config.responseAdapter as ResponseAdapter<T>) || new DefaultResponseAdapter<T>()
   }
 
   /**
    * Default HTTP client using fetch API
    */
-  private async defaultHttpClient(url: string, options?: RequestInit): Promise<any> {
+  private async defaultHttpClient(url: string, options?: RequestInit): Promise<unknown> {
     const headers = {
       'Content-Type': 'application/json',
       ...this.config.headers,
@@ -221,7 +221,7 @@ export class HttpDataProvider<T = any> implements DataProvider<T> {
         cursor: cursorData.nextCursor
       })
     } else {
-      return this.setPage!(this.currentPage + 1)
+      return this.setPage(this.currentPage + 1)
     }
   }
 

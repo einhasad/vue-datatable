@@ -73,7 +73,7 @@ export interface LoadOptions {
 /**
  * Result of load operation
  */
-export interface LoadResult<T = any> {
+export interface LoadResult<T = unknown> {
   items: T[]
   pagination?: PaginationData
 }
@@ -92,7 +92,7 @@ export interface SortState {
  * Designed for extensibility (DSLElasticDataProvider, etc.)
  * State management is delegated to StateProvider
  */
-export interface DataProvider<T = any> {
+export interface DataProvider<T = unknown> {
   config: DataProviderConfig
 
   // Data loading
@@ -118,19 +118,19 @@ export interface DataProvider<T = any> {
 /**
  * Column definition for grid
  */
-export interface Column {
+export interface Column<T = unknown> {
   key: string
-  label?: string | Function
+  label?: string | ((models: T[]) => string)
   labelComponent?: ComponentOptions
-  value?: (_model: any, _key: number) => string
-  show?: (_model: any) => boolean
+  value?: (model: T, key: number) => string
+  show?: (model: T) => boolean
   showColumn?: boolean | (() => boolean)
-  component?: (_model: any, _key: number) => ComponentOptions
-  footer?: Function
-  footerOptions?: Function
-  action?: (_model: any) => void
+  component?: (model: T, key: number) => ComponentOptions
+  footer?: (models: T[]) => string
+  footerOptions?: (models: T[]) => Record<string, unknown>
+  action?: (model: T) => void
   sort?: string
-  options?: Function
+  options?: (model: T) => Record<string, unknown>
   filter?: Filter
 }
 
@@ -141,7 +141,7 @@ export interface Column {
 export interface Filter {
   name: string
   type?: string
-  [key: string]: any
+  [key: string]: unknown
 }
 
 /**
@@ -150,97 +150,107 @@ export interface Filter {
 export interface RowOptions {
   class?: string | string[] | Record<string, boolean>
   style?: string | Record<string, string>
-  [key: string]: any
+  [key: string]: unknown
 }
 
 /**
  * Response adapter interface for different API formats
  */
-export interface ResponseAdapter<T = any> {
+export interface ResponseAdapter<T = unknown> {
   /**
    * Extract items from API response
    */
-  extractItems(response: any): T[]
+  extractItems(response: unknown): T[]
 
   /**
    * Extract pagination data from API response
    */
-  extractPagination(response: any): PaginationData | undefined
+  extractPagination(response: unknown): PaginationData | undefined
 
   /**
    * Check if response indicates success
    */
-  isSuccess?(response: any): boolean
+  isSuccess?(response: unknown): boolean
 
   /**
    * Extract error message from response
    */
-  getErrorMessage?(response: any): string | undefined
+  getErrorMessage?(response: unknown): string | undefined
 }
 
 /**
  * Default response adapter (for current AlmaWord API format)
  */
-export class DefaultResponseAdapter<T = any> implements ResponseAdapter<T> {
-  extractItems(response: any): T[] {
-    return response.items || response.data || []
+export class DefaultResponseAdapter<T = unknown> implements ResponseAdapter<T> {
+  extractItems(response: unknown): T[] {
+    const resp = response as Record<string, unknown>
+    return (resp.items || resp.data || []) as T[]
   }
 
-  extractPagination(response: any): PaginationData | undefined {
-    if (response.nextCursor !== undefined) {
+  extractPagination(response: unknown): PaginationData | undefined {
+    const resp = response as Record<string, unknown>
+    if (resp.nextCursor !== undefined) {
       return {
-        nextCursor: response.nextCursor,
-        hasMore: response.hasMore || false
+        nextCursor: resp.nextCursor as string,
+        hasMore: (resp.hasMore as boolean) || false
       }
     }
 
-    if (response.pagination) {
+    if (resp.pagination) {
+      const p = resp.pagination as Record<string, unknown>
       return {
-        currentPage: response.pagination.currentPage || 1,
-        pageCount: response.pagination.pageCount || 1,
-        perPage: response.pagination.perPage || 10,
-        totalCount: response.pagination.totalCount || 0
+        currentPage: (p.currentPage as number) || 1,
+        pageCount: (p.pageCount as number) || 1,
+        perPage: (p.perPage as number) || 10,
+        totalCount: (p.totalCount as number) || 0
       }
     }
 
     return undefined
   }
 
-  isSuccess(response: any): boolean {
-    return response.code === undefined || response.code === 200
+  isSuccess(response: unknown): boolean {
+    const resp = response as Record<string, unknown>
+    return resp.code === undefined || resp.code === 200
   }
 
-  getErrorMessage(response: any): string | undefined {
-    return response.message
+  getErrorMessage(response: unknown): string | undefined {
+    const resp = response as Record<string, unknown>
+    return resp.message as string | undefined
   }
 }
 
 /**
  * Old-grid response adapter (for legacy API format with _meta)
  */
-export class LegacyResponseAdapter<T = any> implements ResponseAdapter<T> {
-  extractItems(response: any): T[] {
-    return response.result || []
+export class LegacyResponseAdapter<T = unknown> implements ResponseAdapter<T> {
+  extractItems(response: unknown): T[] {
+    const resp = response as Record<string, unknown>
+    return (resp.result || []) as T[]
   }
 
-  extractPagination(response: any): PaginationData | undefined {
-    if (response._meta?.pagination) {
-      const p = response._meta.pagination
+  extractPagination(response: unknown): PaginationData | undefined {
+    const resp = response as Record<string, unknown>
+    const meta = resp._meta as Record<string, unknown> | undefined
+    if (meta?.pagination) {
+      const p = meta.pagination as Record<string, unknown>
       return {
-        currentPage: p.currentPage,
-        pageCount: p.pageCount,
-        perPage: p.perPage,
-        totalCount: p.totalCount
+        currentPage: p.currentPage as number,
+        pageCount: p.pageCount as number,
+        perPage: p.perPage as number,
+        totalCount: p.totalCount as number
       }
     }
     return undefined
   }
 
-  isSuccess(response: any): boolean {
-    return response.code === 200
+  isSuccess(response: unknown): boolean {
+    const resp = response as Record<string, unknown>
+    return resp.code === 200
   }
 
-  getErrorMessage(response: any): string | undefined {
-    return response.message
+  getErrorMessage(response: unknown): string | undefined {
+    const resp = response as Record<string, unknown>
+    return resp.message as string | undefined
   }
 }

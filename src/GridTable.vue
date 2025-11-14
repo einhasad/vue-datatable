@@ -138,14 +138,14 @@ import {
 import DynamicComponent from './DynamicComponent.vue'
 
 const props = withDefaults(defineProps<{
-  columns: Column[]
-  items: any[]
+  columns: Column<unknown>[]
+  items: unknown[]
   loading?: boolean
   showLoader?: boolean
   showFooter?: boolean
   emptyText?: string
-  rowOptions?: (model: any) => RowOptions
-  onRowClick?: (model: any) => void
+  rowOptions?: (model: unknown) => RowOptions
+  onRowClick?: (model: unknown) => void
   onSort?: (field: string, order: 'asc' | 'desc') => void
   sortState?: SortState | null
   rowKeyField?: string
@@ -165,9 +165,12 @@ const hasFooter = computed(() => {
   return visibleColumns.value.some(column => column.footer)
 })
 
-function getRowKey(item: any, index: number): string | number {
-  if (props.rowKeyField && item[props.rowKeyField] !== undefined) {
-    return item[props.rowKeyField]
+function getRowKey(item: unknown, index: number): string | number {
+  if (props.rowKeyField && typeof item === 'object' && item !== null) {
+    const key = (item as Record<string, unknown>)[props.rowKeyField]
+    if (key !== undefined) {
+      return key as string | number
+    }
   }
   return index
 }

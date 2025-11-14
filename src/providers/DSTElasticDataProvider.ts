@@ -16,11 +16,11 @@ import {useErrorMessage} from "@src/spa/utils/useMessage";
  * Elasticsearch DSL query structure
  */
 export interface ElasticQuery {
-  query?: any
-  post_filter?: any
-  sort?: any[]
-  aggs?: Record<string, any>
-  search_after?: any[]
+  query?: unknown
+  post_filter?: unknown
+  sort?: unknown[]
+  aggs?: Record<string, unknown>
+  search_after?: unknown[]
   size?: number
   _source?: string[] | boolean
   track_total_hits?: boolean
@@ -29,7 +29,7 @@ export interface ElasticQuery {
 /**
  * Elasticsearch response structure
  */
-export interface ElasticResponse<T = any> {
+export interface ElasticResponse<T = unknown> {
   hits: {
     total: {
       value: number
@@ -38,10 +38,10 @@ export interface ElasticResponse<T = any> {
     hits: Array<{
       _id: string
       _source: T
-      sort?: any[]
+      sort?: unknown[]
     }>
   }
-  aggregations?: Record<string, any>
+  aggregations?: Record<string, unknown>
 }
 
 /**
@@ -51,9 +51,9 @@ export interface DSTElasticDataProviderConfig extends DataProviderConfig {
   url: string
   index?: string
   pageSize?: number
-  defaultQuery?: any
-  defaultSort?: any[]
-  aggregations?: Record<string, any>
+  defaultQuery?: unknown
+  defaultSort?: unknown[]
+  aggregations?: Record<string, unknown>
   sourceFields?: string[]
   trackTotalHits?: boolean
 }
@@ -73,19 +73,19 @@ export interface DSTElasticDataProviderConfig extends DataProviderConfig {
  * })
  * ```
  */
-export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
+export class DSTElasticDataProvider<T = unknown> implements DataProvider<T> {
   public config: DSTElasticDataProviderConfig
-  public router?: any
+  public router?: unknown
   private loading: Ref<boolean>
   private items: Ref<T[]>
   public paginationData: Ref<CursorPaginationData | null>
   private sortState: SortState | null = null
-  private currentQuery: any = {}
-  private currentPostFilter: any = null
-  private lastSortValues: any[] | null = null
+  private currentQuery: unknown = {}
+  private currentPostFilter: unknown = null
+  private lastSortValues: unknown[] | null = null
   private totalHits = 0
 
-  constructor(config: DSTElasticDataProviderConfig, router?: any) {
+  constructor(config: DSTElasticDataProviderConfig, router?: unknown) {
     this.config = {
       pageSize: 20,
       trackTotalHits: true,
@@ -103,7 +103,7 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
     }
 
     if (config.defaultSort && config.defaultSort.length > 0) {
-      const firstSort = config.defaultSort[0]
+      const firstSort = config.defaultSort[0] as Record<string, unknown>
       const field = Object.keys(firstSort)[0]
       const order = firstSort[field] as 'asc' | 'desc'
       this.sortState = { field, order }
@@ -144,10 +144,10 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
       if (this.currentPostFilter) {
         // Wrap each aggregation in a filter to apply post_filter conditions
         // EXCEPT for global aggregations (they should remain unfiltered)
-        const filteredAggs: Record<string, any> = {}
+        const filteredAggs: Record<string, unknown> = {}
         for (const [key, agg] of Object.entries(this.config.aggregations)) {
           // Check if this is a global aggregation
-          if (agg.global !== undefined) {
+          if ((agg as Record<string, unknown>).global !== undefined) {
             // Keep global aggregations as-is (they ignore query filters)
             filteredAggs[key] = agg
           } else {
@@ -182,8 +182,8 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
   /**
    * Build sort array for Elasticsearch
    */
-  private buildSort(options: LoadOptions = {}): any[] {
-    const sort: any[] = []
+  private buildSort(options: LoadOptions = {}): unknown[] {
+    const sort: unknown[] = []
 
     // Add explicit sort from options
     if (options.sortField && options.sortOrder) {
@@ -199,7 +199,7 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
     }
 
     // Always include _id as tiebreaker for cursor pagination
-    if (sort.length > 0 && !sort.some(s => '_id' in s)) {
+    if (sort.length > 0 && !sort.some(s => '_id' in (s as Record<string, unknown>))) {
       sort.push({ _id: 'desc' })
     }
 
@@ -268,43 +268,43 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
   /**
    * Set Elasticsearch query
    */
-  setElasticQuery(query: any): void {
+  setElasticQuery(query: unknown): void {
     this.currentQuery = query
   }
 
   /**
    * Get current Elasticsearch query
    */
-  getElasticQuery(): any {
+  getElasticQuery(): unknown {
     return this.currentQuery
   }
 
   /**
    * Set Elasticsearch post_filter (filters hits without affecting aggregations)
    */
-  setPostFilter(postFilter: any): void {
+  setPostFilter(postFilter: unknown): void {
     this.currentPostFilter = postFilter
   }
 
   /**
    * Get current Elasticsearch post_filter
    */
-  getPostFilter(): any {
+  getPostFilter(): unknown {
     return this.currentPostFilter
   }
 
   /**
    * Set aggregations
    */
-  setAggregations(aggs: Record<string, any>): void {
+  setAggregations(aggs: Record<string, unknown>): void {
     this.config.aggregations = aggs
   }
 
   /**
    * Get aggregation results from last response
    */
-  getAggregations(): Record<string, any> | undefined {
-    return (this.paginationData.value as any)?.aggregations
+  getAggregations(): Record<string, unknown> | undefined {
+    return (this.paginationData.value as Record<string, unknown> | null)?.aggregations as Record<string, unknown> | undefined
   }
 
   /**
@@ -324,7 +324,7 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
         .catch(useErrorMessage)
 
     // Unwrap backend response if it's wrapped in result
-    const data = (response.data as any).result || response.data
+    const data = (response.data as Record<string, unknown>).result as ElasticResponse<T> || response.data
 
     // Extract items
     const items = data.hits.hits.map(hit => hit._source)
@@ -363,7 +363,7 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
 
     // Store aggregations if present
     if (data.aggregations) {
-      (this.paginationData.value as any).aggregations = data.aggregations
+      (this.paginationData.value as Record<string, unknown>).aggregations = data.aggregations
     }
 
     this.loading.value = false
@@ -437,7 +437,7 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
   /**
    * Build match query for text search
    */
-  static buildMatchQuery(field: string, value: string): any {
+  static buildMatchQuery(field: string, value: string): unknown {
     return {
       match: {
         [field]: value
@@ -448,7 +448,7 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
   /**
    * Build multi-match query for searching across multiple fields
    */
-  static buildMultiMatchQuery(fields: string[], value: string): any {
+  static buildMultiMatchQuery(fields: string[], value: string): unknown {
     return {
       multi_match: {
         query: value,
@@ -461,11 +461,11 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
    * Build bool query with must/should/must_not
    */
   static buildBoolQuery(options: {
-    must?: any[]
-    should?: any[]
-    must_not?: any[]
-    filter?: any[]
-  }): any {
+    must?: unknown[]
+    should?: unknown[]
+    must_not?: unknown[]
+    filter?: unknown[]
+  }): unknown {
     return {
       bool: options
     }
@@ -474,7 +474,7 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
   /**
    * Build term query for exact match
    */
-  static buildTermQuery(field: string, value: any): any {
+  static buildTermQuery(field: string, value: unknown): unknown {
     return {
       term: {
         [field]: value
@@ -487,8 +487,8 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
    */
   static buildRangeQuery(
     field: string,
-    options: { gte?: any; lte?: any; gt?: any; lt?: any }
-  ): any {
+    options: { gte?: unknown; lte?: unknown; gt?: unknown; lt?: unknown }
+  ): unknown {
     return {
       range: {
         [field]: options
@@ -499,7 +499,7 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
   /**
    * Build terms aggregation
    */
-  static buildTermsAggregation(field: string, size = 10): any {
+  static buildTermsAggregation(field: string, size: number = 10): unknown {
     return {
       terms: {
         field,
@@ -514,7 +514,7 @@ export class DSTElasticDataProvider<T = any> implements DataProvider<T> {
   static buildDateHistogramAggregation(
     field: string,
     interval: string
-  ): any {
+  ): unknown {
     return {
       date_histogram: {
         field,

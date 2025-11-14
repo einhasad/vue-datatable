@@ -5,7 +5,7 @@ import type { SortState } from '../types'
  * Configuration for HashStateProvider
  */
 export interface HashStateProviderConfig {
-  router: any
+  router: unknown
   prefix?: string
 }
 
@@ -17,7 +17,7 @@ export interface HashStateProviderConfig {
  * Default prefix: 'search'
  */
 export class HashStateProvider implements StateProvider {
-  private router: any
+  private router: unknown
   private prefix: string
 
   constructor(config: HashStateProviderConfig) {

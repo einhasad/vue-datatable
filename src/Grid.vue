@@ -107,10 +107,10 @@ import GridTable from './GridTable.vue'
 import GridPagination from './GridPagination.vue'
 
 const props = withDefaults(defineProps<{
-  dataProvider: DataProvider
-  columns: Column[]
-  rowOptions?: (model: any) => RowOptions
-  onRowClick?: (model: any) => void
+  dataProvider: DataProvider<unknown>
+  columns: Column<unknown>[]
+  rowOptions?: (model: unknown) => RowOptions
+  onRowClick?: (model: unknown) => void
   showLoader?: boolean
   showFooter?: boolean
   emptyText?: string
@@ -131,11 +131,11 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  loaded: [items: any[]]
+  loaded: [items: unknown[]]
   error: [error: Error]
 }>()
 
-const items = ref<any[]>([])
+const items = ref<unknown[]>([])
 const loading = ref(false)
 const pagination = ref<PaginationData | null>(null)
 
