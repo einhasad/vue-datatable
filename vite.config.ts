@@ -11,13 +11,13 @@ export default defineConfig({
       insertTypesEntry: true,
       copyDtsFiles: false,
       outDir: 'dist',
-      exclude: ['providers/DSTElasticDataProvider.ts', 'doc/**', 'vite.config.ts', 'node_modules/**']
+      exclude: ['src/providers/DSTElasticDataProvider.ts', 'doc/**', 'vite.config.ts', 'node_modules/**']
     }),
     {
       name: 'copy-styles',
       closeBundle() {
         copyFileSync(
-          resolve(__dirname, 'styles.css'),
+          resolve(__dirname, 'src/styles.css'),
           resolve(__dirname, 'dist/style.css')
         )
       }
@@ -25,7 +25,7 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: resolve(__dirname, 'index.ts'),
+      entry: resolve(__dirname, 'src/index.ts'),
       name: 'Grid',
       fileName: (format) => format === 'es' ? 'grid.js' : 'grid.umd.cjs',
       formats: ['es', 'umd']
@@ -57,7 +57,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, './')
+      '@': resolve(__dirname, './src')
     }
   }
 })

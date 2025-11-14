@@ -14,8 +14,8 @@ import {
   buildAttributes,
   getPageRange,
   getPaginationSummary
-} from '../utils'
-import type { Column } from '../types'
+} from '../src/utils'
+import type { Column } from '../src/types'
 
 describe('utils', () => {
   describe('getCellValue', () => {

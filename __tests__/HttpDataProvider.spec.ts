@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'
-import { HttpDataProvider } from '../providers/HttpDataProvider'
-import type { ResponseAdapter } from '../types'
+import { HttpDataProvider } from '../src/providers/HttpDataProvider'
+import type { ResponseAdapter } from '../src/types'
 
 describe('HttpDataProvider', () => {
   const mockHttpClient = vi.fn()
