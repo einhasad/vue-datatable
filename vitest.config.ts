@@ -14,6 +14,7 @@ export default mergeConfig(
           'node_modules/',
           'dist/',
           'doc/',
+          'examples/',
           '*.config.ts',
           '*.config.js',
           'providers/DSTElasticDataProvider.ts', // Not exported
