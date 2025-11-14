@@ -16,6 +16,18 @@ A flexible, configurable grid component library for Vue 3 applications with supp
 - ✅ **Response Adapters**: Support for different API response formats
 - ✅ **Extensible**: Easy to create custom data providers (e.g., DSLElasticDataProvider)
 
+## 📚 Documentation & Examples
+
+**[View Live Examples & Documentation](https://einhasad.github.io/vue-datatable/)**
+
+Check out interactive examples demonstrating all features:
+- Basic usage with ArrayDataProvider
+- Page-based pagination
+- Cursor-based pagination (Load More)
+- Column sorting
+- Custom cell rendering
+- Row actions and styling
+
 ## Installation
 
 Install via npm:
