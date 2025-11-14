@@ -28,7 +28,8 @@ describe('HttpDataProvider', () => {
         pagination: true,
         paginationMode: 'cursor',
         pageSize: 2,
-        httpClient: mockHttpClient
+        httpClient: mockHttpClient,
+        router: mockRouter
       })
     })
 

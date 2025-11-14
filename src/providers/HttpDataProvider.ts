@@ -7,10 +7,13 @@ import type {
   PaginationData,
   CursorPaginationData,
   PagePaginationData,
-  SortState,
-  ResponseAdapter
+  ResponseAdapter,
+  SortState
 } from '../types'
 import { DefaultResponseAdapter } from '../types'
+import type { StateProvider } from '../state/StateProvider'
+import { QueryParamsStateProvider } from '../state/QueryParamsStateProvider'
+import { InMemoryStateProvider } from '../state/InMemoryStateProvider'
 
 /**
  * HTTP client function type
@@ -26,31 +29,46 @@ export interface HttpDataProviderConfig extends DataProviderConfig {
   httpClient?: HttpClient
   responseAdapter?: ResponseAdapter
   headers?: Record<string, string>
+  stateProvider?: StateProvider
+  router?: any // For backward compatibility - creates QueryParamsStateProvider if provided
 }
 
 /**
  * HttpDataProvider implementation supporting both cursor and page-based pagination
  * Framework-agnostic HTTP data provider with configurable HTTP client and response adapter
+ * Uses StateProvider for state management (filters, sorting, pagination)
  */
 export class HttpDataProvider<T = any> implements DataProvider<T> {
   public config: HttpDataProviderConfig
-  public router?: any
+  private stateProvider: StateProvider
   private loading: Ref<boolean>
   private items: Ref<T[]>
   public paginationData: Ref<PaginationData | null>
-  private sortState: SortState | null = null
   private httpClient: HttpClient
   private responseAdapter: ResponseAdapter<T>
   private currentPage = 1
 
-  constructor(config: HttpDataProviderConfig, router?: any) {
+  constructor(config: HttpDataProviderConfig) {
     this.config = {
       pageSize: 20,
       ...config,
-      paginationMode: config.paginationMode || 'cursor',
-      searchPrefix: config.searchPrefix || 'search'
+      paginationMode: config.paginationMode || 'cursor'
     }
-    this.router = router
+
+    // Initialize StateProvider
+    if (config.stateProvider) {
+      this.stateProvider = config.stateProvider
+    } else if (config.router) {
+      // Backward compatibility: create QueryParamsStateProvider if router is provided
+      this.stateProvider = new QueryParamsStateProvider({
+        router: config.router,
+        prefix: 'search'
+      })
+    } else {
+      // Default to InMemoryStateProvider for backward compatibility
+      this.stateProvider = new InMemoryStateProvider()
+    }
+
     this.loading = ref(false)
     this.items = ref([]) as Ref<T[]>
     this.paginationData = ref<PaginationData | null>(null)
@@ -82,134 +100,30 @@ export class HttpDataProvider<T = any> implements DataProvider<T> {
   }
 
   /**
-   * Query parameter management with search prefix isolation
-   */
-  setQueryParam(key: string, value: string): void {
-    if (!this.router) {
-      console.warn('Router not provided. Query parameters will not be persisted to URL.')
-      return
-    }
-
-    const paramName = this.normalizeParamName(key)
-    const currentQuery = { ...this.router.currentRoute.value.query }
-
-    if (value === '' || value === null || value === undefined) {
-      delete currentQuery[paramName]
-    } else {
-      currentQuery[paramName] = value
-    }
-
-    this.router.replace({
-      query: currentQuery,
-      hash: this.router.currentRoute.value.hash
-    })
-  }
-
-  clearQueryParam(key: string): void {
-    this.setQueryParam(key, '')
-  }
-
-  getRawQueryParam(key: string): string | null {
-    if (!this.router) {
-      return null
-    }
-
-    const paramName = this.normalizeParamName(key)
-    const value = this.router.currentRoute.value.query[paramName]
-    return Array.isArray(value) ? (value[0] || null) : (value || null)
-  }
-
-  /**
-   * Sort management
-   */
-  setSort(field: string, order: 'asc' | 'desc'): void {
-    this.sortState = { field, order }
-    const sortValue = order === 'desc' ? `-${field}` : field
-    this.setQueryParam('sort', sortValue)
-  }
-
-  getSort(): SortState | null {
-    if (this.router) {
-      const urlSort = this.getRawQueryParam('sort')
-      if (urlSort) {
-        if (urlSort.startsWith('-')) {
-          return {
-            field: urlSort.substring(1),
-            order: 'desc'
-          }
-        } else {
-          return {
-            field: urlSort,
-            order: 'asc'
-          }
-        }
-      }
-    }
-
-    return this.sortState
-  }
-
-  /**
-   * Normalize parameter name with search prefix
-   */
-  private normalizeParamName(param: string): string {
-    if (this.config.searchPrefix) {
-      return `${this.config.searchPrefix}-${param}`
-    }
-    return param
-  }
-
-  /**
-   * Get search parameters from router
-   */
-  private getSearchParams(): Record<string, string> {
-    if (!this.router || !this.config.searchPrefix) {
-      return {}
-    }
-
-    const searchParams: Record<string, string> = {}
-    const query = this.router.currentRoute.value.query
-
-    Object.keys(query).forEach(key => {
-      if (key.startsWith(`${this.config.searchPrefix!}-`)) {
-        const originalKey = key.substring(this.config.searchPrefix!.length + 1)
-        const value = query[key]
-        searchParams[originalKey] = Array.isArray(value) ? (value[0] || '') : (value || '')
-      }
-    })
-
-    return searchParams
-  }
-
-  /**
-   * Build URL with query parameters
+   * Build URL with query parameters from state
    */
   private buildUrl(options: LoadOptions = {}): string {
-    const searchParams = { ...this.getSearchParams(), ...options.searchParams }
+    const filters = { ...this.stateProvider.getAllFilters(), ...options.searchParams }
     const params = new URLSearchParams()
 
-    Object.entries(searchParams).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && value !== '' && key !== 'sort') {
+    // Add filter parameters
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && value !== '') {
         params.append(key, value)
       }
     })
 
+    // Handle sort
     let sortField = options.sortField
     let sortOrder = options.sortOrder
 
     if (sortField) {
-      const sortValue = sortOrder === 'desc' ? `-${sortField}` : sortField
-      this.setQueryParam('sort', sortValue)
-    } else if (this.router) {
-      const urlSort = this.getRawQueryParam('sort')
-      if (urlSort) {
-        if (urlSort.startsWith('-')) {
-          sortField = urlSort.substring(1)
-          sortOrder = 'desc'
-        } else {
-          sortField = urlSort
-          sortOrder = 'asc'
-        }
+      this.stateProvider.setSort(sortField, sortOrder!)
+    } else {
+      const sortState = this.stateProvider.getSort()
+      if (sortState) {
+        sortField = sortState.field
+        sortOrder = sortState.order
       }
     }
 
@@ -218,6 +132,7 @@ export class HttpDataProvider<T = any> implements DataProvider<T> {
       params.append('sort', sortValue)
     }
 
+    // Handle pagination
     if (this.config.pagination) {
       if (this.config.paginationMode === 'cursor') {
         if (options.cursor) {
@@ -242,6 +157,13 @@ export class HttpDataProvider<T = any> implements DataProvider<T> {
     this.loading.value = true
 
     try {
+      // Update state with search params
+      if (options.searchParams) {
+        Object.entries(options.searchParams).forEach(([key, value]) => {
+          this.stateProvider.setFilter(key, value)
+        })
+      }
+
       const url = this.buildUrl(options)
       const response = await this.httpClient(url)
 
@@ -265,6 +187,7 @@ export class HttpDataProvider<T = any> implements DataProvider<T> {
         this.items.value = items
         if (options.page) {
           this.currentPage = options.page
+          this.stateProvider.setPage(options.page)
         }
       }
 
@@ -309,6 +232,8 @@ export class HttpDataProvider<T = any> implements DataProvider<T> {
     this.items.value = []
     this.paginationData.value = null
     this.currentPage = 1
+    this.stateProvider.clearPage()
+    this.stateProvider.clearCursor()
     return this.load()
   }
 
@@ -368,5 +293,19 @@ export class HttpDataProvider<T = any> implements DataProvider<T> {
    */
   getCurrentPagination(): PaginationData | null {
     return this.paginationData.value
+  }
+
+  /**
+   * Set sort (delegates to StateProvider)
+   */
+  setSort(field: string, order: 'asc' | 'desc'): void {
+    this.stateProvider.setSort(field, order)
+  }
+
+  /**
+   * Get sort (delegates to StateProvider)
+   */
+  getSort(): SortState | null {
+    return this.stateProvider.getSort()
   }
 }

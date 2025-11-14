@@ -55,7 +55,6 @@ export function isPagePagination(data: PaginationData): data is PagePaginationDa
 export interface DataProviderConfig {
   pagination: boolean
   paginationMode: PaginationMode
-  searchPrefix?: string
   url?: string
 }
 
@@ -91,26 +90,21 @@ export interface SortState {
  * Core DataProvider interface
  * Supports both cursor and page-based pagination
  * Designed for extensibility (DSLElasticDataProvider, etc.)
+ * State management is delegated to StateProvider
  */
 export interface DataProvider<T = any> {
   config: DataProviderConfig
-  router?: any
 
   // Data loading
   load(options?: LoadOptions): Promise<LoadResult<T>>
   loadMore(): Promise<LoadResult<T>>
   refresh(): Promise<LoadResult<T>>
 
-  // Query parameter management
-  setQueryParam(key: string, value: string): void
-  getRawQueryParam(key: string): string | null
-  clearQueryParam(key: string): void
-
-  // Sort management
+  // Sort management (delegates to StateProvider)
   setSort(field: string, order: 'asc' | 'desc'): void
   getSort(): SortState | null
 
-  // State management
+  // State queries
   isLoading(): boolean
   hasMore(): boolean
   getCurrentItems(): T[]

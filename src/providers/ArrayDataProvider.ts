@@ -8,6 +8,8 @@ import type {
   PagePaginationData,
   SortState
 } from '../types'
+import type { StateProvider } from '../state/StateProvider'
+import { InMemoryStateProvider } from '../state/InMemoryStateProvider'
 
 /**
  * Configuration for ArrayDataProvider
@@ -15,19 +17,20 @@ import type {
 export interface ArrayDataProviderConfig<T = any> extends DataProviderConfig {
   items: T[]
   pageSize?: number
+  stateProvider?: StateProvider
 }
 
 /**
  * ArrayDataProvider implementation supporting both cursor and page-based pagination
  * Client-side data provider for working with in-memory arrays
+ * Uses StateProvider for state management (filters, sorting, pagination)
  */
 export class ArrayDataProvider<T = any> implements DataProvider<T> {
   public config: ArrayDataProviderConfig<T>
+  private stateProvider: StateProvider
   private loading = false
   private allItems: T[]
   private displayedItems: T[] = []
-  private queryParams: Record<string, string> = {}
-  private sortState: SortState | null = null
   private currentPage = 1
 
   constructor(config: ArrayDataProviderConfig<T>) {
@@ -37,45 +40,19 @@ export class ArrayDataProvider<T = any> implements DataProvider<T> {
       paginationMode: config.paginationMode || 'cursor'
     }
     this.allItems = [...config.items]
+
+    // Initialize StateProvider (default to InMemoryStateProvider)
+    this.stateProvider = config.stateProvider || new InMemoryStateProvider()
   }
 
   /**
-   * Query parameter management (in-memory simulation)
-   */
-  setQueryParam(key: string, value: string): void {
-    if (value === '' || value === null || value === undefined) {
-      delete this.queryParams[key]
-    } else {
-      this.queryParams[key] = value
-    }
-  }
-
-  clearQueryParam(key: string): void {
-    delete this.queryParams[key]
-  }
-
-  getRawQueryParam(key: string): string | null {
-    return this.queryParams[key] || null
-  }
-
-  /**
-   * Sort management
-   */
-  setSort(field: string, order: 'asc' | 'desc'): void {
-    this.sortState = { field, order }
-  }
-
-  getSort(): SortState | null {
-    return this.sortState
-  }
-
-  /**
-   * Filter items based on query parameters
+   * Filter items based on state
    */
   private filterItems(): T[] {
     let filtered = [...this.allItems]
+    const filters = this.stateProvider.getAllFilters()
 
-    Object.entries(this.queryParams).forEach(([key, value]) => {
+    Object.entries(filters).forEach(([key, value]) => {
       if (value && value.trim()) {
         filtered = filtered.filter(item => {
           const itemValue = (item as any)[key]
@@ -93,12 +70,13 @@ export class ArrayDataProvider<T = any> implements DataProvider<T> {
   }
 
   /**
-   * Sort items based on sort state
+   * Sort items based on state
    */
   private sortItems(items: T[]): T[] {
-    if (!this.sortState) return items
+    const sortState = this.stateProvider.getSort()
+    if (!sortState) return items
 
-    const { field, order } = this.sortState
+    const { field, order } = sortState
 
     return [...items].sort((a, b) => {
       const aValue = (a as any)[field]
@@ -138,14 +116,16 @@ export class ArrayDataProvider<T = any> implements DataProvider<T> {
     await new Promise(resolve => setTimeout(resolve, 10))
 
     try {
+      // Update state with search params
       if (options.searchParams) {
         Object.entries(options.searchParams).forEach(([key, value]) => {
-          this.setQueryParam(key, value)
+          this.stateProvider.setFilter(key, value)
         })
       }
 
+      // Update sort state
       if (options.sortField && options.sortOrder) {
-        this.setSort(options.sortField, options.sortOrder)
+        this.stateProvider.setSort(options.sortField, options.sortOrder)
       }
 
       let processedItems = this.filterItems()
@@ -180,6 +160,7 @@ export class ArrayDataProvider<T = any> implements DataProvider<T> {
         } else {
           const page = options.page || this.currentPage
           this.currentPage = page
+          this.stateProvider.setPage(page)
 
           const startIndex = (page - 1) * pageSize
           const endIndex = startIndex + pageSize
@@ -253,6 +234,8 @@ export class ArrayDataProvider<T = any> implements DataProvider<T> {
   async refresh(): Promise<LoadResult<T>> {
     this.displayedItems = []
     this.currentPage = 1
+    this.stateProvider.clearPage()
+    this.stateProvider.clearCursor()
     return this.load()
   }
 
@@ -332,5 +315,19 @@ export class ArrayDataProvider<T = any> implements DataProvider<T> {
         totalCount: processedItems.length
       }
     }
+  }
+
+  /**
+   * Set sort (delegates to StateProvider)
+   */
+  setSort(field: string, order: 'asc' | 'desc'): void {
+    this.stateProvider.setSort(field, order)
+  }
+
+  /**
+   * Get sort (delegates to StateProvider)
+   */
+  getSort(): SortState | null {
+    return this.stateProvider.getSort()
   }
 }
