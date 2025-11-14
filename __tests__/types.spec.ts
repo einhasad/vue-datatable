@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { isCursorPagination, isPagePagination, DefaultResponseAdapter } from '../types'
 import type { CursorPaginationData, PagePaginationData } from '../types'
 
