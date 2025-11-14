@@ -30,7 +30,8 @@ const tasks = [
   { id: 5, title: 'Write tests', priority: 'high', status: 'in_progress', progress: 60 }
 ]
 
-const provider = new ArrayDataProvider(tasks, {
+const provider = new ArrayDataProvider({
+  items: tasks,
   pagination: false,
   paginationMode: 'cursor'
 })
@@ -135,7 +136,8 @@ const tasks = [
   { id: 5, title: 'Write tests', priority: 'high', status: 'in_progress', progress: 60 }
 ]
 
-const provider = new ArrayDataProvider(tasks, {
+const provider = new ArrayDataProvider({
+  items: tasks,
   pagination: false,
   paginationMode: 'cursor'
 })

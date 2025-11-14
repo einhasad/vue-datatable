@@ -30,7 +30,8 @@ const products = Array.from({ length: 35 }, (_, i) => ({
   category: ['Electronics', 'Clothing', 'Books', 'Home'][i % 4]
 }))
 
-const provider = new ArrayDataProvider(products, {
+const provider = new ArrayDataProvider({
+  items: products,
   pagination: true,
   paginationMode: 'cursor',
   pageSize: 8
@@ -58,7 +59,8 @@ const products = Array.from({ length: 35 }, (_, i) => ({
   category: ['Electronics', 'Clothing', 'Books', 'Home'][i % 4]
 }))
 
-const provider = new ArrayDataProvider(products, {
+const provider = new ArrayDataProvider({
+  items: products,
   pagination: true,
   paginationMode: 'cursor',
   pageSize: 8

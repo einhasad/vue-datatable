@@ -33,7 +33,8 @@ const employees = [
   { id: 8, name: 'Hannah Montana', department: 'Sales', salary: 85000 }
 ]
 
-const provider = new ArrayDataProvider(employees, {
+const provider = new ArrayDataProvider({
+  items: employees,
   pagination: false,
   paginationMode: 'cursor'
 })
@@ -69,7 +70,8 @@ const employees = [
   { id: 8, name: 'Hannah Montana', department: 'Sales', salary: 85000 }
 ]
 
-const provider = new ArrayDataProvider(employees, {
+const provider = new ArrayDataProvider({
+  items: employees,
   pagination: false,
   paginationMode: 'cursor'
 })

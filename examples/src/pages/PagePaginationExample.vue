@@ -30,7 +30,8 @@ const users = Array.from({ length: 47 }, (_, i) => ({
   status: ['Active', 'Inactive'][i % 2]
 }))
 
-const provider = new ArrayDataProvider(users, {
+const provider = new ArrayDataProvider({
+  items: users,
   pagination: true,
   paginationMode: 'page',
   pageSize: 10
@@ -58,7 +59,8 @@ const users = Array.from({ length: 47 }, (_, i) => ({
   status: ['Active', 'Inactive'][i % 2]
 }))
 
-const provider = new ArrayDataProvider(users, {
+const provider = new ArrayDataProvider({
+  items: users,
   pagination: true,
   paginationMode: 'page',
   pageSize: 10

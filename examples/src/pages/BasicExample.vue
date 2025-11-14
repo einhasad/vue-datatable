@@ -37,7 +37,8 @@ const users = [
   { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', role: 'User' }
 ]
 
-const provider = new ArrayDataProvider(users, {
+const provider = new ArrayDataProvider({
+  items: users,
   pagination: false,
   paginationMode: 'cursor'
 })
@@ -64,7 +65,8 @@ const users = [
   { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', role: 'User' }
 ]
 
-const provider = new ArrayDataProvider(users, {
+const provider = new ArrayDataProvider({
+  items: users,
   pagination: false,
   paginationMode: 'cursor'
 })

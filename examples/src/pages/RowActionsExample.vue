@@ -24,7 +24,7 @@
 
     <div class="example-section">
       <h3>Code</h3>
-      <pre class="code-block"><code>&lt;template&gt;
+      <pre class="code-block" v-pre><code>&lt;template&gt;
   &lt;div v-if="selectedUser"&gt;
     Selected: {{ selectedUser.name }}
   &lt;/div&gt;
@@ -49,7 +49,8 @@ const users = [
   { id: 4, name: 'Alice Brown', email: 'alice@example.com', active: true }
 ]
 
-const provider = new ArrayDataProvider(users, {
+const provider = new ArrayDataProvider({
+  items: users,
   pagination: false,
   paginationMode: 'cursor'
 })
@@ -117,7 +118,8 @@ const users = [
   { id: 6, name: 'Diana Prince', email: 'diana@example.com', active: false }
 ]
 
-const provider = new ArrayDataProvider(users, {
+const provider = new ArrayDataProvider({
+  items: users,
   pagination: false,
   paginationMode: 'cursor'
 })
