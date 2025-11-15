@@ -1,9 +1,12 @@
 <template>
   <div>
-    <h2>{{ metadata.title }}</h2>
+    <h2>Basic Example</h2>
 
     <div class="example-description">
-      <p>{{ metadata.description }}</p>
+      <p>
+        This example demonstrates the most basic usage of Grid Vue with an ArrayDataProvider.
+        The grid displays static data without pagination, showing how simple it is to get started.
+      </p>
     </div>
 
     <div class="example-notice">
@@ -30,25 +33,58 @@
 &lt;/template&gt;
 
 &lt;script setup lang="ts"&gt;
-{{ extractedCode.imports }}
+import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
 
-{{ extractedCode.code }}
+const users = [
+  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin' },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'User' },
+  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'User' },
+  { id: 4, name: 'Alice Brown', email: 'alice@example.com', role: 'Editor' },
+  { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', role: 'User' }
+]
+
+const provider = new ArrayDataProvider({
+  items: users,
+  pagination: false,
+  paginationMode: 'cursor'
+})
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'name', label: 'Name' },
+  { key: 'email', label: 'Email' },
+  { key: 'role', label: 'Role' }
+]
 &lt;/script&gt;</code></pre>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Grid } from '@grid-vue/grid'
-import { basicExample } from '../../../__tests__/examples/basicExample'
-import extractedExamples from '../generated/extracted-examples.json'
+import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
 
-// Get the working code from tests (single source of truth)
-const metadata = basicExample
-const { provider, columns } = basicExample.setupCode()
+// This code is extracted from __tests__/examples/basicExample.ts
+// and guaranteed to work because it's tested!
+const users = [
+  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin' },
+  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'User' },
+  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'User' },
+  { id: 4, name: 'Alice Brown', email: 'alice@example.com', role: 'Editor' },
+  { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', role: 'User' }
+]
 
-// Get the extracted code for display
-const extractedCode = extractedExamples.basicExample
+const provider = new ArrayDataProvider({
+  items: users,
+  pagination: false,
+  paginationMode: 'cursor'
+})
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID' },
+  { key: 'name', label: 'Name' },
+  { key: 'email', label: 'Email' },
+  { key: 'role', label: 'Role' }
+]
 </script>
 
 <style scoped>

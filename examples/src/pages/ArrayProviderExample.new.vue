@@ -1,9 +1,13 @@
 <template>
   <div>
-    <h2>{{ metadata.title }}</h2>
+    <h2>Array Provider Example</h2>
 
     <div class="example-description">
-      <p>{{ metadata.description }}</p>
+      <p>
+        The <strong>ArrayDataProvider</strong> is perfect for working with static, in-memory data.
+        It supports client-side pagination, sorting, and filtering without requiring a backend API.
+        This example demonstrates its key features including page-based pagination and sorting capabilities.
+      </p>
     </div>
 
     <div class="example-notice">
@@ -30,34 +34,82 @@
 &lt;/template&gt;
 
 &lt;script setup lang="ts"&gt;
-{{ extractedCode.imports }}
+import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
 
-{{ extractedCode.code }}
+const products = [
+  { id: 1, name: 'Laptop Pro', category: 'Electronics', price: 1299, stock: 45 },
+  { id: 2, name: 'Wireless Mouse', category: 'Accessories', price: 29, stock: 150 },
+  { id: 3, name: 'USB-C Cable', category: 'Accessories', price: 15, stock: 200 },
+  { id: 4, name: 'Monitor 27"', category: 'Electronics', price: 399, stock: 30 },
+  { id: 5, name: 'Keyboard Mechanical', category: 'Accessories', price: 129, stock: 75 },
+  { id: 6, name: 'Webcam HD', category: 'Electronics', price: 79, stock: 60 },
+  { id: 7, name: 'Desk Lamp', category: 'Office', price: 45, stock: 90 },
+  { id: 8, name: 'Office Chair', category: 'Office', price: 299, stock: 25 },
+  { id: 9, name: 'Headphones', category: 'Electronics', price: 199, stock: 40 },
+  { id: 10, name: 'Tablet Stand', category: 'Accessories', price: 35, stock: 100 }
+]
+
+const provider = new ArrayDataProvider({
+  items: products,
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 5
+})
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID', sortable: true },
+  { key: 'name', label: 'Product Name', sortable: true },
+  { key: 'category', label: 'Category', sortable: true },
+  { key: 'price', label: 'Price ($)', sortable: true },
+  { key: 'stock', label: 'Stock', sortable: true }
+]
 &lt;/script&gt;</code></pre>
     </div>
 
-    <div class="example-section" v-if="metadata.features">
+    <div class="example-section">
       <h3>Key Features</h3>
       <ul>
-        <li v-for="feature in metadata.features" :key="feature">
-          <strong>{{ feature.split(':')[0] }}:</strong>{{ feature.split(':')[1] }}
-        </li>
+        <li><strong>Client-side pagination:</strong> No server requests needed</li>
+        <li><strong>Sorting:</strong> Click column headers to sort data</li>
+        <li><strong>In-memory processing:</strong> Fast performance for small to medium datasets</li>
+        <li><strong>Simple configuration:</strong> Just pass an array and options</li>
       </ul>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Grid } from '@grid-vue/grid'
-import { arrayProviderExample } from '../../../__tests__/examples/arrayProviderExample'
-import extractedExamples from '../generated/extracted-examples.json'
+import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
 
-// Get the working code from tests (single source of truth)
-const metadata = arrayProviderExample
-const { provider, columns } = arrayProviderExample.setupCode()
+// This code is extracted from __tests__/examples/arrayProviderExample.ts
+// and guaranteed to work because it's tested!
+const products = [
+  { id: 1, name: 'Laptop Pro', category: 'Electronics', price: 1299, stock: 45 },
+  { id: 2, name: 'Wireless Mouse', category: 'Accessories', price: 29, stock: 150 },
+  { id: 3, name: 'USB-C Cable', category: 'Accessories', price: 15, stock: 200 },
+  { id: 4, name: 'Monitor 27"', category: 'Electronics', price: 399, stock: 30 },
+  { id: 5, name: 'Keyboard Mechanical', category: 'Accessories', price: 129, stock: 75 },
+  { id: 6, name: 'Webcam HD', category: 'Electronics', price: 79, stock: 60 },
+  { id: 7, name: 'Desk Lamp', category: 'Office', price: 45, stock: 90 },
+  { id: 8, name: 'Office Chair', category: 'Office', price: 299, stock: 25 },
+  { id: 9, name: 'Headphones', category: 'Electronics', price: 199, stock: 40 },
+  { id: 10, name: 'Tablet Stand', category: 'Accessories', price: 35, stock: 100 }
+]
 
-// Get the extracted code for display
-const extractedCode = extractedExamples.arrayProviderExample
+const provider = new ArrayDataProvider({
+  items: products,
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 5
+})
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID', sortable: true },
+  { key: 'name', label: 'Product Name', sortable: true },
+  { key: 'category', label: 'Category', sortable: true },
+  { key: 'price', label: 'Price ($)', sortable: true },
+  { key: 'stock', label: 'Stock', sortable: true }
+]
 </script>
 
 <style scoped>

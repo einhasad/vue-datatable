@@ -145,9 +145,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import BasicExample from './pages/BasicExample.vue'
+// Living Documentation - Examples extracted from tests
+import BasicExample from './pages/BasicExample.new.vue'
+import ArrayProviderExample from './pages/ArrayProviderExample.new.vue'
+// Other examples (to be migrated)
 import HttpExample from './pages/HttpExample.vue'
-import ArrayProviderExample from './pages/ArrayProviderExample.vue'
 import HTTPProviderExample from './pages/HTTPProviderExample.vue'
 import StateProvidersExample from './pages/StateProvidersExample.vue'
 import PagePaginationExample from './pages/PagePaginationExample.vue'
