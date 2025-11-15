@@ -1,6 +1,20 @@
 import type { Component } from 'vue'
 
 /**
+ * Minimal router interface for state providers
+ * Compatible with Vue Router and similar routing libraries
+ */
+export interface RouterLike {
+  currentRoute: {
+    value: {
+      query: Record<string, string | string[]>
+      hash: string
+    }
+  }
+  replace: (location: { query?: Record<string, string | string[]>; hash?: string }) => void
+}
+
+/**
  * Component rendering options for dynamic components
  */
 export interface ComponentOptions {

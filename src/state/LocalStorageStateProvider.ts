@@ -9,6 +9,16 @@ export interface LocalStorageStateProviderConfig {
 }
 
 /**
+ * State structure stored in localStorage
+ */
+interface LocalStorageState {
+  filters?: Record<string, string>
+  sort?: SortState
+  page?: number
+  cursor?: string
+}
+
+/**
  * LocalStorageStateProvider - stores state in browser localStorage
  * State persists across page refreshes and browser sessions
  * Useful for preserving user preferences
@@ -24,7 +34,7 @@ export class LocalStorageStateProvider implements StateProvider {
   /**
    * Get state from localStorage
    */
-  private getState(): unknown {
+  private getState(): LocalStorageState {
     try {
       const stored = localStorage.getItem(this.storageKey)
       return stored ? JSON.parse(stored) : {}
@@ -37,7 +47,7 @@ export class LocalStorageStateProvider implements StateProvider {
   /**
    * Save state to localStorage
    */
-  private setState(state: unknown): void {
+  private setState(state: LocalStorageState): void {
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(state))
     } catch (error) {

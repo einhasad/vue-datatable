@@ -8,7 +8,8 @@ import type {
   CursorPaginationData,
   PagePaginationData,
   ResponseAdapter,
-  SortState
+  SortState,
+  RouterLike
 } from '../types'
 import { DefaultResponseAdapter } from '../types'
 import type { StateProvider } from '../state/StateProvider'
@@ -30,7 +31,7 @@ export interface HttpDataProviderConfig extends DataProviderConfig {
   responseAdapter?: ResponseAdapter<unknown>
   headers?: Record<string, string>
   stateProvider?: StateProvider
-  router?: unknown // For backward compatibility - creates QueryParamsStateProvider if provided
+  router?: RouterLike // For backward compatibility - creates QueryParamsStateProvider if provided
 }
 
 /**
