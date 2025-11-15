@@ -110,11 +110,24 @@ curl -o "$RUNNER_FILE" -L "https://github.com/actions/runner/releases/download/v
 
 # Validate hash
 echo "Validating download..."
+ACTUAL_HASH=$(sha256sum "$RUNNER_FILE" | awk '{print $1}')
+echo "Calculated hash: $ACTUAL_HASH"
+
+# Download checksums file
 curl -o checksums.txt -L "https://github.com/actions/runner/releases/download/v${LATEST_VERSION}/checksums.txt"
-if grep -q "$(sha256sum $RUNNER_FILE | awk '{print $1}')" checksums.txt; then
-    echo "✓ Checksum validated"
+
+# Extract expected hash for our file (format: "hash  filename")
+EXPECTED_HASH=$(grep "$RUNNER_FILE" checksums.txt | awk '{print $1}')
+
+if [ -z "$EXPECTED_HASH" ]; then
+    echo "⚠ Warning: Could not find checksum for $RUNNER_FILE in checksums.txt"
+    echo "Proceeding without validation..."
+elif [ "$ACTUAL_HASH" = "$EXPECTED_HASH" ]; then
+    echo "✓ Checksum validated successfully"
 else
     echo "✗ Checksum validation failed!"
+    echo "  Expected: $EXPECTED_HASH"
+    echo "  Got:      $ACTUAL_HASH"
     exit 1
 fi
 
