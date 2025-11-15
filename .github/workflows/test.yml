@@ -99,11 +99,16 @@ jobs:
       - name: Start examples server
         run: |
           cd examples
-          npm run dev &
+          npm run dev > ../vite.log 2>&1 &
           echo $! > .vite-server.pid
           cd ..
           # Wait for server to be ready
-          npx wait-on http://localhost:3000/vue-datatable --timeout 30000
+          echo "Waiting for Vite server to start..."
+          sleep 10
+          # Verify server is responding
+          curl -f http://localhost:3000/vue-datatable/ || (echo "Server not ready, waiting more..." && sleep 5)
+          echo "Server is ready!"
+          tail -20 vite.log
 
       - name: Run Playwright tests
         run: npx playwright test --config=playwright.config.simple.ts
