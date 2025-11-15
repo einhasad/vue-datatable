@@ -24,14 +24,14 @@
   "include": [
     "src/**/*.ts",
     "src/**/*.vue",
-    "scripts/**/*.ts",
-    "playwright.config.ts",
-    "playwright.config.simple.ts",
-    "e2e/**/*.ts"
+    "scripts/**/*.ts"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "**/*.spec.ts"
+    "**/*.spec.ts",
+    "e2e",
+    "playwright.config.ts",
+    "playwright.config.simple.ts"
   ]
 }
