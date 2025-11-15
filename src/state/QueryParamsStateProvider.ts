@@ -1,11 +1,11 @@
 import type { StateProvider } from './StateProvider'
-import type { SortState } from '../types'
+import type { SortState, RouterLike } from '../types'
 
 /**
  * Configuration for QueryParamsStateProvider
  */
 export interface QueryParamsStateProviderConfig {
-  router: unknown
+  router: RouterLike
   prefix?: string
 }
 
@@ -16,7 +16,7 @@ export interface QueryParamsStateProviderConfig {
  * Default prefix: 'search'
  */
 export class QueryParamsStateProvider implements StateProvider {
-  private router: unknown
+  private router: RouterLike
   private prefix: string
 
   constructor(config: QueryParamsStateProviderConfig) {
