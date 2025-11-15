@@ -29,11 +29,12 @@ test.describe('Basic Example', () => {
     await expect(section.locator('.example-notice')).toContainText('guaranteed to work')
 
     // Verify grid is rendered
-    await expect(section.locator('[data-qa="grid"]')).toBeVisible()
+    const grid = section.locator('[data-qa="grid"]')
+    await expect(grid).toBeVisible()
 
-    // Verify data is displayed in grid
-    await expect(section.getByText('John Doe')).toBeVisible()
-    await expect(section.getByText('jane@example.com')).toBeVisible()
+    // Verify data is displayed in grid (scope to grid only, not code blocks)
+    await expect(grid.getByText('John Doe')).toBeVisible()
+    await expect(grid.getByText('jane@example.com')).toBeVisible()
 
     // Verify code block is shown
     await expect(section.locator('.code-block')).toBeVisible()
@@ -63,10 +64,11 @@ test.describe('Array Provider Example', () => {
     await expect(section.locator('.example-notice')).toContainText('Living Documentation')
 
     // Verify grid is rendered
-    await expect(section.locator('[data-qa="grid"]')).toBeVisible()
+    const grid = section.locator('[data-qa="grid"]')
+    await expect(grid).toBeVisible()
 
-    // Verify pagination is working (page mode)
-    await expect(section.getByText('Laptop Pro')).toBeVisible()
+    // Verify pagination is working (page mode) - scope to grid only
+    await expect(grid.getByText('Laptop Pro')).toBeVisible()
 
     // Verify code block shows the example
     await expect(section.locator('.code-block')).toBeVisible()
@@ -81,9 +83,9 @@ test.describe('Array Provider Example', () => {
     // Verify features section exists
     await expect(section.getByRole('heading', { name: 'Key Features' })).toBeVisible()
 
-    // Verify features are listed
-    await expect(section.getByText('Client-side pagination')).toBeVisible()
-    await expect(section.getByText('Sorting')).toBeVisible()
+    // Verify features are listed (use exact match to avoid code block)
+    await expect(section.getByText('Client-side pagination:', { exact: true })).toBeVisible()
+    await expect(section.getByText('Sorting:', { exact: true })).toBeVisible()
   })
 
   test('should support pagination interaction', async ({ page }) => {
@@ -92,10 +94,11 @@ test.describe('Array Provider Example', () => {
     const section = page.locator('#array-provider')
 
     // Wait for grid to load
-    await section.locator('[data-qa="grid"]').waitFor()
+    const grid = section.locator('[data-qa="grid"]')
+    await grid.waitFor()
 
-    // Verify first page items are visible
-    await expect(section.getByText('Laptop Pro')).toBeVisible()
+    // Verify first page items are visible (scope to grid only)
+    await expect(grid.getByText('Laptop Pro')).toBeVisible()
   })
 })
 
