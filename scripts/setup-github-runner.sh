@@ -28,7 +28,9 @@ apt-get install -y \
     git \
     jq \
     tar \
-    sudo
+    sudo \
+    bc \
+    lsb-release
 
 # Install Node.js 20 (if not already installed)
 if ! command -v node &> /dev/null; then
@@ -41,6 +43,22 @@ fi
 
 # Install Playwright system dependencies
 echo "Installing Playwright browser dependencies..."
+
+# Detect Ubuntu version for package name compatibility
+UBUNTU_VERSION=$(lsb_release -rs)
+echo "Detected Ubuntu version: $UBUNTU_VERSION"
+
+# Ubuntu 24.04+ uses t64 package names (time64 transition)
+if [ "$(echo "$UBUNTU_VERSION >= 24.04" | bc)" -eq 1 ]; then
+    echo "Using Ubuntu 24.04+ package names (t64 variants)..."
+    LIBASOUND_PKG="libasound2t64"
+    LIBATSPI_PKG="libatspi2.0-0t64"
+else
+    echo "Using Ubuntu 22.04 package names..."
+    LIBASOUND_PKG="libasound2"
+    LIBATSPI_PKG="libatspi2.0-0"
+fi
+
 apt-get install -y \
     libnss3 \
     libnspr4 \
@@ -57,8 +75,8 @@ apt-get install -y \
     libgbm1 \
     libpango-1.0-0 \
     libcairo2 \
-    libasound2 \
-    libatspi2.0-0 \
+    $LIBASOUND_PKG \
+    $LIBATSPI_PKG \
     fonts-liberation \
     fonts-noto-color-emoji \
     libxtst6

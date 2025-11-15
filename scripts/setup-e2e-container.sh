@@ -13,6 +13,9 @@ echo "📦 Updating system packages..."
 apt-get update
 apt-get upgrade -y
 
+# Install basic dependencies first (needed for version detection)
+apt-get install -y bc lsb-release curl wget git
+
 # Install Node.js 20
 echo "📦 Installing Node.js 20..."
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
@@ -20,6 +23,22 @@ apt-get install -y nodejs
 
 # Install required system dependencies for Playwright
 echo "📦 Installing system dependencies for Playwright browsers..."
+
+# Detect Ubuntu version for package name compatibility
+UBUNTU_VERSION=$(lsb_release -rs)
+echo "Detected Ubuntu version: $UBUNTU_VERSION"
+
+# Ubuntu 24.04+ uses t64 package names (time64 transition)
+if [ "$(echo "$UBUNTU_VERSION >= 24.04" | bc)" -eq 1 ]; then
+    echo "Using Ubuntu 24.04+ package names (t64 variants)..."
+    LIBASOUND_PKG="libasound2t64"
+    LIBATSPI_PKG="libatspi2.0-0t64"
+else
+    echo "Using Ubuntu 22.04 package names..."
+    LIBASOUND_PKG="libasound2"
+    LIBATSPI_PKG="libatspi2.0-0"
+fi
+
 apt-get install -y \
     libnss3 \
     libnspr4 \
@@ -36,14 +55,11 @@ apt-get install -y \
     libgbm1 \
     libpango-1.0-0 \
     libcairo2 \
-    libasound2 \
-    libatspi2.0-0 \
+    $LIBASOUND_PKG \
+    $LIBATSPI_PKG \
     libwayland-client0 \
     fonts-liberation \
-    fonts-noto-color-emoji \
-    git \
-    curl \
-    wget
+    fonts-noto-color-emoji
 
 # Install additional dependencies
 echo "📦 Installing additional dependencies..."
