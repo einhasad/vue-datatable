@@ -32,7 +32,7 @@ export default defineConfig({
 
   use: {
     // Base URL for navigation
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://localhost:3000/vue-datatable',
 
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
@@ -62,7 +62,7 @@ export default defineConfig({
   // Run examples dev server before starting the tests
   webServer: {
     command: 'cd examples && npm run dev',
-    url: 'http://localhost:5173',
+    url: 'http://localhost:3000/vue-datatable',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },
