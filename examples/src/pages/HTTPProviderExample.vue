@@ -89,18 +89,6 @@ const columns: Column[] = [
     </div>
 
     <div class="example-section">
-      <h3>Key Features</h3>
-      <ul>
-        <li><strong>REST API integration:</strong> Fetch data from any HTTP endpoint</li>
-        <li><strong>Custom HTTP clients:</strong> Use fetch, axios, or any other HTTP library</li>
-        <li><strong>Response adapters:</strong> Transform API responses to match your data format</li>
-        <li><strong>Flexible pagination:</strong> Supports both cursor and page-based modes</li>
-        <li><strong>URL parameter sync:</strong> Automatically manages query parameters for filtering and sorting</li>
-        <li><strong>Custom headers:</strong> Add authentication tokens and other headers</li>
-      </ul>
-    </div>
-
-    <div class="example-section">
       <h3>Real-World Example</h3>
       <pre class="code-block"><code>// Using with a real API endpoint
 import axios from 'axios'

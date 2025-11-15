@@ -10,12 +10,6 @@
       </p>
     </div>
 
-    <div class="example-notice">
-      <strong>✅ Living Documentation:</strong> This code is extracted from tests and guaranteed to work!
-      <br>
-      <small>Source: <code>__tests__/examples/arrayProviderExample.ts</code></small>
-    </div>
-
     <div class="example-section">
       <h3>Demo</h3>
       <Grid
@@ -65,24 +59,12 @@ const columns: Column[] = [
 ]
 &lt;/script&gt;</code></pre>
     </div>
-
-    <div class="example-section">
-      <h3>Key Features</h3>
-      <ul>
-        <li><strong>Client-side pagination:</strong> No server requests needed</li>
-        <li><strong>Sorting:</strong> Click column headers to sort data</li>
-        <li><strong>In-memory processing:</strong> Fast performance for small to medium datasets</li>
-        <li><strong>Simple configuration:</strong> Just pass an array and options</li>
-      </ul>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
 
-// This code is extracted from __tests__/examples/arrayProviderExample.ts
-// and guaranteed to work because it's tested!
 const products = [
   { id: 1, name: 'Laptop Pro', category: 'Electronics', price: 1299, stock: 45 },
   { id: 2, name: 'Wireless Mouse', category: 'Accessories', price: 29, stock: 150 },
@@ -113,22 +95,6 @@ const columns: Column[] = [
 </script>
 
 <style scoped>
-.example-notice {
-  background: #d4edda;
-  border: 1px solid #c3e6cb;
-  border-radius: 4px;
-  padding: 12px;
-  margin: 16px 0;
-  color: #155724;
-}
-
-.example-notice code {
-  background: #c3e6cb;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 0.9em;
-}
-
 .example-description {
   margin: 16px 0;
   font-size: 1.05em;
