@@ -45,14 +45,51 @@ jobs:
     # To set up a self-hosted runner, see scripts/github-runner-instructions.md
     if: contains(github.event.head_commit.message, '[e2e]') || github.event_name == 'pull_request'
 
+    env:
+      CI: true
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.playwright-browsers
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 0
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        run: |
+          node --version
+          npm --version
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            examples/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ${{ github.workspace }}/.playwright-browsers
+          key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
 
       - name: Install dependencies
         run: |
           npm ci
           cd examples && npm ci && cd ..
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium firefox webkit
+
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps
 
       - name: Build library
         run: npm run build
@@ -60,8 +97,25 @@ jobs:
       - name: Extract examples
         run: npm run extract:examples
 
+      - name: Start examples server
+        run: |
+          cd examples
+          npm run dev &
+          echo $! > .vite-server.pid
+          cd ..
+          # Wait for server to be ready
+          npx wait-on http://localhost:3000/vue-datatable --timeout 30000
+
       - name: Run Playwright tests
         run: npx playwright test --config=playwright.config.simple.ts
+
+      - name: Stop examples server
+        if: always()
+        run: |
+          if [ -f examples/.vite-server.pid ]; then
+            kill $(cat examples/.vite-server.pid) || true
+            rm examples/.vite-server.pid
+          fi
 
       - name: Upload test results
         if: always()
@@ -70,6 +124,14 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+
+      - name: Upload test screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-screenshots
+          path: test-results/
+          retention-days: 7
 
   lint:
     name: Lint

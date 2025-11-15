@@ -87,7 +87,8 @@
     "vite-plugin-dts": "^3.7.0",
     "vitest": "^3.2.4",
     "vue": "^3.4.0",
-    "vue-router": "^4.2.0"
+    "vue-router": "^4.2.0",
+    "wait-on": "^8.0.1"
   },
   "engines": {
     "node": ">=18.0.0"
