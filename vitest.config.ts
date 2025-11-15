@@ -13,6 +13,13 @@ export default mergeConfig(
     test: {
       globals: true,
       environment: 'happy-dom',
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/e2e/**',
+        '**/examples/**',
+        '**/*.config.ts'
+      ],
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html', 'lcov'],

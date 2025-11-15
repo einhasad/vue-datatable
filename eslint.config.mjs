@@ -111,8 +111,11 @@ export default defineConfigWithVueTs(
       '**/*.spec.tsx',
       '__tests__/**',
       'examples/**',
+      'e2e/**',
       'vite.config.ts',
       'vitest.config.ts',
+      'playwright.config.ts',
+      'playwright.config.simple.ts',
       'eslint.config.mjs',
     ],
   }
