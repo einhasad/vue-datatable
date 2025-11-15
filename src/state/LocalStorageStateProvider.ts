@@ -24,7 +24,7 @@ export class LocalStorageStateProvider implements StateProvider {
   /**
    * Get state from localStorage
    */
-  private getState(): any {
+  private getState(): unknown {
     try {
       const stored = localStorage.getItem(this.storageKey)
       return stored ? JSON.parse(stored) : {}
@@ -37,7 +37,7 @@ export class LocalStorageStateProvider implements StateProvider {
   /**
    * Save state to localStorage
    */
-  private setState(state: any): void {
+  private setState(state: unknown): void {
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(state))
     } catch (error) {
