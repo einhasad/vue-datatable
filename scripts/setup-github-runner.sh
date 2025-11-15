@@ -89,8 +89,12 @@ else
     echo "Creating user $RUNNER_USER..."
     useradd -m -s /bin/bash "$RUNNER_USER"
     usermod -aG sudo "$RUNNER_USER"
-    echo "$RUNNER_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$RUNNER_USER
 fi
+
+# Configure passwordless sudo for GitHub Actions runner
+echo "Configuring passwordless sudo for $RUNNER_USER..."
+echo "$RUNNER_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$RUNNER_USER
+chmod 0440 /etc/sudoers.d/$RUNNER_USER
 
 # Create runner directory
 RUNNER_HOME="/home/$RUNNER_USER/actions-runner"
