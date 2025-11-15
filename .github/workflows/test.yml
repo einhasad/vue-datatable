@@ -53,6 +53,7 @@ jobs:
 
       - name: Cache node_modules
         uses: actions/cache@v4
+        id: npm-cache
         with:
           path: |
             node_modules
@@ -67,16 +68,16 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('package-lock.json') }}
 
       - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
         run: |
           npm ci --prefer-offline --no-audit
           cd examples && npm ci --prefer-offline --no-audit && cd ..
 
       - name: Install Playwright
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: |
-          if [ "${{ steps.playwright-cache.outputs.cache-hit }}" != "true" ]; then
-            npx playwright install-deps chromium
-            npx playwright install chromium
-          fi
+          npx playwright install-deps chromium
+          npx playwright install chromium
 
       - name: Build library
         run: npm run build
@@ -85,8 +86,8 @@ jobs:
         run: |
           cd examples && npm run dev > /dev/null 2>&1 &
           VITE_PID=$!
-          sleep 8
-          cd ..
+          sleep 5
+          cd ${{ github.workspace }}
           npx playwright test --config=playwright.config.simple.ts
           kill $VITE_PID || true
 
