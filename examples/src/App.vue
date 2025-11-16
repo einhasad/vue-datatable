@@ -86,6 +86,11 @@
             <div>
               <h2>Basic Example</h2>
 
+              <div class="example-notice">
+                <strong>Living Documentation:</strong> This example is generated from
+                <code>__tests__/examples/basicExample.ts</code> - the code you see here is tested and guaranteed to work.
+              </div>
+
               <div class="example-description">
                 <p>
                   This example demonstrates the most basic usage of Grid Vue with an ArrayDataProvider.
@@ -143,12 +148,27 @@ const columns: Column[] = [
             <div>
               <h2>Array Provider Example</h2>
 
+              <div class="example-notice">
+                <strong>Living Documentation:</strong> This example is generated from
+                <code>__tests__/examples/arrayProviderExample.ts</code> - the code you see here is tested and guaranteed to work.
+              </div>
+
               <div class="example-description">
                 <p>
                   The <strong>ArrayDataProvider</strong> is perfect for working with static, in-memory data.
                   It supports client-side pagination, sorting, and filtering without requiring a backend API.
                   This example demonstrates its key features including page-based pagination and sorting capabilities.
                 </p>
+              </div>
+
+              <div class="example-section">
+                <h3>Key Features</h3>
+                <ul class="feature-list">
+                  <li><strong>Client-side pagination:</strong> No server requests needed</li>
+                  <li><strong>Sorting:</strong> Click column headers to sort data</li>
+                  <li>In-memory processing: Fast performance for small to medium datasets</li>
+                  <li>Simple configuration: Just pass an array and options</li>
+                </ul>
               </div>
 
               <div class="example-section">
@@ -1611,6 +1631,24 @@ onUnmounted(() => {
 .example-description {
   margin-bottom: 1.5rem;
   color: #4a5568;
+}
+
+.example-notice {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  background: #f0f4ff;
+  border-left: 4px solid #667eea;
+  border-radius: 0.25rem;
+  font-size: 0.9rem;
+  color: #4a5568;
+}
+
+.example-notice code {
+  background: #e0e7ff;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  color: #4338ca;
 }
 
 .actions {
