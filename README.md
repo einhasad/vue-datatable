@@ -338,34 +338,6 @@ class CustomStateProvider implements StateProvider {
 
 Adapt different API response formats to work with the grid.
 
-### Built-in Adapters
-
-**DefaultResponseAdapter** (current AlmaWord format):
-```json
-{
-  "items": [...],
-  "nextCursor": "abc123",
-  "hasMore": true
-}
-```
-
-**LegacyResponseAdapter** (old-grid format):
-```json
-{
-  "code": 200,
-  "status": "success",
-  "result": [...],
-  "_meta": {
-    "pagination": {
-      "currentPage": 1,
-      "pageCount": 10,
-      "perPage": 20,
-      "totalCount": 200
-    }
-  }
-}
-```
-
 ### Custom Response Adapter
 
 ```ts

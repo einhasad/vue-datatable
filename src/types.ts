@@ -192,9 +192,6 @@ export interface ResponseAdapter<T = unknown> {
   getErrorMessage?(response: unknown): string | undefined
 }
 
-/**
- * Default response adapter (for current AlmaWord API format)
- */
 export class DefaultResponseAdapter<T = unknown> implements ResponseAdapter<T> {
   extractItems(response: unknown): T[] {
     const resp = response as Record<string, unknown>
