@@ -26,7 +26,6 @@ test.describe('Basic Example', () => {
 
     // Verify living documentation notice is shown
     await expect(section.locator('.example-notice')).toContainText('Living Documentation')
-    await expect(section.locator('.example-notice')).toContainText('guaranteed to work')
 
     // Verify grid is rendered
     const grid = section.locator('[data-qa="grid"]')
@@ -116,7 +115,6 @@ test.describe('Living Documentation Integrity', () => {
 
       // Every example must show it's living documentation
       await expect(section.locator('.example-notice')).toContainText('Living Documentation')
-      await expect(section.locator('.example-notice')).toContainText('guaranteed to work')
 
       // Must reference source file
       await expect(section.locator('.example-notice code')).toContainText('__tests__/examples/')

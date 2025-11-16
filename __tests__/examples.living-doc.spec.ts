@@ -4,7 +4,7 @@
  * These tests verify that all example code:
  * 1. Actually works (can be instantiated without errors)
  * 2. Returns expected data structures
- * 3. Is guaranteed to be in sync with documentation
+ * 3. Is in sync with documentation
  *
  * Pattern: Living Documentation / Specification by Example
  * References:

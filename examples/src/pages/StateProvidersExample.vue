@@ -160,6 +160,10 @@ import { useRouter } from 'vue-router'
 import { Grid, ArrayDataProvider, InMemoryStateProvider, QueryParamsStateProvider, LocalStorageStateProvider, HashStateProvider } from '../../../src'
 import type { Column } from '../../../src'
 
+const props = defineProps<{
+  initialTab?: string | null
+}>()
+
 const router = useRouter()
 
 // Sample data
@@ -187,8 +191,8 @@ const columns: Column[] = [
   { key: 'status', label: 'Status', sort: 'status', value: (m) => m.status }
 ]
 
-// Tab state
-const activeTab = ref('inmemory')
+// Tab state - initialize from prop or default to 'inmemory'
+const activeTab = ref(props.initialTab || 'inmemory')
 const tabs = [
   { id: 'inmemory', label: 'InMemory' },
   { id: 'queryparams', label: 'Query Params (Default)' },
@@ -229,103 +233,3 @@ const hashProvider = new ArrayDataProvider({
   stateProvider: new HashStateProvider({ router, prefix: 'grid' })
 })
 </script>
-
-<style scoped>
-.tabs {
-  display: flex;
-  gap: 0.5rem;
-  margin: 1.5rem 0;
-  border-bottom: 2px solid #e2e8f0;
-}
-
-.tab {
-  padding: 0.75rem 1.5rem;
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
-  cursor: pointer;
-  font-size: 1rem;
-  color: #4a5568;
-  transition: all 0.2s;
-  margin-bottom: -2px;
-}
-
-.tab:hover {
-  color: #667eea;
-}
-
-.tab.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
-  font-weight: 600;
-}
-
-.tab-content {
-  margin-top: 2rem;
-}
-
-.example {
-  margin-bottom: 2rem;
-}
-
-.example h3 {
-  margin-bottom: 1rem;
-  color: #2d3748;
-}
-
-.example p {
-  margin-bottom: 1rem;
-  line-height: 1.6;
-  color: #4a5568;
-}
-
-.info {
-  background: #ebf8ff;
-  border-left: 4px solid #4299e1;
-  padding: 1rem;
-  margin: 1rem 0;
-  border-radius: 0.25rem;
-}
-
-code {
-  background: #f7fafc;
-  padding: 0.2rem 0.4rem;
-  border-radius: 0.25rem;
-  font-family: 'Monaco', 'Courier New', monospace;
-  font-size: 0.875rem;
-  color: #e53e3e;
-}
-
-.grid-container {
-  margin: 1.5rem 0;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.5rem;
-  overflow: hidden;
-}
-
-.code-example {
-  margin-top: 2rem;
-}
-
-.code-example h4 {
-  margin-bottom: 0.5rem;
-  color: #2d3748;
-}
-
-.code-example pre {
-  background: #2d3748;
-  color: #f7fafc;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  overflow-x: auto;
-  margin: 0;
-}
-
-.code-example code {
-  background: none;
-  color: inherit;
-  padding: 0;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-</style>

@@ -20,7 +20,10 @@
           </div>
           <div class="nav-section">
             <span class="nav-section-title">State Providers</span>
-            <a href="#state-providers" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'state-providers' }]" @click="scrollToSection">State Management</a>
+            <a href="#state-inmemory" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'state-inmemory' }]" @click="scrollToStateProvider('inmemory')">InMemory</a>
+            <a href="#state-queryparams" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'state-queryparams' }]" @click="scrollToStateProvider('queryparams')">Query Params</a>
+            <a href="#state-localstorage" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'state-localstorage' }]" @click="scrollToStateProvider('localstorage')">LocalStorage</a>
+            <a href="#state-hash" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'state-hash' }]" @click="scrollToStateProvider('hash')">Hash</a>
           </div>
           <a href="#page-pagination" :class="['nav-link', { active: activeSection === 'page-pagination' }]" @click="scrollToSection">Page Pagination</a>
           <a href="#cursor-pagination" :class="['nav-link', { active: activeSection === 'cursor-pagination' }]" @click="scrollToSection">Cursor Pagination</a>
@@ -102,7 +105,7 @@
 
           <!-- State Providers Section -->
           <section id="state-providers" class="section">
-            <StateProvidersExample />
+            <StateProvidersExample :initial-tab="stateProviderTab" />
           </section>
 
           <!-- Page Pagination Section -->
@@ -164,6 +167,7 @@ import CustomColumnsExample from './pages/CustomColumnsExample.vue'
 import RowActionsExample from './pages/RowActionsExample.vue'
 
 const activeSection = ref('introduction')
+const stateProviderTab = ref<string | null>(null)
 
 const scrollToSection = (event: Event) => {
   event.preventDefault()
@@ -174,6 +178,18 @@ const scrollToSection = (event: Event) => {
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' })
       activeSection.value = id
+    }
+  }
+}
+
+const scrollToStateProvider = (tab: string) => {
+  return (event: Event) => {
+    event.preventDefault()
+    stateProviderTab.value = tab
+    const element = document.getElementById('state-providers')
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      activeSection.value = `state-${tab}`
     }
   }
 }
@@ -198,7 +214,12 @@ const updateActiveSection = () => {
   for (let i = sections.length - 1; i >= 0; i--) {
     const section = document.getElementById(sections[i])
     if (section && section.offsetTop <= scrollPosition) {
-      activeSection.value = sections[i]
+      // If we're in the state-providers section and have a tab selected, use the specific state section
+      if (sections[i] === 'state-providers' && stateProviderTab.value) {
+        activeSection.value = `state-${stateProviderTab.value}`
+      } else {
+        activeSection.value = sections[i]
+      }
       break
     }
   }
@@ -348,17 +369,6 @@ onUnmounted(() => {
 
 .example-section {
   margin-bottom: 2rem;
-}
-
-.code-block {
-  background: #2d3748;
-  color: #f7fafc;
-  padding: 1rem;
-  border-radius: 0.375rem;
-  font-family: 'Monaco', 'Courier New', monospace;
-  font-size: 0.875rem;
-  margin: 0.5rem 0;
-  overflow-x: auto;
 }
 
 .actions {

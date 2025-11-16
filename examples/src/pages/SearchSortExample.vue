@@ -37,17 +37,6 @@
     </div>
 
     <div class="example-section">
-      <h3>Features</h3>
-      <ul>
-        <li><strong>Real-time Filtering:</strong> Type in any search box to filter results instantly</li>
-        <li><strong>Multi-column Search:</strong> Apply filters to multiple columns simultaneously</li>
-        <li><strong>Sortable Columns:</strong> Click column headers to sort ascending/descending</li>
-        <li><strong>Combined Search & Sort:</strong> Filtering and sorting work together seamlessly</li>
-        <li><strong>Case-insensitive:</strong> Search is case-insensitive for better UX</li>
-      </ul>
-    </div>
-
-    <div class="example-section">
       <h3>Code</h3>
       <pre class="code-block"><code>&lt;template&gt;
   &lt;Grid
@@ -226,25 +215,3 @@ const columns: Column[] = [
   { key: 'salary', label: 'Salary ($)', sortable: true, sort: 'salary' }
 ]
 </script>
-
-<style scoped>
-.filter-input {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 13px;
-  box-sizing: border-box;
-}
-
-.filter-input:focus {
-  outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
-}
-
-:deep(.grid-filter-cell) {
-  padding: 8px;
-  background: #f9f9f9;
-}
-</style>

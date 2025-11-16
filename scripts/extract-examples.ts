@@ -115,7 +115,7 @@ function main() {
 
   console.log(`\n✨ Successfully extracted ${exampleCount} examples`)
   console.log(`📝 Output: ${OUTPUT_FILE}`)
-  console.log('\n✅ All examples are now guaranteed to be working code!\n')
+  console.log('\n✅ All examples are now working code!\n')
 }
 
 main()

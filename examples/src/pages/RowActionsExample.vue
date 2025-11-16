@@ -166,18 +166,3 @@ function getRowOptions(user: any): RowOptions {
   }
 }
 </script>
-
-<style>
-:deep(.row-clickable:hover) {
-  background: #f7fafc !important;
-}
-
-:deep(.row-selected) {
-  background: #e6fffa !important;
-  border-left: 4px solid #38b2ac !important;
-}
-
-:deep(.row-inactive) {
-  opacity: 0.6;
-}
-</style>

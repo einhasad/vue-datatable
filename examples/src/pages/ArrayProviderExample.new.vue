@@ -10,21 +10,6 @@
       </p>
     </div>
 
-    <div class="example-notice">
-      <strong>📘 Living Documentation:</strong> This is a working example that's guaranteed to work
-      because it's tested in <code>__tests__/examples/arrayProviderExample.ts</code>
-    </div>
-
-    <div class="example-section">
-      <h3>Key Features</h3>
-      <ul>
-        <li><strong>Client-side pagination:</strong> Data is paginated without server requests</li>
-        <li><strong>Sorting:</strong> Click column headers to sort data locally</li>
-        <li><strong>No API required:</strong> Perfect for demos and small datasets</li>
-        <li><strong>Page-based navigation:</strong> Traditional numbered page controls</li>
-      </ul>
-    </div>
-
     <div class="example-section">
       <h3>Demo</h3>
       <Grid
@@ -108,53 +93,3 @@ const columns: Column[] = [
   { key: 'stock', label: 'Stock', sortable: true }
 ]
 </script>
-
-<style scoped>
-.example-description {
-  margin: 16px 0;
-  font-size: 1.05em;
-}
-
-.example-notice {
-  background: #e3f2fd;
-  border-left: 4px solid #2196f3;
-  padding: 12px 16px;
-  margin: 16px 0;
-  border-radius: 4px;
-}
-
-.example-notice code {
-  background: #fff;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 0.9em;
-}
-
-.example-section {
-  margin: 24px 0;
-}
-
-.example-section ul {
-  list-style: none;
-  padding: 0;
-}
-
-.example-section li {
-  padding: 8px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.example-section li:last-child {
-  border-bottom: none;
-}
-
-.code-block {
-  background: #f5f5f5;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 16px;
-  overflow-x: auto;
-  font-size: 14px;
-  line-height: 1.5;
-}
-</style>
