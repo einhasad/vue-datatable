@@ -9,6 +9,11 @@
       </p>
     </div>
 
+    <div class="example-notice">
+      <strong>📘 Living Documentation:</strong> This is a working example that's guaranteed to work
+      because it's tested in <code>__tests__/examples/basicExample.ts</code>
+    </div>
+
     <div class="example-section">
       <h3>Demo</h3>
       <Grid
@@ -83,6 +88,21 @@ const columns: Column[] = [
 .example-description {
   margin: 16px 0;
   font-size: 1.05em;
+}
+
+.example-notice {
+  background: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  padding: 12px 16px;
+  margin: 16px 0;
+  border-radius: 4px;
+}
+
+.example-notice code {
+  background: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 0.9em;
 }
 
 .example-section {
