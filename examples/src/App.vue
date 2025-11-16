@@ -1165,7 +1165,6 @@ const columns: Column[] = [
 
 function handleRowClick(user: any) {
   selectedUser.value = user
-  console.log('Row clicked:', user)
 }
 
 function getRowOptions(user: any): RowOptions {
@@ -1845,7 +1844,6 @@ const selectedUser = ref<any>(null)
 
 function handleRowClick(user: any) {
   selectedUser.value = user
-  console.log('Row clicked:', user)
 }
 
 function getRowOptions(user: any): RowOptions {

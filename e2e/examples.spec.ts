@@ -1,16 +1,10 @@
 /**
- * E2E Tests for Living Documentation Examples
+ * E2E Tests for Examples
  *
  * These tests verify that:
  * 1. Examples render correctly in real browsers
- * 2. The displayed code matches what's in tests
- * 3. Interactive features work as expected
- * 4. Examples are accessible and user-friendly
- *
- * Pattern: Living Documentation E2E Verification
- * - Unit tests verify code works in isolation
- * - E2E tests verify examples work for end users
- * - Together they guarantee documentation accuracy
+ * 2. Interactive features work as expected
+ * 3. Examples are accessible and user-friendly
  */
 
 import { test, expect } from '@playwright/test'
@@ -386,7 +380,7 @@ test.describe('Multi-State Example', () => {
 })
 
 test.describe('Cross-Browser Compatibility', () => {
-  test('examples should render consistently across browsers', async ({ page, browserName }) => {
+  test('examples should render consistently across browsers', async ({ page }) => {
     await page.goto('/#basic')
 
     const section = page.locator('#basic')
@@ -394,7 +388,5 @@ test.describe('Cross-Browser Compatibility', () => {
     // Core functionality should work in all browsers
     await expect(section.locator('[data-qa="grid"]')).toBeVisible()
     await expect(section.locator('.code-block')).toBeVisible()
-
-    console.log(`✓ Basic Example works in ${browserName}`)
   })
 })
