@@ -151,43 +151,54 @@ test.describe('GitHub API HTTP Provider Example', () => {
     await page.goto('/#github-api')
 
     const section = page.locator('#github-api')
+    const grid = section.locator('[data-qa="grid"]')
 
-    // Wait for initial search to complete (default is "vue table")
-    await page.waitForTimeout(2000)
+    // Wait for initial GitHub API request to complete
+    await page.waitForResponse(response =>
+      response.url().includes('api.github.com/search/repositories') && response.status() === 200
+    )
+
+    // Verify initial data loaded
+    await expect(grid.locator('tbody tr').first()).toBeVisible()
 
     // Change search query
     const searchInput = section.locator('input#search')
     await searchInput.fill('react')
 
-    // Click search button
+    // Click search button and wait for API response
+    const responsePromise = page.waitForResponse(response =>
+      response.url().includes('api.github.com/search/repositories') &&
+      response.url().includes('q=react')
+    )
     await section.locator('button.btn-primary').click()
-
-    // Wait for search to complete
-    await page.waitForTimeout(2000)
+    await responsePromise
 
     // Verify URL contains gh-q parameter
-    const url = new URL(page.url())
-    expect(url.searchParams.get('gh-q')).toBe('react')
+    expect(page.url()).toContain('gh-q=react')
   })
 
   test('should change sort order and update URL', async ({ page }) => {
     await page.goto('/#github-api')
 
     const section = page.locator('#github-api')
+    const grid = section.locator('[data-qa="grid"]')
 
     // Wait for initial load
-    await page.waitForTimeout(2000)
+    await page.waitForResponse(response =>
+      response.url().includes('api.github.com/search/repositories')
+    )
 
-    // Change sort order
+    // Change sort order and wait for new API request
     const sortSelect = section.locator('select#sort')
+    const responsePromise = page.waitForResponse(response =>
+      response.url().includes('api.github.com/search/repositories') &&
+      response.url().includes('sort=forks')
+    )
     await sortSelect.selectOption('forks')
-
-    // Wait for re-fetch
-    await page.waitForTimeout(2000)
+    await responsePromise
 
     // Verify URL contains gh-sort parameter
-    const url = new URL(page.url())
-    expect(url.searchParams.get('gh-sort')).toBe('forks')
+    expect(page.url()).toContain('gh-sort=forks')
   })
 
   test('should display repository results from GitHub API', async ({ page }) => {
@@ -196,15 +207,16 @@ test.describe('GitHub API HTTP Provider Example', () => {
     const section = page.locator('#github-api')
     const grid = section.locator('[data-qa="grid"]')
 
-    // Wait for API response
-    await page.waitForTimeout(3000)
+    // Wait for GitHub API response
+    await page.waitForResponse(response =>
+      response.url().includes('api.github.com/search/repositories') && response.status() === 200
+    )
 
     // Verify grid has data (should have table headers)
     await expect(grid.locator('thead')).toBeVisible()
 
     // Verify at least one repository row is displayed
-    const rows = grid.locator('tbody tr')
-    await expect(rows.first()).toBeVisible()
+    await expect(grid.locator('tbody tr').first()).toBeVisible()
 
     // Verify columns are present
     await expect(grid.getByText('Repository')).toBeVisible()
@@ -217,8 +229,10 @@ test.describe('GitHub API HTTP Provider Example', () => {
 
     const section = page.locator('#github-api')
 
-    // Wait for search to complete
-    await page.waitForTimeout(3000)
+    // Wait for API response
+    await page.waitForResponse(response =>
+      response.url().includes('api.github.com/search/repositories')
+    )
 
     // Verify results count is shown
     const resultsText = section.locator('.control-group:has-text("Results:")')
@@ -233,19 +247,28 @@ test.describe('GitHub API HTTP Provider Example', () => {
     const grid = section.locator('[data-qa="grid"]')
 
     // Wait for initial load
-    await page.waitForTimeout(3000)
+    await page.waitForResponse(response =>
+      response.url().includes('api.github.com/search/repositories')
+    )
 
-    // Find and click page 2 button (if pagination exists)
+    // Try to find page 2 button (GitHub API might not return enough results)
     const page2Button = grid.locator('button:has-text("2")')
-    const page2Exists = await page2Button.count() > 0
 
-    if (page2Exists) {
+    // Only test pagination if page 2 exists
+    await page2Button.waitFor({ state: 'visible', timeout: 1000 }).catch(() => {
+      // Page 2 doesn't exist, skip this test
+    })
+
+    if (await page2Button.isVisible()) {
+      const responsePromise = page.waitForResponse(response =>
+        response.url().includes('api.github.com/search/repositories') &&
+        response.url().includes('page=2')
+      )
       await page2Button.click()
-      await page.waitForTimeout(2000)
+      await responsePromise
 
       // Verify URL contains page parameter
-      const url = new URL(page.url())
-      expect(url.searchParams.get('page')).toBe('2')
+      expect(page.url()).toContain('page=2')
     }
   })
 
@@ -262,15 +285,20 @@ test.describe('GitHub API HTTP Provider Example', () => {
     const sortSelect = section.locator('select#sort')
     await sortSelect.selectOption('updated')
 
-    // Click search
+    // Click search and wait for API response
+    const responsePromise = page.waitForResponse(response =>
+      response.url().includes('api.github.com/search/repositories') &&
+      response.url().includes('q=typescript') &&
+      response.url().includes('sort=updated')
+    )
     await section.locator('button.btn-primary').click()
-    await page.waitForTimeout(2000)
+    await responsePromise
 
     // Verify URL has all parameters with correct prefix
-    const url = new URL(page.url())
-    expect(url.searchParams.get('gh-q')).toBe('typescript')
-    expect(url.searchParams.get('gh-sort')).toBe('updated')
-    expect(url.searchParams.get('page')).toBe('1')
+    const url = page.url()
+    expect(url).toContain('gh-q=typescript')
+    expect(url).toContain('gh-sort=updated')
+    expect(url).toContain('page=1')
   })
 
   test('should handle search on Enter key press', async ({ page }) => {
@@ -279,16 +307,17 @@ test.describe('GitHub API HTTP Provider Example', () => {
     const section = page.locator('#github-api')
     const searchInput = section.locator('input#search')
 
-    // Clear and type new search
+    // Type and press Enter, wait for API response
     await searchInput.fill('vue3')
+    const responsePromise = page.waitForResponse(response =>
+      response.url().includes('api.github.com/search/repositories') &&
+      response.url().includes('q=vue3')
+    )
     await searchInput.press('Enter')
-
-    // Wait for search
-    await page.waitForTimeout(2000)
+    await responsePromise
 
     // Verify URL updated
-    const url = new URL(page.url())
-    expect(url.searchParams.get('gh-q')).toBe('vue3')
+    expect(page.url()).toContain('gh-q=vue3')
   })
 })
 
@@ -316,37 +345,43 @@ test.describe('Multi-State Example', () => {
     const section = page.locator('#multi-state')
     const grids = section.locator('[data-qa="grid"]')
 
-    // Wait for grids to load
-    await page.waitForTimeout(1000)
+    // Wait for both grids to have data
+    await expect(grids.first().locator('tbody tr').first()).toBeVisible()
+    await expect(grids.last().locator('tbody tr').first()).toBeVisible()
 
     // Get first grid (products) and sort by a column
     const firstGrid = grids.first()
     const firstSortableHeader = firstGrid.locator('th[data-sortable="true"]').first()
-    if (await firstSortableHeader.count() > 0) {
-      await firstSortableHeader.click()
-      await page.waitForTimeout(500)
 
-      // Verify URL has products prefix
-      const url = new URL(page.url())
-      const hasProductsParam = Array.from(url.searchParams.keys()).some(key => key.startsWith('products-'))
-      expect(hasProductsParam).toBe(true)
-    }
+    // Click first grid's sortable header
+    await firstSortableHeader.click()
+
+    // Wait for URL to update with products prefix
+    await page.waitForURL(url => {
+      const params = new URL(url).searchParams
+      return Array.from(params.keys()).some(key => key.startsWith('products-'))
+    })
+
+    // Verify URL has products prefix
+    expect(page.url()).toMatch(/products-/)
 
     // Get second grid (users) and sort by a column
     const secondGrid = grids.last()
     const secondSortableHeader = secondGrid.locator('th[data-sortable="true"]').first()
-    if (await secondSortableHeader.count() > 0) {
-      await secondSortableHeader.click()
-      await page.waitForTimeout(500)
 
-      // Verify URL has both prefixes
-      const url = new URL(page.url())
-      const hasProductsParam = Array.from(url.searchParams.keys()).some(key => key.startsWith('products-'))
-      const hasUsersParam = Array.from(url.searchParams.keys()).some(key => key.startsWith('users-'))
+    // Click second grid's sortable header
+    await secondSortableHeader.click()
 
-      expect(hasProductsParam).toBe(true)
-      expect(hasUsersParam).toBe(true)
-    }
+    // Wait for URL to update with users prefix
+    await page.waitForURL(url => {
+      const params = new URL(url).searchParams
+      return Array.from(params.keys()).some(key => key.startsWith('users-'))
+    })
+
+    // Verify URL has both prefixes
+    const finalUrl = page.url()
+    expect(finalUrl).toMatch(/products-/)
+    expect(finalUrl).toMatch(/users-/)
   })
 })
 
