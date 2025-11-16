@@ -649,6 +649,168 @@ function getRowOptions(user: any): RowOptions {
 </div>"
 `;
 
+exports[`Example Components > SearchSortExample.vue > should match snapshot 1`] = `
+"<div data-v-64fec0f4="">
+  <h2 data-v-64fec0f4="">Inline Search &amp; Sort Example</h2>
+  <div data-v-64fec0f4="" class="example-description">
+    <p data-v-64fec0f4=""> This example demonstrates <strong data-v-64fec0f4="">inline search and sort</strong> functionality. Each column header includes a search input field, allowing you to filter data in real-time. Click on column headers to sort, and type in the search boxes to filter results. </p>
+  </div>
+  <div data-v-64fec0f4="" class="example-section">
+    <h3 data-v-64fec0f4="">Demo</h3>
+    <div data-v-64fec0f4="" class="grid" data-qa="grid">
+      <div class="grid-table-wrapper">
+        <table class="grid-table">
+          <thead>
+            <tr class="grid-header-row">
+              <th class="grid-header-cell"><button type="button" class="grid-sort-button">ID</button></th>
+              <th class="grid-header-cell"><button type="button" class="grid-sort-button">Name</button></th>
+              <th class="grid-header-cell"><button type="button" class="grid-sort-button">Department</button></th>
+              <th class="grid-header-cell"><button type="button" class="grid-sort-button">Position</button></th>
+              <th class="grid-header-cell"><button type="button" class="grid-sort-button">Salary ($)</button></th>
+            </tr>
+            <tr class="grid-filter-row">
+              <td data-v-64fec0f4="" class="grid-filter-cell"><input data-v-64fec0f4="" type="text" class="filter-input" placeholder="Search ID..."></td>
+              <td data-v-64fec0f4="" class="grid-filter-cell"><input data-v-64fec0f4="" type="text" class="filter-input" placeholder="Search Name..."></td>
+              <td data-v-64fec0f4="" class="grid-filter-cell"><input data-v-64fec0f4="" type="text" class="filter-input" placeholder="Search Department..."></td>
+              <td data-v-64fec0f4="" class="grid-filter-cell"><input data-v-64fec0f4="" type="text" class="filter-input" placeholder="Search Position..."></td>
+              <td data-v-64fec0f4="" class="grid-filter-cell"><input data-v-64fec0f4="" type="text" class="filter-input" placeholder="Search Salary ($)..."></td>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="grid-empty-row">
+              <td colspan="5" class="grid-empty-cell">No results found</td>
+            </tr>
+            <!--v-if-->
+          </tbody>
+        </table>
+      </div>
+      <div class="grid-pagination">
+        <!-- Cursor-based pagination (Load More pattern) -->
+        <!--v-if-->
+      </div>
+    </div>
+  </div>
+  <div class="example-section" data-v-64fec0f4="">
+    <h3 data-v-64fec0f4="">Features</h3>
+    <ul data-v-64fec0f4="">
+      <li data-v-64fec0f4=""><strong data-v-64fec0f4="">Real-time Filtering:</strong> Type in any search box to filter results instantly</li>
+      <li data-v-64fec0f4=""><strong data-v-64fec0f4="">Multi-column Search:</strong> Apply filters to multiple columns simultaneously</li>
+      <li data-v-64fec0f4=""><strong data-v-64fec0f4="">Sortable Columns:</strong> Click column headers to sort ascending/descending</li>
+      <li data-v-64fec0f4=""><strong data-v-64fec0f4="">Combined Search &amp; Sort:</strong> Filtering and sorting work together seamlessly</li>
+      <li data-v-64fec0f4=""><strong data-v-64fec0f4="">Case-insensitive:</strong> Search is case-insensitive for better UX</li>
+    </ul>
+  </div>
+  <div class="example-section" data-v-64fec0f4="">
+    <h3 data-v-64fec0f4="">Code</h3><pre class="code-block" data-v-64fec0f4=""><code data-v-64fec0f4="">&lt;template&gt;
+  &lt;Grid
+    :data-provider="provider"
+    :columns="columns"
+  &gt;
+    &lt;template #filters&gt;
+      &lt;td
+        v-for="column in columns"
+        :key="column.key"
+        class="grid-filter-cell"
+      &gt;
+        &lt;input
+          v-model="filters[column.key]"
+          type="text"
+          class="filter-input"
+          :placeholder="\\\`Search \\\${column.label}...\\\`"
+          @input="onFilterChange"
+        &gt;
+      &lt;/td&gt;
+    &lt;/template&gt;
+  &lt;/Grid&gt;
+&lt;/template&gt;
+
+&lt;script setup lang="ts"&gt;
+import { ref } from 'vue'
+import { Grid, ArrayDataProvider, InMemoryStateProvider, type Column } from '@grid-vue/grid'
+
+// Sample dataset
+const employees = [
+  { id: 1, name: 'Alice Johnson', department: 'Engineering', position: 'Senior Developer', salary: 95000 },
+  { id: 2, name: 'Bob Smith', department: 'Marketing', position: 'Marketing Manager', salary: 75000 },
+  { id: 3, name: 'Carol Williams', department: 'Engineering', position: 'Tech Lead', salary: 120000 },
+  { id: 4, name: 'David Brown', department: 'Sales', position: 'Sales Representative', salary: 65000 },
+  { id: 5, name: 'Emma Davis', department: 'HR', position: 'HR Specialist', salary: 60000 },
+  { id: 6, name: 'Frank Miller', department: 'Engineering', position: 'Junior Developer', salary: 70000 },
+  { id: 7, name: 'Grace Wilson', department: 'Marketing', position: 'Content Writer', salary: 55000 },
+  { id: 8, name: 'Henry Moore', department: 'Sales', position: 'Sales Manager', salary: 85000 },
+  { id: 9, name: 'Iris Taylor', department: 'Engineering', position: 'DevOps Engineer', salary: 90000 },
+  { id: 10, name: 'Jack Anderson', department: 'HR', position: 'Recruiter', salary: 58000 }
+]
+
+// Create state provider for managing filter state
+const stateProvider = new InMemoryStateProvider()
+
+// Configure ArrayDataProvider with state provider
+const provider = new ArrayDataProvider({
+  items: employees,
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 5,
+  stateProvider
+})
+
+// Reactive filters object
+const filters = ref&lt;Record&lt;string, string&gt;&gt;({
+  id: '',
+  name: '',
+  department: '',
+  position: '',
+  salary: ''
+})
+
+// Handle filter changes
+const onFilterChange = async () =&gt; {
+  // Update state provider with filter values
+  Object.entries(filters.value).forEach(([key, value]) =&gt; {
+    if (value.trim()) {
+      stateProvider.setFilter(key, value)
+    } else {
+      stateProvider.clearFilter(key)
+    }
+  })
+
+  // Refresh data with new filters
+  await provider.refresh()
+}
+
+const columns: Column[] = [
+  { key: 'id', label: 'ID', sortable: true, sort: 'id' },
+  { key: 'name', label: 'Name', sortable: true, sort: 'name' },
+  { key: 'department', label: 'Department', sortable: true, sort: 'department' },
+  { key: 'position', label: 'Position', sortable: true, sort: 'position' },
+  { key: 'salary', label: 'Salary ($)', sortable: true, sort: 'salary' }
+]
+&lt;/script&gt;
+
+&lt;style scoped&gt;
+.filter-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.filter-input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+:deep(.grid-filter-cell) {
+  padding: 8px;
+  background: #f9f9f9;
+}
+&lt;/style&gt;</code></pre>
+  </div>
+</div>"
+`;
+
 exports[`Example Components > SortingExample.vue > should match snapshot 1`] = `
 "<div>
   <h2>Sorting Example</h2>

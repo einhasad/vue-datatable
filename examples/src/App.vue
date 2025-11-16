@@ -25,6 +25,7 @@
           <a href="#page-pagination" :class="['nav-link', { active: activeSection === 'page-pagination' }]" @click="scrollToSection">Page Pagination</a>
           <a href="#cursor-pagination" :class="['nav-link', { active: activeSection === 'cursor-pagination' }]" @click="scrollToSection">Cursor Pagination</a>
           <a href="#sorting" :class="['nav-link', { active: activeSection === 'sorting' }]" @click="scrollToSection">Sorting</a>
+          <a href="#search-sort" :class="['nav-link', { active: activeSection === 'search-sort' }]" @click="scrollToSection">Search & Sort</a>
           <a href="#custom-columns" :class="['nav-link', { active: activeSection === 'custom-columns' }]" @click="scrollToSection">Custom Columns</a>
           <a href="#row-actions" :class="['nav-link', { active: activeSection === 'row-actions' }]" @click="scrollToSection">Row Actions</a>
         </nav>
@@ -119,6 +120,11 @@
             <SortingExample />
           </section>
 
+          <!-- Search & Sort Section -->
+          <section id="search-sort" class="section">
+            <SearchSortExample />
+          </section>
+
           <!-- Custom Columns Section -->
           <section id="custom-columns" class="section">
             <CustomColumnsExample />
@@ -153,6 +159,7 @@ import StateProvidersExample from './pages/StateProvidersExample.vue'
 import PagePaginationExample from './pages/PagePaginationExample.vue'
 import CursorPaginationExample from './pages/CursorPaginationExample.vue'
 import SortingExample from './pages/SortingExample.vue'
+import SearchSortExample from './pages/SearchSortExample.vue'
 import CustomColumnsExample from './pages/CustomColumnsExample.vue'
 import RowActionsExample from './pages/RowActionsExample.vue'
 
@@ -181,6 +188,7 @@ const updateActiveSection = () => {
     'page-pagination',
     'cursor-pagination',
     'sorting',
+    'search-sort',
     'custom-columns',
     'row-actions'
   ]
