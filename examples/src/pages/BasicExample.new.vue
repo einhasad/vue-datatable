@@ -9,12 +9,6 @@
       </p>
     </div>
 
-    <div class="example-notice">
-      <strong>✅ Living Documentation:</strong> This code is extracted from tests and guaranteed to work!
-      <br>
-      <small>Source: <code>__tests__/examples/basicExample.ts</code></small>
-    </div>
-
     <div class="example-section">
       <h3>Demo</h3>
       <Grid
@@ -63,8 +57,6 @@ const columns: Column[] = [
 <script setup lang="ts">
 import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
 
-// This code is extracted from __tests__/examples/basicExample.ts
-// and guaranteed to work because it's tested!
 const users = [
   { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin' },
   { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'User' },
@@ -88,22 +80,6 @@ const columns: Column[] = [
 </script>
 
 <style scoped>
-.example-notice {
-  background: #d4edda;
-  border: 1px solid #c3e6cb;
-  border-radius: 4px;
-  padding: 12px;
-  margin: 16px 0;
-  color: #155724;
-}
-
-.example-notice code {
-  background: #c3e6cb;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 0.9em;
-}
-
 .example-description {
   margin: 16px 0;
   font-size: 1.05em;

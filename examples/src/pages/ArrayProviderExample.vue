@@ -61,16 +61,6 @@ const columns: Column[] = [
 ]
 &lt;/script&gt;</code></pre>
     </div>
-
-    <div class="example-section">
-      <h3>Key Features</h3>
-      <ul>
-        <li><strong>Client-side pagination:</strong> No server requests needed</li>
-        <li><strong>Sorting:</strong> Click column headers to sort data</li>
-        <li><strong>In-memory processing:</strong> Fast performance for small to medium datasets</li>
-        <li><strong>Simple configuration:</strong> Just pass an array and options</li>
-      </ul>
-    </div>
   </div>
 </template>
 

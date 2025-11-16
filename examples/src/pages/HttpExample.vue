@@ -55,60 +55,71 @@
     </div>
 
     <div class="example-section">
-      <h3>Key Features</h3>
-      <ul class="feature-list">
-        <li><strong>URL State Management:</strong> Search query, sort, and page number are synced with the URL</li>
-        <li><strong>Bookmarkable:</strong> Copy the URL to save your current search and filters</li>
-        <li><strong>Browser Navigation:</strong> Back/forward buttons work with pagination</li>
-        <li><strong>Page-based Pagination:</strong> Navigate through numbered pages of results</li>
-        <li><strong>Custom Response Adapter:</strong> Adapts GitHub's API response to the grid format</li>
-      </ul>
-    </div>
+      <h3>Code</h3>
+      <pre class="code-block" v-pre><code>&lt;template&gt;
+  &lt;div class="controls"&gt;
+    &lt;input
+      v-model="searchQuery"
+      type="text"
+      placeholder="Search repositories..."
+      @keyup.enter="handleSearch"
+    /&gt;
+    &lt;select v-model="sortBy" @change="handleSortChange"&gt;
+      &lt;option value="stars"&gt;Stars&lt;/option&gt;
+      &lt;option value="forks"&gt;Forks&lt;/option&gt;
+    &lt;/select&gt;
+    &lt;button @click="handleSearch"&gt;Search&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;Grid :data-provider="provider" :columns="columns" :auto-load="false" /&gt;
+&lt;/template&gt;
 
-    <div class="example-section">
-      <h3>Code Example</h3>
-      <pre class="code-block" v-pre><code>&lt;script setup lang="ts"&gt;
+&lt;script setup lang="ts"&gt;
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { Grid, HttpDataProvider, type Column } from '@grid-vue/grid'
 
 const router = useRouter()
+const route = useRoute()
 
-// Custom adapter for GitHub Search API
 class GitHubSearchAdapter {
+  private currentPage = 1
+
+  setCurrentPage(page: number) {
+    this.currentPage = page
+  }
+
   extractItems(response: any): any[] {
     return response.items || []
   }
 
   extractPagination(response: any) {
     const totalCount = response.total_count || 0
-    const perPage = 10
     return {
-      currentPage: 1,
-      perPage,
-      pageCount: Math.min(Math.ceil(totalCount / perPage), 100),
-      totalCount: Math.min(totalCount, 1000) // GitHub limits to 1000
+      currentPage: this.currentPage,
+      perPage: 10,
+      pageCount: Math.min(Math.ceil(totalCount / 10), 100),
+      totalCount: Math.min(totalCount, 1000)
     }
   }
 }
 
-// Custom HTTP client for GitHub API
+const searchQuery = ref('vue table')
+const sortBy = ref('stars')
+const adapter = new GitHubSearchAdapter()
+
 async function githubHttpClient(fullUrl: string): Promise&lt;any&gt; {
   const urlObj = new URL(fullUrl)
-  const q = urlObj.searchParams.get('search-q') || 'vue'
-  const sort = urlObj.searchParams.get('search-sort')?.replace('-', '') || 'stars'
+  const q = urlObj.searchParams.get('search-q') || searchQuery.value
+  const sort = urlObj.searchParams.get('search-sort')?.replace('-', '') || sortBy.value
   const page = urlObj.searchParams.get('page') || '1'
 
+  adapter.setCurrentPage(parseInt(page))
+
   const params = new URLSearchParams({
-    q: q,
-    sort: sort,
-    order: 'desc',
-    per_page: '10',
-    page: page
+    q, sort, order: 'desc', per_page: '10', page
   })
 
-  const url = \`https://api.github.com/search/repositories?\${params}\`
-  const response = await fetch(url, {
+  const response = await fetch(\`https://api.github.com/search/repositories?\${params}\`, {
     headers: { 'Accept': 'application/vnd.github.v3+json' }
   })
   return response.json()
@@ -119,14 +130,26 @@ const provider = new HttpDataProvider({
   pagination: true,
   paginationMode: 'page',
   pageSize: 10,
-  responseAdapter: new GitHubSearchAdapter(),
-  httpClient: githubHttpClient,
-  searchPrefix: 'search' // Prefix for URL params
+  responseAdapter: adapter,
+  httpClient: githubHttpClient
 }, router)
 
-// Load data on mount (reads from URL if available)
+function handleSearch() {
+  router.push({
+    query: {
+      ...route.query,
+      'search-q': searchQuery.value,
+      'search-sort': sortBy.value,
+      page: '1'
+    }
+  })
+  provider.refresh()
+}
+
 onMounted(() =&gt; {
-  provider.load()
+  searchQuery.value = (route.query['search-q'] as string) || 'vue table'
+  sortBy.value = (route.query['search-sort'] as string) || 'stars'
+  handleSearch()
 })
 &lt;/script&gt;</code></pre>
     </div>
@@ -279,28 +302,23 @@ const columns: Column[] = [
 ]
 
 async function handleSearch() {
-  console.log('🔍 handleSearch called')
-  console.log('  searchQuery:', searchQuery.value)
-  console.log('  sortBy:', sortBy.value)
+  // Update URL with new search params
+  await router.push({
+    query: {
+      ...route.query,
+      'search-q': searchQuery.value,
+      'search-sort': sortBy.value,
+      page: '1'
+    }
+  })
 
-  // Set query parameters - the provider will update the URL
-  provider.setQueryParam('q', searchQuery.value)
-  provider.setQueryParam('sort', sortBy.value)
-
-  // Use the Grid's refresh method to properly update pagination
+  // Refresh grid to load new data
   if (gridRef.value) {
-    console.log('  gridRef exists, calling refresh...')
     await gridRef.value.refresh()
     const paginationData = gridRef.value.pagination
-    console.log('  paginationData:', paginationData)
-    console.log('  provider.config.pagination:', provider.config.pagination)
-    console.log('  provider.config.paginationMode:', provider.config.paginationMode)
     if (paginationData) {
       totalCount.value = (paginationData as any).totalCount || 0
-      console.log('  totalCount set to:', totalCount.value)
     }
-  } else {
-    console.log('  ❌ gridRef is null!')
   }
 }
 
@@ -310,17 +328,9 @@ function handleSortChange() {
 
 // Initialize search query and sort from URL on mount
 onMounted(() => {
-  console.log('🚀 HttpExample mounted')
-  console.log('  gridRef.value:', gridRef.value)
-
   // Read initial values from URL or use defaults
-  const urlQuery = provider.getRawQueryParam('q')
-  const urlSort = provider.getRawQueryParam('sort')
-
-  searchQuery.value = urlQuery || 'vue table'
-  sortBy.value = urlSort || 'stars'
-
-  console.log('  Initial search params:', { q: searchQuery.value, sort: sortBy.value })
+  searchQuery.value = (route.query['search-q'] as string) || 'vue table'
+  sortBy.value = (route.query['search-sort'] as string) || 'stars'
 
   // Perform initial search
   handleSearch()
@@ -328,8 +338,8 @@ onMounted(() => {
 
 // Watch for route changes (browser back/forward)
 watch(() => route.query, () => {
-  const urlQuery = provider.getRawQueryParam('q')
-  const urlSort = provider.getRawQueryParam('sort')
+  const urlQuery = route.query['search-q'] as string
+  const urlSort = route.query['search-sort'] as string
 
   if (urlQuery) searchQuery.value = urlQuery
   if (urlSort) sortBy.value = urlSort
