@@ -175,12 +175,10 @@ test.describe('GitHub API HTTP Provider Example', () => {
     await page.goto('/#github-api')
 
     const section = page.locator('#github-api')
-    const grid = section.locator('[data-qa="grid"]')
 
-    // Wait for initial load
-    await page.waitForResponse(response =>
-      response.url().includes('api.github.com/search/repositories')
-    )
+    // Wait for initial load by checking for data
+    const grid = section.locator('[data-qa="grid"]')
+    await expect(grid.locator('tbody tr').first()).toBeVisible({ timeout: 10000 })
 
     // Change sort order and wait for new API request
     const sortSelect = section.locator('select#sort')
@@ -240,10 +238,8 @@ test.describe('GitHub API HTTP Provider Example', () => {
     const section = page.locator('#github-api')
     const grid = section.locator('[data-qa="grid"]')
 
-    // Wait for initial load
-    await page.waitForResponse(response =>
-      response.url().includes('api.github.com/search/repositories')
-    )
+    // Wait for initial data to load
+    await expect(grid.locator('tbody tr').first()).toBeVisible({ timeout: 10000 })
 
     // Try to find page 2 button (GitHub API might not return enough results)
     const page2Button = grid.locator('button:has-text("2")')
@@ -261,8 +257,9 @@ test.describe('GitHub API HTTP Provider Example', () => {
       await page2Button.click()
       await responsePromise
 
-      // Verify URL contains page parameter
-      expect(page.url()).toContain('page=2')
+      // Verify URL contains page=2 (not other prefixed page params)
+      const url = new URL(page.url())
+      expect(url.searchParams.get('page')).toBe('2')
     }
   })
 
@@ -328,9 +325,9 @@ test.describe('Multi-State Example', () => {
     const grids = section.locator('[data-qa="grid"]')
     await expect(grids).toHaveCount(2)
 
-    // Verify section headers
-    await expect(section.getByText('Array Provider with "products" prefix')).toBeVisible()
-    await expect(section.getByText('Mock HTTP Provider with "users" prefix')).toBeVisible()
+    // Verify section headers using getByRole to avoid matching code blocks
+    await expect(section.getByRole('heading', { name: /Array Provider with "products" prefix/i })).toBeVisible()
+    await expect(section.getByRole('heading', { name: /Mock HTTP Provider with "users" prefix/i })).toBeVisible()
   })
 
   test('should maintain independent state with different URL prefixes', async ({ page }) => {

@@ -1402,10 +1402,10 @@ const multiStateArrayProvider = new ArrayDataProvider({
 })
 
 const multiStateArrayColumns: Column[] = [
-  { key: 'id', label: 'ID', sortable: true },
-  { key: 'name', label: 'Product', sortable: true },
-  { key: 'category', label: 'Category', sortable: true },
-  { key: 'price', label: 'Price ($)', sortable: true }
+  { key: 'id', label: 'ID', sortable: true, sort: 'id' },
+  { key: 'name', label: 'Product', sortable: true, sort: 'name' },
+  { key: 'category', label: 'Category', sortable: true, sort: 'category' },
+  { key: 'price', label: 'Price ($)', sortable: true, sort: 'price' }
 ]
 
 // Multi-State Example: HTTP Provider (mock)
@@ -1423,10 +1423,10 @@ const multiStateHttpProvider = new HttpDataProvider({
 })
 
 const multiStateHttpColumns: Column[] = [
-  { key: 'id', label: 'ID', sortable: true },
-  { key: 'username', label: 'Username', sortable: true },
-  { key: 'email', label: 'Email', sortable: true },
-  { key: 'status', label: 'Status', sortable: true }
+  { key: 'id', label: 'ID', sortable: true, sort: 'id' },
+  { key: 'username', label: 'Username', sortable: true, sort: 'username' },
+  { key: 'email', label: 'Email', sortable: true, sort: 'email' },
+  { key: 'status', label: 'Status', sortable: true, sort: 'status' }
 ]
 
 // GitHub API Example
