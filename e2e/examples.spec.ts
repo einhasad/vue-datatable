@@ -24,9 +24,6 @@ test.describe('Basic Example', () => {
     // Verify page loaded
     await expect(section.locator('h2')).toContainText('Basic Example')
 
-    // Verify living documentation notice is shown
-    await expect(section.locator('.example-notice')).toContainText('Living Documentation')
-
     // Verify grid is rendered
     const grid = section.locator('[data-qa="grid"]')
     await expect(grid).toBeVisible()
@@ -39,15 +36,6 @@ test.describe('Basic Example', () => {
     await expect(section.locator('.code-block')).toBeVisible()
     await expect(section.locator('.code-block')).toContainText('ArrayDataProvider')
   })
-
-  test('should show source file reference', async ({ page }) => {
-    await page.goto('/#basic')
-
-    const section = page.locator('#basic')
-
-    // Verify source file is referenced
-    await expect(section.locator('.example-notice code')).toContainText('__tests__/examples/basicExample.ts')
-  })
 })
 
 test.describe('Array Provider Example', () => {
@@ -58,9 +46,6 @@ test.describe('Array Provider Example', () => {
 
     // Verify page loaded
     await expect(section.locator('h2')).toContainText('Array Provider Example')
-
-    // Verify living documentation notice
-    await expect(section.locator('.example-notice')).toContainText('Living Documentation')
 
     // Verify grid is rendered
     const grid = section.locator('[data-qa="grid"]')
@@ -101,26 +86,7 @@ test.describe('Array Provider Example', () => {
   })
 })
 
-test.describe('Living Documentation Integrity', () => {
-  test('all example pages should have living documentation notice', async ({ page }) => {
-    const examples = [
-      { name: 'Basic Example', hash: '#basic' },
-      { name: 'Array Provider', hash: '#array-provider' }
-    ]
-
-    for (const example of examples) {
-      await page.goto(`/${example.hash}`)
-
-      const section = page.locator(example.hash)
-
-      // Every example must show it's living documentation
-      await expect(section.locator('.example-notice')).toContainText('Living Documentation')
-
-      // Must reference source file
-      await expect(section.locator('.example-notice code')).toContainText('__tests__/examples/')
-    }
-  })
-
+test.describe('Example Integrity', () => {
   test('all examples should display code and working demo', async ({ page }) => {
     const examples = [
       { name: 'Basic Example', hash: '#basic' },
@@ -172,7 +138,6 @@ test.describe('Cross-Browser Compatibility', () => {
     // Core functionality should work in all browsers
     await expect(section.locator('[data-qa="grid"]')).toBeVisible()
     await expect(section.locator('.code-block')).toBeVisible()
-    await expect(section.locator('.example-notice')).toBeVisible()
 
     console.log(`✓ Basic Example works in ${browserName}`)
   })

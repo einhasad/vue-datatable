@@ -20,8 +20,15 @@
           </div>
           <div class="nav-section">
             <span class="nav-section-title">State Providers</span>
-            <a href="#state-inmemory" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'state-inmemory' }]" @click="scrollToStateProvider('inmemory')">InMemory</a>
-            <a href="#state-localstorage" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'state-localstorage' }]" @click="scrollToStateProvider('localstorage')">LocalStorage</a>
+            <a href="#state-inmemory" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'state-inmemory' }]" @click="scrollToSection">InMemory</a>
+            <a href="#state-localstorage" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'state-localstorage' }]" @click="scrollToSection">LocalStorage</a>
+            <a href="#state-queryparams" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'state-queryparams' }]" @click="scrollToSection">QueryParams</a>
+            <a href="#state-hash" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'state-hash' }]" @click="scrollToSection">Hash</a>
+          </div>
+          <div class="nav-section">
+            <span class="nav-section-title">Advanced</span>
+            <a href="#multi-state" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'multi-state' }]" @click="scrollToSection">Multi-State Example</a>
+            <a href="#github-api" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'github-api' }]" @click="scrollToSection">GitHub API</a>
           </div>
           <a href="#page-pagination" :class="['nav-link', { active: activeSection === 'page-pagination' }]" @click="scrollToSection">Page Pagination</a>
           <a href="#cursor-pagination" :class="['nav-link', { active: activeSection === 'cursor-pagination' }]" @click="scrollToSection">Cursor Pagination</a>
@@ -86,10 +93,6 @@
             <div>
               <h2>Basic Example</h2>
 
-              <div class="example-notice">
-                📖 <strong>Living Documentation:</strong> This example is extracted from <code>__tests__/examples/basicExample.ts</code> and is verified by unit tests to ensure accuracy.
-              </div>
-
               <div class="example-description">
                 <p>
                   This example demonstrates the most basic usage of Grid Vue with an ArrayDataProvider.
@@ -146,10 +149,6 @@ const columns: Column[] = [
           <section id="array-provider" class="section">
             <div>
               <h2>Array Provider Example</h2>
-
-              <div class="example-notice">
-                📖 <strong>Living Documentation:</strong> This example is extracted from <code>__tests__/examples/arrayProviderExample.ts</code> and is verified by unit tests to ensure accuracy.
-              </div>
 
               <div class="example-description">
                 <p>
@@ -335,39 +334,20 @@ const provider = new HttpDataProvider({
             </div>
           </section>
 
-          <!-- State Providers Section -->
-          <section id="state-providers" class="section">
+          <!-- InMemory State Provider Section -->
+          <section id="state-inmemory" class="section">
             <div>
-              <h2>State Providers</h2>
+              <h2>InMemory State Provider</h2>
               <p>
-                State Providers manage grid state (filters, sorting, pagination) independently from data fetching.
-                This separation allows you to choose where and how state is persisted.
+                Stores state in memory. State is lost on page refresh. Useful for temporary filtering/sorting or testing.
               </p>
-
-              <div class="tabs">
-                <button
-                  v-for="tab in stateTabs"
-                  :key="tab.id"
-                  :class="['tab', { active: stateActiveTab === tab.id }]"
-                  @click="stateActiveTab = tab.id"
-                >
-                  {{ tab.label }}
-                </button>
+              <div class="example-section">
+                <h3>Demo</h3>
+                <Grid :data-provider="inMemoryProvider" :columns="stateColumns" />
               </div>
-
-              <div class="tab-content">
-                <!-- InMemory State Provider -->
-                <div v-if="stateActiveTab === 'inmemory'" class="example">
-                  <h3>InMemoryStateProvider</h3>
-                  <p>
-                    Stores state in memory. State is lost on page refresh. Useful for temporary filtering/sorting or testing.
-                  </p>
-                  <div class="grid-container">
-                    <Grid :data-provider="inMemoryProvider" :columns="stateColumns" />
-                  </div>
-                  <div class="code-example">
-                    <h4>Code Example:</h4>
-                    <pre><code>import { ArrayDataProvider, InMemoryStateProvider } from '@grid-vue/grid'
+              <div class="example-section">
+                <h3>Code</h3>
+                <pre class="code-block"><code>import { ArrayDataProvider, InMemoryStateProvider } from '@grid-vue/grid'
 
 const stateProvider = new InMemoryStateProvider()
 
@@ -378,25 +358,28 @@ const provider = new ArrayDataProvider({
   pageSize: 5,
   stateProvider
 })</code></pre>
-                  </div>
-                </div>
+              </div>
+            </div>
+          </section>
 
-                <!-- LocalStorage State Provider -->
-                <div v-if="stateActiveTab === 'localstorage'" class="example">
-                  <h3>LocalStorageStateProvider</h3>
-                  <p>
-                    Stores state in browser localStorage. State persists across page refreshes and browser sessions.
-                    Useful for preserving user preferences.
-                  </p>
-                  <p class="info">
-                    Try filtering or sorting, then refresh the page - your preferences will be restored!
-                  </p>
-                  <div class="grid-container">
-                    <Grid :data-provider="localStorageProvider" :columns="stateColumns" />
-                  </div>
-                  <div class="code-example">
-                    <h4>Code Example:</h4>
-                    <pre><code>import { ArrayDataProvider, LocalStorageStateProvider } from '@grid-vue/grid'
+          <!-- LocalStorage State Provider Section -->
+          <section id="state-localstorage" class="section">
+            <div>
+              <h2>LocalStorage State Provider</h2>
+              <p>
+                Stores state in browser localStorage. State persists across page refreshes and browser sessions.
+                Useful for preserving user preferences.
+              </p>
+              <p class="info">
+                Try sorting, then refresh the page - your preferences will be restored!
+              </p>
+              <div class="example-section">
+                <h3>Demo</h3>
+                <Grid :data-provider="localStorageProvider" :columns="stateColumns" />
+              </div>
+              <div class="example-section">
+                <h3>Code</h3>
+                <pre class="code-block"><code>import { ArrayDataProvider, LocalStorageStateProvider } from '@grid-vue/grid'
 
 const stateProvider = new LocalStorageStateProvider({
   storageKey: 'my-grid-state' // default: 'grid-state'
@@ -409,8 +392,264 @@ const provider = new ArrayDataProvider({
   pageSize: 5,
   stateProvider
 })</code></pre>
+              </div>
+            </div>
+          </section>
+
+          <!-- QueryParams State Provider Section -->
+          <section id="state-queryparams" class="section">
+            <div>
+              <h2>QueryParams State Provider</h2>
+              <p>
+                Stores state in URL query parameters. State is shareable via URL and works with browser navigation (back/forward).
+                Perfect for bookmarkable filtered views and SEO-friendly pages. Requires Vue Router.
+              </p>
+              <p class="info">
+                Try sorting - notice how the URL updates! You can share this URL or use browser back/forward.
+              </p>
+              <div class="example-section">
+                <h3>Demo</h3>
+                <Grid :data-provider="queryParamsProvider" :columns="stateColumns" />
+              </div>
+              <div class="example-section">
+                <h3>Code</h3>
+                <pre class="code-block"><code>import { useRouter } from 'vue-router'
+import { ArrayDataProvider, QueryParamsStateProvider } from '@grid-vue/grid'
+
+const router = useRouter()
+
+const stateProvider = new QueryParamsStateProvider({
+  router,
+  prefix: 'qp' // query params will be: ?qp-sort=name
+})
+
+const provider = new ArrayDataProvider({
+  items: users,
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 5,
+  stateProvider
+})</code></pre>
+              </div>
+            </div>
+          </section>
+
+          <!-- Hash State Provider Section -->
+          <section id="state-hash" class="section">
+            <div>
+              <h2>Hash State Provider</h2>
+              <p>
+                Stores state in URL hash fragment. Similar to QueryParams but doesn't interfere with query parameters.
+                Useful for hash-based routing or when query params are used by other parts of the application.
+              </p>
+              <p class="info">
+                Try sorting - notice how the hash fragment updates!
+              </p>
+              <div class="example-section">
+                <h3>Demo</h3>
+                <Grid :data-provider="hashProvider" :columns="stateColumns" />
+              </div>
+              <div class="example-section">
+                <h3>Code</h3>
+                <pre class="code-block"><code>import { useRouter } from 'vue-router'
+import { ArrayDataProvider, HashStateProvider } from '@grid-vue/grid'
+
+const router = useRouter()
+
+const stateProvider = new HashStateProvider({
+  router,
+  prefix: 'hash' // hash will be: #hash-sort=name
+})
+
+const provider = new ArrayDataProvider({
+  items: users,
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 5,
+  stateProvider
+})</code></pre>
+              </div>
+            </div>
+          </section>
+
+          <!-- Multi-State Example Section -->
+          <section id="multi-state" class="section">
+            <div>
+              <h2>Multi-State Example</h2>
+              <p>
+                This example demonstrates using multiple grids with different state providers and URL prefixes.
+                Each grid maintains its own independent state, allowing complex dashboards with multiple data sources.
+              </p>
+              <p class="info">
+                Try sorting or paginating both grids - notice how each maintains its own state with different URL prefixes!
+              </p>
+
+              <div class="example-section">
+                <h3>Array Provider with "products" prefix</h3>
+                <Grid :data-provider="multiStateArrayProvider" :columns="multiStateArrayColumns" />
+              </div>
+
+              <div class="example-section">
+                <h3>Mock HTTP Provider with "users" prefix</h3>
+                <Grid :data-provider="multiStateHttpProvider" :columns="multiStateHttpColumns" />
+              </div>
+
+              <div class="example-section">
+                <h3>Code</h3>
+                <pre class="code-block"><code>import { useRouter } from 'vue-router'
+import { ArrayDataProvider, HttpDataProvider, QueryParamsStateProvider } from '@grid-vue/grid'
+
+const router = useRouter()
+
+// First grid: Array provider with "products" prefix
+const productsStateProvider = new QueryParamsStateProvider({
+  router,
+  prefix: 'products'
+})
+
+const productsProvider = new ArrayDataProvider({
+  items: products,
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 5,
+  stateProvider: productsStateProvider
+})
+
+// Second grid: HTTP provider with "users" prefix
+const usersStateProvider = new QueryParamsStateProvider({
+  router,
+  prefix: 'users'
+})
+
+const usersProvider = new HttpDataProvider({
+  url: '/api/users',
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 5,
+  stateProvider: usersStateProvider,
+  httpClient: mockHttpClient,
+  responseAdapter: customAdapter
+})
+
+// URL will contain both: ?products-sort=name&products-page=2&users-sort=email&users-page=1</code></pre>
+              </div>
+            </div>
+          </section>
+
+          <!-- GitHub API Example Section -->
+          <section id="github-api" class="section">
+            <div>
+              <h2>GitHub API Example</h2>
+              <p>
+                This example demonstrates HttpDataProvider with the real GitHub API.
+                Search for repositories, sort by stars/forks/updated, and navigate pages - all state synced with URL!
+              </p>
+
+              <div class="example-section">
+                <h3>Search & Filters</h3>
+                <div class="controls">
+                  <div class="control-group">
+                    <label for="search">Search Repositories:</label>
+                    <input
+                      id="search"
+                      v-model="githubSearchQuery"
+                      type="text"
+                      placeholder="e.g., vue datatable"
+                      class="search-input"
+                      @keyup.enter="handleGithubSearch"
+                    />
+                    <button @click="handleGithubSearch" class="btn btn-primary">Search</button>
+                  </div>
+
+                  <div class="control-group">
+                    <label for="sort">Sort By:</label>
+                    <select id="sort" v-model="githubSortBy" @change="handleGithubSearch" class="sort-select">
+                      <option value="stars">⭐ Stars</option>
+                      <option value="forks">🔱 Forks</option>
+                      <option value="updated">🕐 Recently Updated</option>
+                      <option value="help-wanted-issues">🙋 Help Wanted</option>
+                    </select>
+                  </div>
+
+                  <div class="control-group" v-if="githubTotalCount > 0">
+                    <span>Results: {{ githubTotalCount.toLocaleString() }} repositories</span>
                   </div>
                 </div>
+              </div>
+
+              <div class="example-section">
+                <h3>Results</h3>
+                <Grid
+                  ref="githubGridRef"
+                  :data-provider="githubProvider"
+                  :columns="githubColumns"
+                  :auto-load="false"
+                />
+              </div>
+
+              <div class="example-section">
+                <h3>Code</h3>
+                <pre class="code-block"><code>// Custom adapter for GitHub API response format
+class GitHubSearchAdapter {
+  private currentPage = 1
+
+  setCurrentPage(page: number) {
+    this.currentPage = page
+  }
+
+  extractItems(response: any): any[] {
+    return response.items || []
+  }
+
+  extractPagination(response: any) {
+    const totalCount = response.total_count || 0
+    return {
+      currentPage: this.currentPage,
+      perPage: 10,
+      pageCount: Math.min(Math.ceil(totalCount / 10), 100),
+      totalCount: Math.min(totalCount, 1000)
+    }
+  }
+
+  isSuccess(response: any): boolean {
+    return !response.message
+  }
+
+  getErrorMessage(response: any): string {
+    return response.message || 'API request failed'
+  }
+}
+
+const adapter = new GitHubSearchAdapter()
+
+async function githubHttpClient(fullUrl: string): Promise&lt;any&gt; {
+  const urlObj = new URL(fullUrl)
+  const q = urlObj.searchParams.get('gh-q') || 'vue table'
+  const sort = urlObj.searchParams.get('gh-sort') || 'stars'
+  const page = urlObj.searchParams.get('page') || '1'
+
+  adapter.setCurrentPage(parseInt(page))
+
+  const params = new URLSearchParams({
+    q, sort, order: 'desc', per_page: '10', page
+  })
+
+  const response = await fetch(\`https://api.github.com/search/repositories?\${params}\`)
+  return response.json()
+}
+
+const provider = new HttpDataProvider({
+  url: 'https://api.github.com/search/repositories',
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 10,
+  responseAdapter: adapter,
+  httpClient: githubHttpClient,
+  stateProvider: new QueryParamsStateProvider({
+    router,
+    prefix: 'gh'
+  })
+})</code></pre>
               </div>
             </div>
           </section>
@@ -976,11 +1215,14 @@ function getRowOptions(user: any): RowOptions {
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
-import { Grid, ArrayDataProvider, HttpDataProvider, InMemoryStateProvider, LocalStorageStateProvider, type Column, type ResponseAdapter, type RowOptions } from '@grid-vue/grid'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { Grid, ArrayDataProvider, HttpDataProvider, InMemoryStateProvider, LocalStorageStateProvider, QueryParamsStateProvider, HashStateProvider, type Column, type ResponseAdapter, type RowOptions } from '@grid-vue/grid'
+
+const router = useRouter()
+const route = useRoute()
 
 const activeSection = ref('introduction')
-const stateProviderTab = ref<string | null>(null)
 
 // Basic Example
 const basicUsers = [
@@ -1110,12 +1352,6 @@ const stateColumns: Column[] = [
   { key: 'status', label: 'Status', sort: 'status', value: (m) => m.status }
 ]
 
-const stateActiveTab = ref('inmemory')
-const stateTabs = [
-  { id: 'inmemory', label: 'InMemory' },
-  { id: 'localstorage', label: 'LocalStorage' }
-]
-
 const inMemoryProvider = new ArrayDataProvider({
   items: stateUsers,
   pagination: true,
@@ -1130,6 +1366,232 @@ const localStorageProvider = new ArrayDataProvider({
   paginationMode: 'page',
   pageSize: 5,
   stateProvider: new LocalStorageStateProvider({ storageKey: 'grid-demo-state' })
+})
+
+const queryParamsProvider = new ArrayDataProvider({
+  items: stateUsers,
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 5,
+  stateProvider: new QueryParamsStateProvider({
+    router,
+    prefix: 'qp'
+  })
+})
+
+const hashProvider = new ArrayDataProvider({
+  items: stateUsers,
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 5,
+  stateProvider: new HashStateProvider({
+    router,
+    prefix: 'hash'
+  })
+})
+
+// Multi-State Example: Array Provider
+const multiStateArrayProvider = new ArrayDataProvider({
+  items: products,
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 5,
+  stateProvider: new QueryParamsStateProvider({
+    router,
+    prefix: 'products'
+  })
+})
+
+const multiStateArrayColumns: Column[] = [
+  { key: 'id', label: 'ID', sortable: true },
+  { key: 'name', label: 'Product', sortable: true },
+  { key: 'category', label: 'Category', sortable: true },
+  { key: 'price', label: 'Price ($)', sortable: true }
+]
+
+// Multi-State Example: HTTP Provider (mock)
+const multiStateHttpProvider = new HttpDataProvider({
+  url: '/api/users',
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 5,
+  httpClient: mockHttpClient,
+  responseAdapter: customAdapter,
+  stateProvider: new QueryParamsStateProvider({
+    router,
+    prefix: 'users'
+  })
+})
+
+const multiStateHttpColumns: Column[] = [
+  { key: 'id', label: 'ID', sortable: true },
+  { key: 'username', label: 'Username', sortable: true },
+  { key: 'email', label: 'Email', sortable: true },
+  { key: 'status', label: 'Status', sortable: true }
+]
+
+// GitHub API Example
+class GitHubSearchAdapter {
+  private currentPage = 1
+
+  setCurrentPage(page: number) {
+    this.currentPage = page
+  }
+
+  extractItems(response: any): any[] {
+    return response.items || []
+  }
+
+  extractPagination(response: any) {
+    const totalCount = response.total_count || 0
+    const perPage = 10
+    return {
+      currentPage: this.currentPage,
+      perPage,
+      pageCount: Math.min(Math.ceil(totalCount / perPage), 100),
+      totalCount: Math.min(totalCount, 1000)
+    }
+  }
+
+  isSuccess(response: any): boolean {
+    return !response.message
+  }
+
+  getErrorMessage(response: any): string {
+    return response.message || 'API request failed'
+  }
+}
+
+const githubSearchQuery = ref('vue table')
+const githubSortBy = ref('stars')
+const githubTotalCount = ref(0)
+const githubGridRef = ref<any>(null)
+
+const githubAdapter = new GitHubSearchAdapter()
+
+async function githubHttpClient(fullUrl: string): Promise<any> {
+  const urlObj = new URL(fullUrl)
+  const q = urlObj.searchParams.get('gh-q') || githubSearchQuery.value || 'vue table'
+  const sort = urlObj.searchParams.get('gh-sort')?.replace('-', '') || githubSortBy.value
+  const page = urlObj.searchParams.get('page') || '1'
+
+  githubAdapter.setCurrentPage(parseInt(page))
+
+  const params = new URLSearchParams({
+    q,
+    sort,
+    order: 'desc',
+    per_page: '10',
+    page
+  })
+
+  const url = `https://api.github.com/search/repositories?${params.toString()}`
+
+  const response = await fetch(url, {
+    headers: {
+      'Accept': 'application/vnd.github.v3+json'
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`)
+  }
+
+  return response.json()
+}
+
+const githubProvider = new HttpDataProvider({
+  url: 'https://api.github.com/search/repositories',
+  pagination: true,
+  paginationMode: 'page',
+  pageSize: 10,
+  responseAdapter: githubAdapter,
+  httpClient: githubHttpClient,
+  stateProvider: new QueryParamsStateProvider({
+    router,
+    prefix: 'gh'
+  })
+})
+
+const githubColumns: Column[] = [
+  {
+    key: 'full_name',
+    label: 'Repository',
+    component: (row) => ({
+      is: 'a',
+      props: {
+        href: row.html_url,
+        target: '_blank',
+        style: {
+          color: '#667eea',
+          fontWeight: 'bold',
+          textDecoration: 'none'
+        }
+      },
+      content: row.full_name
+    })
+  },
+  {
+    key: 'description',
+    label: 'Description',
+    value: (row) => {
+      const desc = row.description || 'No description'
+      return desc.length > 100 ? desc.substring(0, 100) + '...' : desc
+    }
+  },
+  {
+    key: 'stargazers_count',
+    label: '⭐ Stars',
+    value: (row) => row.stargazers_count.toLocaleString()
+  },
+  {
+    key: 'forks_count',
+    label: '🔱 Forks',
+    value: (row) => row.forks_count.toLocaleString()
+  },
+  {
+    key: 'language',
+    label: 'Language',
+    value: (row) => row.language || 'Unknown'
+  },
+  {
+    key: 'updated_at',
+    label: 'Updated',
+    value: (row) => new Date(row.updated_at).toLocaleDateString()
+  }
+]
+
+async function handleGithubSearch() {
+  await router.push({
+    query: {
+      ...route.query,
+      'gh-q': githubSearchQuery.value,
+      'gh-sort': githubSortBy.value,
+      page: '1'
+    }
+  })
+
+  if (githubGridRef.value) {
+    await githubGridRef.value.refresh()
+    const paginationData = githubGridRef.value.pagination
+    if (paginationData) {
+      githubTotalCount.value = (paginationData as any).totalCount || 0
+    }
+  }
+}
+
+onMounted(() => {
+  githubSearchQuery.value = (route.query['gh-q'] as string) || 'vue table'
+  githubSortBy.value = (route.query['gh-sort'] as string) || 'stars'
+  handleGithubSearch()
+})
+
+watch(() => route.query, () => {
+  const urlQuery = route.query['gh-q'] as string
+  const urlSort = route.query['gh-sort'] as string
+
+  if (urlQuery) githubSearchQuery.value = urlQuery
+  if (urlSort) githubSortBy.value = urlSort
 })
 
 // Page Pagination Example
@@ -1437,26 +1899,18 @@ const scrollToSection = (event: Event) => {
   }
 }
 
-const scrollToStateProvider = (tab: string) => {
-  return (event: Event) => {
-    event.preventDefault()
-    stateProviderTab.value = tab
-    stateActiveTab.value = tab
-    const element = document.getElementById('state-providers')
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      activeSection.value = `state-${tab}`
-    }
-  }
-}
-
 const updateActiveSection = () => {
   const sections = [
     'introduction',
     'basic',
     'array-provider',
     'http-provider',
-    'state-providers',
+    'state-inmemory',
+    'state-localstorage',
+    'state-queryparams',
+    'state-hash',
+    'multi-state',
+    'github-api',
     'page-pagination',
     'cursor-pagination',
     'sorting',
@@ -1470,11 +1924,7 @@ const updateActiveSection = () => {
   for (let i = sections.length - 1; i >= 0; i--) {
     const section = document.getElementById(sections[i])
     if (section && section.offsetTop <= scrollPosition) {
-      if (sections[i] === 'state-providers' && stateProviderTab.value) {
-        activeSection.value = `state-${stateProviderTab.value}`
-      } else {
-        activeSection.value = sections[i]
-      }
+      activeSection.value = sections[i]
       break
     }
   }
@@ -1626,24 +2076,6 @@ onUnmounted(() => {
   margin-bottom: 2rem;
 }
 
-.example-notice {
-  background: #ebf8ff;
-  border-left: 4px solid #4299e1;
-  border-radius: 0.25rem;
-  padding: 0.75rem 1rem;
-  margin-bottom: 1.5rem;
-  font-size: 0.9rem;
-  color: #2c5282;
-}
-
-.example-notice code {
-  background: #bee3f8;
-  padding: 0.2rem 0.4rem;
-  border-radius: 0.25rem;
-  font-family: 'Courier New', monospace;
-  font-size: 0.85rem;
-  color: #2c5282;
-}
 
 .example-description {
   margin-bottom: 1.5rem;
@@ -1695,43 +2127,70 @@ onUnmounted(() => {
   color: #e2e8f0;
 }
 
-.tabs {
+.controls {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  border-bottom: 2px solid #e2e8f0;
-}
-
-.tab {
-  padding: 0.75rem 1.5rem;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #4a5568;
-  transition: all 0.2s;
-  margin-bottom: -2px;
-}
-
-.tab:hover {
-  color: #667eea;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
   background: #f7fafc;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
 }
 
-.tab.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 200px;
+  flex: 1;
+}
+
+.control-group label {
+  font-size: 0.875rem;
   font-weight: 600;
+  color: #4a5568;
 }
 
-.tab-content {
-  padding: 1rem 0;
+.search-input,
+.sort-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 0.375rem;
+  font-size: 0.9rem;
+  color: #2d3748;
+  background: white;
+  transition: all 0.2s;
 }
 
-.example {
-  margin-bottom: 2rem;
+.search-input:focus,
+.sort-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-primary {
+  padding: 0.5rem 1rem;
+  background: #667eea;
+  color: white;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  align-self: flex-end;
+}
+
+.btn-primary:hover {
+  background: #5a67d8;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
 
 .grid-container {
