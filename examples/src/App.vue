@@ -86,6 +86,10 @@
             <div>
               <h2>Basic Example</h2>
 
+              <div class="example-notice">
+                📖 <strong>Living Documentation:</strong> This example is extracted from <code>__tests__/examples/basicExample.ts</code> and is verified by unit tests to ensure accuracy.
+              </div>
+
               <div class="example-description">
                 <p>
                   This example demonstrates the most basic usage of Grid Vue with an ArrayDataProvider.
@@ -143,12 +147,26 @@ const columns: Column[] = [
             <div>
               <h2>Array Provider Example</h2>
 
+              <div class="example-notice">
+                📖 <strong>Living Documentation:</strong> This example is extracted from <code>__tests__/examples/arrayProviderExample.ts</code> and is verified by unit tests to ensure accuracy.
+              </div>
+
               <div class="example-description">
                 <p>
                   The <strong>ArrayDataProvider</strong> is perfect for working with static, in-memory data.
                   It supports client-side pagination, sorting, and filtering without requiring a backend API.
                   This example demonstrates its key features including page-based pagination and sorting capabilities.
                 </p>
+              </div>
+
+              <div class="example-section">
+                <h3>Key Features</h3>
+                <ul class="feature-list">
+                  <li><strong>Client-side pagination:</strong> No backend required for pagination</li>
+                  <li><strong>Sorting:</strong> Sort by any column with a single click</li>
+                  <li><strong>Filtering:</strong> Filter data locally in the browser</li>
+                  <li><strong>Fast:</strong> Perfect for datasets up to thousands of rows</li>
+                </ul>
               </div>
 
               <div class="example-section">
@@ -1606,6 +1624,25 @@ onUnmounted(() => {
 
 .example-section {
   margin-bottom: 2rem;
+}
+
+.example-notice {
+  background: #ebf8ff;
+  border-left: 4px solid #4299e1;
+  border-radius: 0.25rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  color: #2c5282;
+}
+
+.example-notice code {
+  background: #bee3f8;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #2c5282;
 }
 
 .example-description {
