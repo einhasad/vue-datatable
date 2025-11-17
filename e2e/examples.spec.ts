@@ -124,7 +124,7 @@ test.describe('Example Integrity', () => {
 })
 
 test.describe('GitHub API HTTP Provider Example', () => {
-  test.skip('should render GitHub API section with search controls', async ({ page }) => {
+  test('should render GitHub API section with search controls', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -141,7 +141,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     await expect(section.locator('[data-qa="grid"]')).toBeVisible()
   })
 
-  test.skip('should perform search and update URL with gh prefix', async ({ page }) => {
+  test('should perform search and update URL with gh prefix', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -171,7 +171,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     expect(page.url()).toContain('gh-q=react')
   })
 
-  test.skip('should change sort order and update URL', async ({ page }) => {
+  test('should change sort order and update URL', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -193,7 +193,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     expect(page.url()).toContain('gh-sort=forks')
   })
 
-  test.skip('should display repository results from GitHub API', async ({ page }) => {
+  test('should display repository results from GitHub API', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -216,7 +216,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     await expect(grid.getByText('Forks')).toBeVisible()
   })
 
-  test.skip('should show total results count', async ({ page }) => {
+  test('should show total results count', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -232,7 +232,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     await expect(resultsText).toContainText('repositories')
   })
 
-  test.skip('should handle pagination with page parameter', async ({ page }) => {
+  test('should handle pagination with page parameter', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -263,7 +263,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     }
   })
 
-  test.skip('should maintain URL state with gh prefix for all parameters', async ({ page }) => {
+  test('should maintain URL state with gh prefix for all parameters', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -292,7 +292,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     expect(url).toContain('page=1')
   })
 
-  test.skip('should handle search on Enter key press', async ({ page }) => {
+  test('should handle search on Enter key press', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -311,7 +311,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     expect(page.url()).toContain('gh-q=vue3')
   })
 
-  test.skip('should restore state after page refresh', async ({ page }) => {
+  test('should restore state after page refresh', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -376,7 +376,7 @@ test.describe('Multi-State Example', () => {
     await expect(section.getByRole('heading', { name: /Mock HTTP Provider with "users" prefix/i })).toBeVisible()
   })
 
-  test.skip('should maintain independent state with different URL prefixes', async ({ page }) => {
+  test('should maintain independent state with different URL prefixes', async ({ page }) => {
     await page.goto('/#multi-state')
 
     const section = page.locator('#multi-state')
@@ -423,7 +423,7 @@ test.describe('Multi-State Example', () => {
 })
 
 test.describe('LocalStorage State Provider', () => {
-  test.skip('should persist pagination state after page refresh', async ({ page }) => {
+  test('should persist pagination state after page refresh', async ({ page }) => {
     // Clear localStorage before test
     await page.goto('/#state-localstorage')
     await page.evaluate(() => localStorage.clear())
@@ -489,7 +489,7 @@ test.describe('LocalStorage State Provider', () => {
     expect(firstRowNameAfterReload).toBe(firstRowName)
   })
 
-  test.skip('should not share state with InMemory provider', async ({ page }) => {
+  test('should not share state with InMemory provider', async ({ page }) => {
     // Clear localStorage before test
     await page.goto('/#state-localstorage')
     await page.evaluate(() => localStorage.clear())
