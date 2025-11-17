@@ -20,8 +20,17 @@
 // Components
 export { default as Grid } from './Grid.vue'
 export { default as GridTable } from './GridTable.vue'
-export { default as GridPagination } from './GridPagination.vue'
 export { default as DynamicComponent } from './DynamicComponent.vue'
+
+// Pagination Components
+export { default as LoadModePagination } from './LoadModePagination.vue'
+export { default as PagePagination } from './PagePagination.vue'
+export { default as ScrollPagination } from './ScrollPagination.vue'
+
+/**
+ * @deprecated GridPagination is deprecated - use LoadModePagination, PagePagination, or ScrollPagination instead
+ */
+export { default as GridPagination } from './GridPagination.vue'
 
 // Data Providers
 export { HttpDataProvider } from './providers/HttpDataProvider'
@@ -49,21 +58,39 @@ export type {
   DataProviderConfig,
   LoadOptions,
   LoadResult,
-  PaginationData,
-  CursorPaginationData,
-  PagePaginationData,
   SortState,
-  PaginationMode,
   Column,
   ComponentOptions,
   Filter,
   RowOptions,
-  ResponseAdapter
+  ResponseAdapter,
+  // New pagination interface
+  Pagination
 } from './types'
 
 export {
   DefaultResponseAdapter,
   LegacyResponseAdapter,
+  PaginationRequest
+} from './types'
+
+// Pagination implementations
+export { CursorPagination, PageBasedPagination } from './pagination-impl'
+
+/**
+ * @deprecated Legacy pagination types - use Pagination interface instead
+ */
+export type {
+  PaginationData,
+  CursorPaginationData,
+  PagePaginationData,
+  PaginationMode
+} from './types'
+
+/**
+ * @deprecated Legacy type guards - use Pagination interface instead
+ */
+export {
   isCursorPagination,
   isPagePagination
 } from './types'

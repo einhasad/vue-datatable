@@ -25,12 +25,59 @@ export interface ComponentOptions {
 }
 
 /**
- * Pagination mode types
+ * Pagination interface - unified interface for all pagination types
+ * Components interact with this interface without knowing about DataProvider internals
  */
-export type PaginationMode = 'cursor' | 'page'
+export interface Pagination {
+  // Common methods
+  hasMore(): boolean
+  loadMore(): Promise<void>
+  refresh(): Promise<void>
+  isLoading(): boolean
+
+  // Page-based pagination methods (optional)
+  getCurrentPage?(): number
+  getTotalPages?(): number
+  getPerPage?(): number
+  getTotalCount?(): number
+  setPage?(page: number): Promise<void>
+
+  // Cursor-based pagination methods (optional)
+  getNextCursor?(): string | null
+}
 
 /**
- * Cursor-based pagination data (for infinite scroll / load more)
+ * Pagination request configuration for HTTP requests
+ * Used by HttpDataProvider to build pagination parameters
+ */
+export class PaginationRequest {
+  next: string = ''
+  limit: number = 20
+  nextParamName: string = 'page'
+  limitParamName: string = 'pageSize'
+
+  constructor(options?: Partial<PaginationRequest>) {
+    if (options) {
+      Object.assign(this, options)
+    }
+  }
+
+  /**
+   * Convert to URL query parameters
+   */
+  toParams(): Record<string, string> {
+    const params: Record<string, string> = {}
+    if (this.next) {
+      params[this.nextParamName] = this.next
+    }
+    params[this.limitParamName] = this.limit.toString()
+    return params
+  }
+}
+
+/**
+ * @deprecated Legacy pagination data types - kept for backward compatibility
+ * Use Pagination interface instead
  */
 export interface CursorPaginationData {
   nextCursor: string
@@ -38,7 +85,8 @@ export interface CursorPaginationData {
 }
 
 /**
- * Page-based pagination data (for traditional page navigation)
+ * @deprecated Legacy pagination data types - kept for backward compatibility
+ * Use Pagination interface instead
  */
 export interface PagePaginationData {
   currentPage: number
@@ -48,28 +96,40 @@ export interface PagePaginationData {
 }
 
 /**
- * Combined pagination data (supports both modes)
+ * @deprecated Legacy pagination data type - kept for backward compatibility
+ * Use Pagination interface instead
  */
 export type PaginationData = CursorPaginationData | PagePaginationData
 
 /**
- * Helper type guards for pagination data
+ * @deprecated Legacy type guard - kept for backward compatibility
  */
 export function isCursorPagination(data: PaginationData): data is CursorPaginationData {
   return 'nextCursor' in data && 'hasMore' in data
 }
 
+/**
+ * @deprecated Legacy type guard - kept for backward compatibility
+ */
 export function isPagePagination(data: PaginationData): data is PagePaginationData {
   return 'currentPage' in data && 'pageCount' in data
 }
+
+/**
+ * @deprecated Legacy pagination mode - kept for backward compatibility
+ */
+export type PaginationMode = 'cursor' | 'page'
 
 /**
  * Data provider configuration
  */
 export interface DataProviderConfig {
   pagination: boolean
-  paginationMode: PaginationMode
   url?: string
+  /**
+   * @deprecated paginationMode is deprecated - pagination type is now determined by the Pagination implementation
+   */
+  paginationMode?: PaginationMode
 }
 
 /**
@@ -102,7 +162,7 @@ export interface SortState {
 
 /**
  * Core DataProvider interface
- * Supports both cursor and page-based pagination
+ * Supports both cursor and page-based pagination via Pagination interface
  * Designed for extensibility (DSLElasticDataProvider, etc.)
  * State management is delegated to StateProvider
  */
@@ -111,8 +171,10 @@ export interface DataProvider<T = unknown> {
 
   // Data loading
   load(options?: LoadOptions): Promise<LoadResult<T>>
-  loadMore(): Promise<LoadResult<T>>
   refresh(): Promise<LoadResult<T>>
+
+  // Pagination - returns Pagination interface that components interact with
+  getPagination(): Pagination | null
 
   // Sort management (delegates to StateProvider)
   setSort(field: string, order: 'asc' | 'desc'): void
@@ -120,12 +182,31 @@ export interface DataProvider<T = unknown> {
 
   // State queries
   isLoading(): boolean
-  hasMore(): boolean
   getCurrentItems(): T[]
-  getCurrentPagination(): PaginationData | null
 
-  // Page-based pagination methods (for page mode)
+  /**
+   * @deprecated Use getPagination() instead
+   */
+  getCurrentPagination?(): PaginationData | null
+
+  /**
+   * @deprecated Use getPagination().hasMore() instead
+   */
+  hasMore?(): boolean
+
+  /**
+   * @deprecated Use getPagination().loadMore() instead
+   */
+  loadMore?(): Promise<LoadResult<T>>
+
+  /**
+   * @deprecated Use getPagination().getCurrentPage() instead
+   */
   getCurrentPage?(): number
+
+  /**
+   * @deprecated Use getPagination().setPage() instead
+   */
   setPage?(page: number): Promise<LoadResult<T>>
 }
 

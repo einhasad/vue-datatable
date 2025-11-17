@@ -6,10 +6,12 @@ import type {
   PaginationData,
   CursorPaginationData,
   PagePaginationData,
-  SortState
+  SortState,
+  Pagination
 } from '../types'
 import type { StateProvider } from '../state/StateProvider'
 import { InMemoryStateProvider } from '../state/InMemoryStateProvider'
+import { CursorPagination, PageBasedPagination } from '../pagination-impl'
 
 /**
  * Configuration for ArrayDataProvider
@@ -32,6 +34,7 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
   private allItems: T[]
   private displayedItems: T[] = []
   private currentPage = 1
+  private paginationInstance: Pagination | null = null
 
   constructor(config: ArrayDataProviderConfig<T>) {
     this.config = {
@@ -43,6 +46,21 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
 
     // Initialize StateProvider (default to InMemoryStateProvider)
     this.stateProvider = config.stateProvider || new InMemoryStateProvider()
+
+    // Initialize pagination instance
+    if (this.config.pagination) {
+      if (this.config.paginationMode === 'cursor') {
+        this.paginationInstance = new CursorPagination(
+          (cursor?: string) => this.load({ cursor }),
+          () => this.refresh()
+        )
+      } else {
+        this.paginationInstance = new PageBasedPagination(
+          (page: number) => this.setPage(page),
+          () => this.refresh()
+        )
+      }
+    }
   }
 
   /**
@@ -153,6 +171,11 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
             hasMore
           }
 
+          // Update pagination instance
+          if (this.paginationInstance) {
+            ;(this.paginationInstance as CursorPagination).update(nextCursor || null, hasMore)
+          }
+
           return {
             items: this.displayedItems,
             pagination
@@ -174,6 +197,16 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
             pageCount: Math.ceil(processedItems.length / pageSize),
             perPage: pageSize,
             totalCount: processedItems.length
+          }
+
+          // Update pagination instance
+          if (this.paginationInstance) {
+            ;(this.paginationInstance as PageBasedPagination).update(
+              pagination.currentPage,
+              pagination.pageCount,
+              pagination.perPage,
+              pagination.totalCount
+            )
           }
 
           return {
@@ -330,5 +363,12 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
    */
   getSort(): SortState | null {
     return this.stateProvider.getSort()
+  }
+
+  /**
+   * Get pagination instance (new interface)
+   */
+  getPagination(): Pagination | null {
+    return this.paginationInstance
   }
 }

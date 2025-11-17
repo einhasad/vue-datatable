@@ -77,6 +77,7 @@
 
     <slot
       name="pagination"
+      :pagination-instance="paginationInstance"
       :pagination="pagination"
       :has-more="hasMore"
       :loading="loading"
@@ -84,27 +85,16 @@
       :set-page="setPage"
       :mode="paginationMode"
     >
-      <GridPagination
-        v-if="dataProvider.config.pagination"
-        :mode="paginationMode"
-        :pagination="pagination"
-        :has-more="hasMore"
-        :loading="loading"
-        :show-summary="showPaginationSummary"
-        :hide-prev-next-on-edge="hidePrevNextOnEdge"
-        :max-visible-pages="maxVisiblePages"
-        :on-load-more="loadMore"
-        :on-page-change="setPage"
-      />
+      <!-- Default pagination slot - users should provide their own pagination component -->
+      <!-- Examples: <LoadModePagination>, <PagePagination>, <ScrollPagination> -->
     </slot>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import type { DataProvider, Column, RowOptions, PaginationData, SortState, PaginationMode } from './types'
+import type { DataProvider, Column, RowOptions, PaginationData, SortState, PaginationMode, Pagination } from './types'
 import GridTable from './GridTable.vue'
-import GridPagination from './GridPagination.vue'
 
 const props = withDefaults(defineProps<{
   dataProvider: DataProvider<unknown>
@@ -139,12 +129,22 @@ const items = ref<unknown[]>([])
 const loading = ref(false)
 const pagination = ref<PaginationData | null>(null)
 
-const paginationMode = computed<PaginationMode>(() => {
-  return props.dataProvider.config.paginationMode
+const paginationInstance = computed<Pagination | null>(() => {
+  return props.dataProvider.getPagination()
 })
 
+/**
+ * @deprecated paginationMode is deprecated - use paginationInstance instead
+ */
+const paginationMode = computed<PaginationMode>(() => {
+  return props.dataProvider.config.paginationMode || 'cursor'
+})
+
+/**
+ * @deprecated hasMore is deprecated - use paginationInstance.hasMore() instead
+ */
 const hasMore = computed(() => {
-  return props.dataProvider.hasMore()
+  return props.dataProvider.hasMore?.() || false
 })
 
 const sortState = computed<SortState | null>(() => {
@@ -171,17 +171,39 @@ async function loadMore() {
     return
   }
 
-  loading.value = true
-  try {
-    const result = await props.dataProvider.loadMore()
-    items.value = result.items
-    pagination.value = result.pagination || null
-    emit('loaded', result.items)
-  } catch (error) {
-    emit('error', error as Error)
-    throw error
-  } finally {
-    loading.value = false
+  // Use new pagination interface if available
+  if (paginationInstance.value) {
+    loading.value = true
+    try {
+      await paginationInstance.value.loadMore()
+      items.value = props.dataProvider.getCurrentItems()
+      // Refresh pagination data from provider (for backward compatibility)
+      const currentPagination = props.dataProvider.getCurrentPagination?.()
+      pagination.value = currentPagination || null
+      emit('loaded', items.value)
+    } catch (error) {
+      emit('error', error as Error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+    return
+  }
+
+  // Fallback to legacy loadMore method
+  if (props.dataProvider.loadMore) {
+    loading.value = true
+    try {
+      const result = await props.dataProvider.loadMore()
+      items.value = result.items
+      pagination.value = result.pagination || null
+      emit('loaded', result.items)
+    } catch (error) {
+      emit('error', error as Error)
+      throw error
+    } finally {
+      loading.value = false
+    }
   }
 }
 
@@ -204,6 +226,26 @@ async function refresh() {
 }
 
 async function setPage(page: number) {
+  // Use new pagination interface if available
+  if (paginationInstance.value && paginationInstance.value.setPage) {
+    loading.value = true
+    try {
+      await paginationInstance.value.setPage(page)
+      items.value = props.dataProvider.getCurrentItems()
+      // Refresh pagination data from provider (for backward compatibility)
+      const currentPagination = props.dataProvider.getCurrentPagination?.()
+      pagination.value = currentPagination || null
+      emit('loaded', items.value)
+    } catch (error) {
+      emit('error', error as Error)
+      throw error
+    } finally {
+      loading.value = false
+    }
+    return
+  }
+
+  // Fallback to legacy setPage method
   if (paginationMode.value !== 'page') {
     console.warn('setPage() is only available for page-based pagination')
     return

@@ -8,9 +8,11 @@ import type {
   LoadResult,
   PaginationData,
   CursorPaginationData,
-  SortState
+  SortState,
+  Pagination
 } from '../types'
 import {useErrorMessage} from "@src/spa/utils/useMessage";
+import { CursorPagination } from '../pagination-impl'
 
 /**
  * Elasticsearch DSL query structure
@@ -84,6 +86,7 @@ export class DSTElasticDataProvider<T = unknown> implements DataProvider<T> {
   private currentPostFilter: unknown = null
   private lastSortValues: unknown[] | null = null
   private totalHits = 0
+  private paginationInstance: Pagination | null = null
 
   constructor(config: DSTElasticDataProviderConfig, router?: unknown) {
     this.config = {
@@ -107,6 +110,14 @@ export class DSTElasticDataProvider<T = unknown> implements DataProvider<T> {
       const field = Object.keys(firstSort)[0]
       const order = firstSort[field] as 'asc' | 'desc'
       this.sortState = { field, order }
+    }
+
+    // Initialize pagination instance (cursor-only for Elasticsearch)
+    if (this.config.pagination) {
+      this.paginationInstance = new CursorPagination(
+        (cursor?: string) => this.load({ cursor }),
+        () => this.refresh()
+      )
     }
   }
 
@@ -366,6 +377,11 @@ export class DSTElasticDataProvider<T = unknown> implements DataProvider<T> {
       (this.paginationData.value as Record<string, unknown>).aggregations = data.aggregations
     }
 
+    // Update pagination instance
+    if (this.paginationInstance) {
+      ;(this.paginationInstance as CursorPagination).update(nextCursor || null, hasMore)
+    }
+
     this.loading.value = false
 
     return {
@@ -521,5 +537,12 @@ export class DSTElasticDataProvider<T = unknown> implements DataProvider<T> {
         calendar_interval: interval
       }
     }
+  }
+
+  /**
+   * Get pagination instance (new interface)
+   */
+  getPagination(): Pagination | null {
+    return this.paginationInstance
   }
 }
