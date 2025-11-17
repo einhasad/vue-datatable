@@ -266,7 +266,6 @@ const columns: Column[] = [
                   ref="githubGridRef"
                   :data-provider="githubProvider"
                   :columns="githubColumns"
-                  :auto-load="false"
                 />
               </div>
 
@@ -1326,8 +1325,9 @@ class GitHubSearchAdapter {
   }
 }
 
-const githubSearchQuery = ref('vue table')
-const githubSortBy = ref('stars')
+// Initialize from URL params or use defaults
+const githubSearchQuery = ref((route.query['gh-q'] as string) || 'vue table')
+const githubSortBy = ref((route.query['gh-sort'] as string) || 'stars')
 const githubTotalCount = ref(0)
 const githubGridRef = ref<any>(null)
 
@@ -1444,19 +1444,25 @@ async function handleGithubSearch() {
   }
 }
 
-onMounted(() => {
-  githubSearchQuery.value = (route.query['gh-q'] as string) || 'vue table'
-  githubSortBy.value = (route.query['gh-sort'] as string) || 'stars'
-  handleGithubSearch()
-})
+// Update total count when grid data loads
+watch(() => githubGridRef.value?.pagination, (paginationData) => {
+  if (paginationData) {
+    githubTotalCount.value = (paginationData as any).totalCount || 0
+  }
+}, { deep: true })
 
+// Sync local state with URL params
 watch(() => route.query, () => {
   const urlQuery = route.query['gh-q'] as string
   const urlSort = route.query['gh-sort'] as string
 
-  if (urlQuery) githubSearchQuery.value = urlQuery
-  if (urlSort) githubSortBy.value = urlSort
-})
+  if (urlQuery && urlQuery !== githubSearchQuery.value) {
+    githubSearchQuery.value = urlQuery
+  }
+  if (urlSort && urlSort !== githubSortBy.value) {
+    githubSortBy.value = urlSort
+  }
+}, { immediate: true })
 
 // Page Pagination Example
 const pagePaginationUsers = Array.from({ length: 47 }, (_, i) => ({
