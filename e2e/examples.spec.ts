@@ -310,6 +310,52 @@ test.describe('GitHub API HTTP Provider Example', () => {
     // Verify URL updated
     expect(page.url()).toContain('gh-q=vue3')
   })
+
+  test('should restore state after page refresh', async ({ page }) => {
+    await page.goto('/#github-api')
+
+    const section = page.locator('#github-api')
+    const searchInput = section.locator('input#search')
+    const sortSelect = section.locator('select#sort')
+
+    // Set custom search query and sort
+    await searchInput.fill('react hooks')
+    await sortSelect.selectOption('forks')
+
+    // Click search and wait for API response
+    const responsePromise = page.waitForResponse(response =>
+      response.url().includes('api.github.com/search/repositories') &&
+      response.url().includes('q=react+hooks') &&
+      response.url().includes('sort=forks')
+    )
+    await section.locator('button.btn-primary').click()
+    await responsePromise
+
+    // Verify URL has parameters
+    const urlBeforeRefresh = page.url()
+    expect(urlBeforeRefresh).toContain('gh-q=react+hooks')
+    expect(urlBeforeRefresh).toContain('gh-sort=forks')
+
+    // Reload the page
+    await page.reload()
+
+    // Wait for grid to be visible after reload
+    const grid = section.locator('[data-qa="grid"]')
+    await expect(grid.locator('tbody tr').first()).toBeVisible({ timeout: 10000 })
+
+    // Verify URL still has the same parameters after refresh
+    const urlAfterRefresh = page.url()
+    expect(urlAfterRefresh).toContain('gh-q=react+hooks')
+    expect(urlAfterRefresh).toContain('gh-sort=forks')
+
+    // Verify input values are restored from URL
+    await expect(searchInput).toHaveValue('react hooks')
+    await expect(sortSelect).toHaveValue('forks')
+
+    // Verify results count is still displayed
+    const resultsText = section.locator('.control-group:has-text("Results:")')
+    await expect(resultsText).toBeVisible()
+  })
 })
 
 test.describe('Multi-State Example', () => {
