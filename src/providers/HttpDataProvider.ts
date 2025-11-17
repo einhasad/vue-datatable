@@ -9,12 +9,14 @@ import type {
   PagePaginationData,
   ResponseAdapter,
   SortState,
-  RouterLike
+  RouterLike,
+  Pagination
 } from '../types'
-import { DefaultResponseAdapter } from '../types'
+import { DefaultResponseAdapter, PaginationRequest } from '../types'
 import type { StateProvider } from '../state/StateProvider'
 import { QueryParamsStateProvider } from '../state/QueryParamsStateProvider'
 import { InMemoryStateProvider } from '../state/InMemoryStateProvider'
+import { HttpPagination } from './HttpPagination'
 
 /**
  * HTTP client function type
@@ -27,6 +29,7 @@ export type HttpClient = (url: string, options?: RequestInit) => Promise<unknown
 export interface HttpDataProviderConfig extends DataProviderConfig {
   url: string
   pageSize?: number
+  paginationRequest?: PaginationRequest
   httpClient?: HttpClient
   responseAdapter?: ResponseAdapter<unknown>
   headers?: Record<string, string>
@@ -53,7 +56,8 @@ export class HttpDataProvider<T = unknown> implements DataProvider<T> {
     this.config = {
       pageSize: 20,
       ...config,
-      paginationMode: config.paginationMode || 'cursor'
+      paginationMode: config.paginationMode || 'cursor',
+      paginationRequest: config.paginationRequest || new PaginationRequest()
     }
 
     // Initialize StateProvider
@@ -134,16 +138,24 @@ export class HttpDataProvider<T = unknown> implements DataProvider<T> {
     }
 
     // Handle pagination
-    if (this.config.pagination) {
+    if (this.config.pagination && this.config.paginationRequest) {
+      const paginationReq = this.config.paginationRequest
+
+      // Cursor-based pagination
       if (this.config.paginationMode === 'cursor') {
-        if (options.cursor) {
-          params.append('pagination.cursor', options.cursor)
+        const cursor = options.cursor || paginationReq.next
+        if (cursor) {
+          params.append(paginationReq.nextParamName, cursor)
         }
-        params.append('pagination.page_size', (options.pageSize || this.config.pageSize || 20).toString())
-      } else {
+        const limit = options.pageSize || this.config.pageSize || paginationReq.limit || 20
+        params.append(paginationReq.limitParamName, limit.toString())
+      }
+      // Page-based pagination
+      else {
         const page = options.page || this.currentPage
-        params.append('page', page.toString())
-        params.append('per-page', (options.pageSize || this.config.pageSize || 20).toString())
+        params.append(paginationReq.nextParamName, page.toString())
+        const limit = options.pageSize || this.config.pageSize || paginationReq.limit || 20
+        params.append(paginationReq.limitParamName, limit.toString())
       }
     }
 
@@ -294,6 +306,16 @@ export class HttpDataProvider<T = unknown> implements DataProvider<T> {
    */
   getCurrentPagination(): PaginationData | null {
     return this.paginationData.value
+  }
+
+  /**
+   * Get pagination interface for UI components
+   */
+  getPagination(): Pagination | null {
+    if (!this.paginationData.value) {
+      return null
+    }
+    return new HttpPagination(this.paginationData.value)
   }
 
   /**

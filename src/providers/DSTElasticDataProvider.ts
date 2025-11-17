@@ -8,9 +8,11 @@ import type {
   LoadResult,
   PaginationData,
   CursorPaginationData,
-  SortState
+  SortState,
+  Pagination
 } from '../types'
 import {useErrorMessage} from "@src/spa/utils/useMessage";
+import { ElasticPagination } from './ElasticPagination';
 
 /**
  * Elasticsearch DSL query structure
@@ -425,6 +427,16 @@ export class DSTElasticDataProvider<T = unknown> implements DataProvider<T> {
    */
   getCurrentPagination(): PaginationData | null {
     return this.paginationData.value
+  }
+
+  /**
+   * Get pagination interface for UI components
+   */
+  getPagination(): Pagination | null {
+    if (!this.paginationData.value) {
+      return null
+    }
+    return new ElasticPagination(this.paginationData.value, this.totalHits)
   }
 
   /**
