@@ -59,7 +59,7 @@ const emit = defineEmits<{
 const sentinel = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 
-async function handleIntersection(entries: IntersectionObserverEntry[]): Promise<void> {
+function handleIntersection(entries: IntersectionObserverEntry[]): void {
   const entry = entries[0]
 
   if (
@@ -67,8 +67,14 @@ async function handleIntersection(entries: IntersectionObserverEntry[]): Promise
     props.pagination.hasMore() &&
     !props.pagination.isLoading()
   ) {
-    await props.pagination.loadMore()
-    emit('loadMore')
+    // Don't await here to avoid returning a Promise to IntersectionObserver
+    props.pagination.loadMore()
+      .then(() => {
+        emit('loadMore')
+      })
+      .catch((error: unknown) => {
+        console.error('Error loading more items:', error)
+      })
   }
 }
 
