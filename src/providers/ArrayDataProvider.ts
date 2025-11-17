@@ -158,7 +158,8 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
             pagination
           }
         } else {
-          const page = options.page || this.currentPage
+          // Check options, then state provider, then default to 1
+          const page = options.page || this.stateProvider.getPage() || 1
           this.currentPage = page
           this.stateProvider.setPage(page)
 
