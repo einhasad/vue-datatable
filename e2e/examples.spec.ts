@@ -125,12 +125,12 @@ test.describe('Example Integrity', () => {
 
 test.describe('GitHub API HTTP Provider Example', () => {
   test('should render GitHub API section with search controls', async ({ page }) => {
-    await page.goto('/#github-api')
+    await page.goto('/#http-provider')
 
-    const section = page.locator('#github-api')
+    const section = page.locator('#http-provider')
 
     // Verify section loaded
-    await expect(section.locator('h2')).toContainText('GitHub API Example')
+    await expect(section.locator('h2')).toContainText('HTTP Provider Example - GitHub API')
 
     // Verify search controls are present
     await expect(section.locator('input#search')).toBeVisible()
@@ -142,9 +142,9 @@ test.describe('GitHub API HTTP Provider Example', () => {
   })
 
   test('should perform search and update URL with gh prefix', async ({ page }) => {
-    await page.goto('/#github-api')
+    await page.goto('/#http-provider')
 
-    const section = page.locator('#github-api')
+    const section = page.locator('#http-provider')
     const grid = section.locator('[data-qa="grid"]')
 
     // Wait for initial GitHub API request to complete
@@ -172,9 +172,9 @@ test.describe('GitHub API HTTP Provider Example', () => {
   })
 
   test('should change sort order and update URL', async ({ page }) => {
-    await page.goto('/#github-api')
+    await page.goto('/#http-provider')
 
-    const section = page.locator('#github-api')
+    const section = page.locator('#http-provider')
 
     // Wait for initial load by checking for data
     const grid = section.locator('[data-qa="grid"]')
@@ -194,9 +194,9 @@ test.describe('GitHub API HTTP Provider Example', () => {
   })
 
   test('should display repository results from GitHub API', async ({ page }) => {
-    await page.goto('/#github-api')
+    await page.goto('/#http-provider')
 
-    const section = page.locator('#github-api')
+    const section = page.locator('#http-provider')
     const grid = section.locator('[data-qa="grid"]')
 
     // Wait for GitHub API response
@@ -217,9 +217,9 @@ test.describe('GitHub API HTTP Provider Example', () => {
   })
 
   test('should show total results count', async ({ page }) => {
-    await page.goto('/#github-api')
+    await page.goto('/#http-provider')
 
-    const section = page.locator('#github-api')
+    const section = page.locator('#http-provider')
 
     // Wait for API response
     await page.waitForResponse(response =>
@@ -233,9 +233,9 @@ test.describe('GitHub API HTTP Provider Example', () => {
   })
 
   test('should handle pagination with page parameter', async ({ page }) => {
-    await page.goto('/#github-api')
+    await page.goto('/#http-provider')
 
-    const section = page.locator('#github-api')
+    const section = page.locator('#http-provider')
     const grid = section.locator('[data-qa="grid"]')
 
     // Wait for initial data to load
@@ -264,9 +264,9 @@ test.describe('GitHub API HTTP Provider Example', () => {
   })
 
   test('should maintain URL state with gh prefix for all parameters', async ({ page }) => {
-    await page.goto('/#github-api')
+    await page.goto('/#http-provider')
 
-    const section = page.locator('#github-api')
+    const section = page.locator('#http-provider')
 
     // Set search query
     const searchInput = section.locator('input#search')
@@ -293,9 +293,9 @@ test.describe('GitHub API HTTP Provider Example', () => {
   })
 
   test('should handle search on Enter key press', async ({ page }) => {
-    await page.goto('/#github-api')
+    await page.goto('/#http-provider')
 
-    const section = page.locator('#github-api')
+    const section = page.locator('#http-provider')
     const searchInput = section.locator('input#search')
 
     // Type and press Enter, wait for API response
@@ -312,9 +312,9 @@ test.describe('GitHub API HTTP Provider Example', () => {
   })
 
   test('should restore state after page refresh', async ({ page }) => {
-    await page.goto('/#github-api')
+    await page.goto('/#http-provider')
 
-    const section = page.locator('#github-api')
+    const section = page.locator('#http-provider')
     const searchInput = section.locator('input#search')
     const sortSelect = section.locator('select#sort')
 
