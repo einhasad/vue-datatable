@@ -6,10 +6,12 @@ import type {
   PaginationData,
   CursorPaginationData,
   PagePaginationData,
-  SortState
+  SortState,
+  Pagination
 } from '../types'
 import type { StateProvider } from '../state/StateProvider'
 import { InMemoryStateProvider } from '../state/InMemoryStateProvider'
+import { ArrayPagination } from './ArrayPagination'
 
 /**
  * Configuration for ArrayDataProvider
@@ -32,17 +34,20 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
   private allItems: T[]
   private displayedItems: T[] = []
   private currentPage = 1
+  private pagination: ArrayPagination
 
   constructor(config: ArrayDataProviderConfig<T>) {
     this.config = {
       pageSize: 20,
-      ...config,
-      paginationMode: config.paginationMode || 'cursor'
+      ...config
     }
     this.allItems = [...config.items]
 
     // Initialize StateProvider (default to InMemoryStateProvider)
     this.stateProvider = config.stateProvider || new InMemoryStateProvider()
+
+    // Initialize pagination
+    this.pagination = new ArrayPagination()
   }
 
   /**
@@ -134,7 +139,8 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
       const pageSize = options.pageSize || this.config.pageSize || 20
 
       if (this.config.pagination) {
-        if (this.config.paginationMode === 'cursor') {
+        // Check if cursor is provided (cursor-based loading)
+        if (options.cursor) {
           const startIndex = this.getCursorIndex(options.cursor || '')
           const endIndex = startIndex + pageSize
           const pageItems = processedItems.slice(startIndex, endIndex)
@@ -153,12 +159,21 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
             hasMore
           }
 
+          // Update ArrayPagination with cursor-style data
+          // For cursor mode, we track current position
+          const currentPosition = this.displayedItems.length
+          this.pagination.update({
+            totalCount: processedItems.length,
+            currentPage: Math.ceil(currentPosition / pageSize),
+            pageSize
+          })
+
           return {
             items: this.displayedItems,
             pagination
           }
         } else {
-          // Check options, then state provider, then default to 1
+          // Page-based loading
           const page = options.page || this.stateProvider.getPage() || 1
           this.currentPage = page
           this.stateProvider.setPage(page)
@@ -176,6 +191,13 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
             totalCount: processedItems.length
           }
 
+          // Update ArrayPagination
+          this.pagination.update({
+            totalCount: processedItems.length,
+            currentPage: page,
+            pageSize
+          })
+
           return {
             items: this.displayedItems,
             pagination
@@ -183,6 +205,14 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
         }
       } else {
         this.displayedItems = processedItems
+
+        // Update pagination even when disabled (totalCount is still useful)
+        this.pagination.update({
+          totalCount: processedItems.length,
+          currentPage: 1,
+          pageSize: processedItems.length
+        })
+
         return {
           items: this.displayedItems
         }
@@ -235,6 +265,7 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
   async refresh(): Promise<LoadResult<T>> {
     this.displayedItems = []
     this.currentPage = 1
+    this.pagination.reset()
     this.stateProvider.clearPage()
     this.stateProvider.clearCursor()
     return this.load()
@@ -244,11 +275,6 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
    * Set page (for page-based pagination)
    */
   async setPage(page: number): Promise<LoadResult<T>> {
-    if (this.config.paginationMode !== 'page') {
-      console.warn('setPage() is only available for page-based pagination')
-      return { items: this.displayedItems }
-    }
-
     this.currentPage = page
     return this.load({ page })
   }
@@ -272,16 +298,7 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
    */
   hasMore(): boolean {
     if (!this.config.pagination) return false
-
-    let processedItems = this.filterItems()
-    processedItems = this.sortItems(processedItems)
-
-    if (this.config.paginationMode === 'cursor') {
-      return this.displayedItems.length < processedItems.length
-    } else {
-      const pageData = this.getCurrentPagination() as PagePaginationData
-      return pageData ? this.currentPage < pageData.pageCount : false
-    }
+    return this.pagination.hasMore()
   }
 
   /**
@@ -293,6 +310,7 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
 
   /**
    * Get current pagination data
+   * @deprecated Use getPagination() instead
    */
   getCurrentPagination(): PaginationData | null {
     if (!this.config.pagination) return null
@@ -300,22 +318,23 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
     let processedItems = this.filterItems()
     processedItems = this.sortItems(processedItems)
 
-    if (this.config.paginationMode === 'cursor') {
-      const hasMore = this.displayedItems.length < processedItems.length
-
-      return {
-        nextCursor: hasMore ? this.displayedItems.length.toString() : '',
-        hasMore
-      }
-    } else {
-      const pageSize = this.config.pageSize || 20
-      return {
-        currentPage: this.currentPage,
-        pageCount: Math.ceil(processedItems.length / pageSize),
-        perPage: pageSize,
-        totalCount: processedItems.length
-      }
+    const pageSize = this.config.pageSize || 20
+    return {
+      currentPage: this.currentPage,
+      pageCount: Math.ceil(processedItems.length / pageSize),
+      perPage: pageSize,
+      totalCount: processedItems.length
     }
+  }
+
+  /**
+   * Get pagination interface for UI components
+   */
+  getPagination(): Pagination | null {
+    if (!this.config.pagination) {
+      return null
+    }
+    return this.pagination
   }
 
   /**

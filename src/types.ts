@@ -25,12 +25,28 @@ export interface ComponentOptions {
 }
 
 /**
- * Pagination mode types
+ * Pagination interface for UI components
+ * UI components receive this interface and don't know about DataProvider
+ * This is a read-only state interface - actions live on DataProvider
+ */
+export interface Pagination {
+  getTotalCount(): number | null
+  getPageCount(): number | null
+  getCurrentPage(): number | null
+  getPageSize(): number | null
+  getNextToken(): string | null
+  hasMore(): boolean
+}
+
+/**
+ * @deprecated Use Pagination interface instead
+ * Kept for backward compatibility during migration
  */
 export type PaginationMode = 'cursor' | 'page'
 
 /**
  * Cursor-based pagination data (for infinite scroll / load more)
+ * @deprecated Internal implementation detail, use Pagination interface
  */
 export interface CursorPaginationData {
   nextCursor: string
@@ -39,6 +55,7 @@ export interface CursorPaginationData {
 
 /**
  * Page-based pagination data (for traditional page navigation)
+ * @deprecated Internal implementation detail, use Pagination interface
  */
 export interface PagePaginationData {
   currentPage: number
@@ -49,11 +66,13 @@ export interface PagePaginationData {
 
 /**
  * Combined pagination data (supports both modes)
+ * @deprecated Internal implementation detail, use Pagination interface
  */
 export type PaginationData = CursorPaginationData | PagePaginationData
 
 /**
  * Helper type guards for pagination data
+ * @deprecated Internal implementation detail
  */
 export function isCursorPagination(data: PaginationData): data is CursorPaginationData {
   return 'nextCursor' in data && 'hasMore' in data
@@ -68,7 +87,6 @@ export function isPagePagination(data: PaginationData): data is PagePaginationDa
  */
 export interface DataProviderConfig {
   pagination: boolean
-  paginationMode: PaginationMode
   url?: string
 }
 
@@ -122,11 +140,18 @@ export interface DataProvider<T = unknown> {
   isLoading(): boolean
   hasMore(): boolean
   getCurrentItems(): T[]
-  getCurrentPagination(): PaginationData | null
 
-  // Page-based pagination methods (for page mode)
+  // Pagination
+  getPagination(): Pagination | null
+
+  // Page-based pagination methods
   getCurrentPage?(): number
   setPage?(page: number): Promise<LoadResult<T>>
+
+  /**
+   * @deprecated Use getPagination() instead
+   */
+  getCurrentPagination?(): PaginationData | null
 }
 
 /**

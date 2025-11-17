@@ -9,12 +9,14 @@ import type {
   PagePaginationData,
   ResponseAdapter,
   SortState,
-  RouterLike
+  RouterLike,
+  Pagination
 } from '../types'
 import { DefaultResponseAdapter } from '../types'
 import type { StateProvider } from '../state/StateProvider'
 import { QueryParamsStateProvider } from '../state/QueryParamsStateProvider'
 import { InMemoryStateProvider } from '../state/InMemoryStateProvider'
+import { HttpPagination, PaginationRequest } from './HttpPagination'
 
 /**
  * HTTP client function type
@@ -32,6 +34,7 @@ export interface HttpDataProviderConfig extends DataProviderConfig {
   headers?: Record<string, string>
   stateProvider?: StateProvider
   router?: RouterLike // For backward compatibility - creates QueryParamsStateProvider if provided
+  paginationRequest?: PaginationRequest // Configuration for pagination parameters
 }
 
 /**
@@ -48,12 +51,13 @@ export class HttpDataProvider<T = unknown> implements DataProvider<T> {
   private httpClient: HttpClient
   private responseAdapter: ResponseAdapter<T>
   private currentPage = 1
+  private pagination: HttpPagination
+  private paginationRequest: PaginationRequest
 
   constructor(config: HttpDataProviderConfig) {
     this.config = {
       pageSize: 20,
-      ...config,
-      paginationMode: config.paginationMode || 'cursor'
+      ...config
     }
 
     // Initialize StateProvider
@@ -76,6 +80,10 @@ export class HttpDataProvider<T = unknown> implements DataProvider<T> {
 
     this.httpClient = config.httpClient || this.defaultHttpClient.bind(this)
     this.responseAdapter = (config.responseAdapter as ResponseAdapter<T>) || new DefaultResponseAdapter<T>()
+
+    // Initialize pagination
+    this.pagination = new HttpPagination()
+    this.paginationRequest = config.paginationRequest || new PaginationRequest()
   }
 
   /**
@@ -135,12 +143,13 @@ export class HttpDataProvider<T = unknown> implements DataProvider<T> {
 
     // Handle pagination
     if (this.config.pagination) {
-      if (this.config.paginationMode === 'cursor') {
-        if (options.cursor) {
-          params.append('pagination.cursor', options.cursor)
-        }
-        params.append('pagination.page_size', (options.pageSize || this.config.pageSize || 20).toString())
-      } else {
+      // Use cursor if provided (cursor-based pagination)
+      if (options.cursor) {
+        params.append(this.paginationRequest.nextParamName, options.cursor)
+        params.append(this.paginationRequest.limitParamName, (options.pageSize || this.config.pageSize || 20).toString())
+      }
+      // Otherwise use page-based pagination
+      else {
         const page = options.page || this.currentPage
         params.append('page', page.toString())
         params.append('per-page', (options.pageSize || this.config.pageSize || 20).toString())
@@ -178,13 +187,12 @@ export class HttpDataProvider<T = unknown> implements DataProvider<T> {
       const items = this.responseAdapter.extractItems(response)
       const pagination = this.responseAdapter.extractPagination(response)
 
-      if (this.config.paginationMode === 'cursor') {
-        if (!options.cursor) {
-          this.items.value = items
-        } else {
-          this.items.value.push(...items)
-        }
+      // Update items based on whether we're loading more or replacing
+      if (options.cursor) {
+        // Cursor-based: append items
+        this.items.value.push(...items)
       } else {
+        // Page-based or initial load: replace items
         this.items.value = items
         if (options.page) {
           this.currentPage = options.page
@@ -193,6 +201,28 @@ export class HttpDataProvider<T = unknown> implements DataProvider<T> {
       }
 
       this.paginationData.value = pagination || null
+
+      // Update HttpPagination state
+      if (pagination) {
+        if ('nextCursor' in pagination) {
+          // Cursor-based pagination
+          this.pagination.update({
+            nextToken: pagination.nextCursor || null,
+            hasMore: pagination.hasMore,
+            pageSize: this.config.pageSize || 20
+          })
+        } else if ('currentPage' in pagination) {
+          // Page-based pagination
+          this.pagination.update({
+            totalCount: pagination.totalCount,
+            pageCount: pagination.pageCount,
+            currentPage: pagination.currentPage,
+            pageSize: pagination.perPage,
+            hasMore: pagination.currentPage < pagination.pageCount
+          })
+        }
+      }
+
       this.loading.value = false
 
       return {
@@ -216,12 +246,14 @@ export class HttpDataProvider<T = unknown> implements DataProvider<T> {
       }
     }
 
-    if (this.config.paginationMode === 'cursor') {
-      const cursorData = this.paginationData.value as CursorPaginationData
+    // Check if we have a cursor (cursor-based pagination)
+    const nextToken = this.pagination.getNextToken()
+    if (nextToken) {
       return this.load({
-        cursor: cursorData.nextCursor
+        cursor: nextToken
       })
     } else {
+      // Page-based pagination
       return this.setPage(this.currentPage + 1)
     }
   }
@@ -233,6 +265,7 @@ export class HttpDataProvider<T = unknown> implements DataProvider<T> {
     this.items.value = []
     this.paginationData.value = null
     this.currentPage = 1
+    this.pagination.reset()
     this.stateProvider.clearPage()
     this.stateProvider.clearCursor()
     return this.load()
@@ -242,11 +275,6 @@ export class HttpDataProvider<T = unknown> implements DataProvider<T> {
    * Set page (for page-based pagination)
    */
   async setPage(page: number): Promise<LoadResult<T>> {
-    if (this.config.paginationMode !== 'page') {
-      console.warn('setPage() is only available for page-based pagination')
-      return { items: this.items.value }
-    }
-
     this.currentPage = page
     return this.load({ page })
   }
@@ -269,17 +297,10 @@ export class HttpDataProvider<T = unknown> implements DataProvider<T> {
    * Check if more data available
    */
   hasMore(): boolean {
-    if (!this.config.pagination || !this.paginationData.value) {
+    if (!this.config.pagination) {
       return false
     }
-
-    if (this.config.paginationMode === 'cursor') {
-      const cursorData = this.paginationData.value as CursorPaginationData
-      return cursorData.hasMore === true
-    } else {
-      const pageData = this.paginationData.value as PagePaginationData
-      return this.currentPage < pageData.pageCount
-    }
+    return this.pagination.hasMore()
   }
 
   /**
@@ -291,9 +312,20 @@ export class HttpDataProvider<T = unknown> implements DataProvider<T> {
 
   /**
    * Get current pagination data
+   * @deprecated Use getPagination() instead
    */
   getCurrentPagination(): PaginationData | null {
     return this.paginationData.value
+  }
+
+  /**
+   * Get pagination interface for UI components
+   */
+  getPagination(): Pagination | null {
+    if (!this.config.pagination) {
+      return null
+    }
+    return this.pagination
   }
 
   /**
