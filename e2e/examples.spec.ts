@@ -422,6 +422,105 @@ test.describe('Multi-State Example', () => {
   })
 })
 
+test.describe('LocalStorage State Provider', () => {
+  test('should persist pagination state after page refresh', async ({ page }) => {
+    // Clear localStorage before test
+    await page.goto('/#state-localstorage')
+    await page.evaluate(() => localStorage.clear())
+    await page.reload()
+
+    const section = page.locator('#state-localstorage')
+    const grid = section.locator('[data-qa="grid"]')
+
+    // Wait for grid to load
+    await expect(grid.locator('tbody tr').first()).toBeVisible()
+
+    // Should start on page 1
+    const page1Button = grid.locator('button.active:has-text("1")')
+    await expect(page1Button).toBeVisible()
+
+    // Navigate to page 2
+    const page2Button = grid.locator('button:has-text("2")')
+    await page2Button.click()
+
+    // Wait for page to update
+    await expect(grid.locator('button.active:has-text("2")')).toBeVisible()
+
+    // Reload the page
+    await page.reload()
+
+    // Wait for grid to load after reload
+    await expect(grid.locator('tbody tr').first()).toBeVisible()
+
+    // Verify still on page 2 (state restored from localStorage)
+    await expect(grid.locator('button.active:has-text("2")')).toBeVisible()
+  })
+
+  test('should persist sort state after page refresh', async ({ page }) => {
+    // Clear localStorage before test
+    await page.goto('/#state-localstorage')
+    await page.evaluate(() => localStorage.clear())
+    await page.reload()
+
+    const section = page.locator('#state-localstorage')
+    const grid = section.locator('[data-qa="grid"]')
+
+    // Wait for grid to load
+    await expect(grid.locator('tbody tr').first()).toBeVisible()
+
+    // Click on a sortable column header (e.g., "Name")
+    const nameHeader = grid.locator('th:has-text("Name")')
+    await nameHeader.click()
+
+    // Wait a moment for sort to apply
+    await page.waitForTimeout(200)
+
+    // Get the first row's name after sorting
+    const firstRowName = await grid.locator('tbody tr').first().locator('td').nth(1).textContent()
+
+    // Reload the page
+    await page.reload()
+
+    // Wait for grid to load after reload
+    await expect(grid.locator('tbody tr').first()).toBeVisible()
+
+    // Verify sort persisted - first row should be the same
+    const firstRowNameAfterReload = await grid.locator('tbody tr').first().locator('td').nth(1).textContent()
+    expect(firstRowNameAfterReload).toBe(firstRowName)
+  })
+
+  test('should not share state with InMemory provider', async ({ page }) => {
+    // Clear localStorage before test
+    await page.goto('/#state-localstorage')
+    await page.evaluate(() => localStorage.clear())
+
+    // Go to LocalStorage section and navigate to page 2
+    await page.goto('/#state-localstorage')
+    const localStorageSection = page.locator('#state-localstorage')
+    const localStorageGrid = localStorageSection.locator('[data-qa="grid"]')
+
+    await expect(localStorageGrid.locator('tbody tr').first()).toBeVisible()
+    const page2Button = localStorageGrid.locator('button:has-text("2")')
+    await page2Button.click()
+    await expect(localStorageGrid.locator('button.active:has-text("2")')).toBeVisible()
+
+    // Go to InMemory section
+    await page.goto('/#state-inmemory')
+    const inMemorySection = page.locator('#state-inmemory')
+    const inMemoryGrid = inMemorySection.locator('[data-qa="grid"]')
+
+    await expect(inMemoryGrid.locator('tbody tr').first()).toBeVisible()
+
+    // InMemory should be on page 1 (not affected by LocalStorage state)
+    await expect(inMemoryGrid.locator('button.active:has-text("1")')).toBeVisible()
+
+    // Reload and check LocalStorage still has page 2
+    await page.goto('/#state-localstorage')
+    await expect(localStorageGrid.locator('tbody tr').first()).toBeVisible()
+    await expect(localStorageGrid.locator('button.active:has-text("2")')).toBeVisible()
+  })
+})
+
 test.describe('Cross-Browser Compatibility', () => {
   test('examples should render consistently across browsers', async ({ page }) => {
     await page.goto('/#basic')
