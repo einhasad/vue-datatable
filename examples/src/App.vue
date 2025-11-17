@@ -28,7 +28,6 @@
           <div class="nav-section">
             <span class="nav-section-title">Advanced</span>
             <a href="#multi-state" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'multi-state' }]" @click="scrollToSection">Multi-State Example</a>
-            <a href="#github-api" :class="['nav-link', 'nav-sub-link', { active: activeSection === 'github-api' }]" @click="scrollToSection">GitHub API</a>
           </div>
           <a href="#page-pagination" :class="['nav-link', { active: activeSection === 'page-pagination' }]" @click="scrollToSection">Page Pagination</a>
           <a href="#cursor-pagination" :class="['nav-link', { active: activeSection === 'cursor-pagination' }]" @click="scrollToSection">Cursor Pagination</a>
@@ -223,112 +222,116 @@ const columns: Column[] = [
           <!-- HTTP Provider Section -->
           <section id="http-provider" class="section">
             <div>
-              <h2>HTTP Provider Example</h2>
+              <h2>HTTP Provider Example - GitHub API</h2>
+              <p>
+                This example demonstrates <strong>HttpDataProvider</strong> with the real GitHub API.
+                Search for repositories, sort by stars/forks/updated, and navigate pages - all state synced with URL!
+              </p>
 
-              <div class="example-description">
-                <p>
-                  The <strong>HttpDataProvider</strong> is designed for fetching data from REST APIs.
-                  It supports both cursor-based and page-based pagination, custom HTTP clients, response adapters,
-                  and automatic URL parameter management. This example shows how to configure it with a mock HTTP client
-                  to simulate API responses.
-                </p>
+              <div class="example-section">
+                <h3>Search & Filters</h3>
+                <div class="controls">
+                  <div class="control-group">
+                    <label for="search">Search Repositories:</label>
+                    <input
+                      id="search"
+                      v-model="githubSearchQuery"
+                      type="text"
+                      placeholder="e.g., vue datatable"
+                      class="search-input"
+                      @keyup.enter="handleGithubSearch"
+                    />
+                    <button @click="handleGithubSearch" class="btn btn-primary">Search</button>
+                  </div>
+
+                  <div class="control-group">
+                    <label for="sort">Sort By:</label>
+                    <select id="sort" v-model="githubSortBy" @change="handleGithubSearch" class="sort-select">
+                      <option value="stars">⭐ Stars</option>
+                      <option value="forks">🔱 Forks</option>
+                      <option value="updated">🕐 Recently Updated</option>
+                      <option value="help-wanted-issues">🙋 Help Wanted</option>
+                    </select>
+                  </div>
+
+                  <div class="control-group" v-if="githubTotalCount > 0">
+                    <span>Results: {{ githubTotalCount.toLocaleString() }} repositories</span>
+                  </div>
+                </div>
               </div>
 
               <div class="example-section">
-                <h3>Demo</h3>
+                <h3>Results</h3>
                 <Grid
-                  :data-provider="httpProvider"
-                  :columns="httpColumns"
+                  ref="githubGridRef"
+                  :data-provider="githubProvider"
+                  :columns="githubColumns"
+                  :auto-load="false"
                 />
               </div>
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>&lt;template&gt;
-  &lt;Grid
-    :data-provider="provider"
-    :columns="columns"
-  /&gt;
-&lt;/template&gt;
+                <pre class="code-block"><code>// Custom adapter for GitHub API response format
+class GitHubSearchAdapter {
+  private currentPage = 1
 
-&lt;script setup lang="ts"&gt;
-import { Grid, HttpDataProvider, type Column, type ResponseAdapter } from '@grid-vue/grid'
+  setCurrentPage(page: number) {
+    this.currentPage = page
+  }
 
-// Custom response adapter for your API format
-const customAdapter: ResponseAdapter = {
-  extractItems: (response) => response.data || [],
-  extractPagination: (response) => ({
-    currentPage: response.page || 1,
-    pageCount: response.totalPages || 1,
-    pageSize: response.pageSize || 10,
-    totalCount: response.total || 0
-  }),
-  isSuccess: (response) => response.success === true,
-  getErrorMessage: (response) => response.error || 'Unknown error'
-}
+  extractItems(response: any): any[] {
+    return response.items || []
+  }
 
-// Mock HTTP client that simulates API responses
-const mockHttpClient = async (url: string) => {
-  await new Promise(resolve => setTimeout(resolve, 500)) // Simulate network delay
+  extractPagination(response: any) {
+    const totalCount = response.total_count || 0
+    return {
+      currentPage: this.currentPage,
+      perPage: 10,
+      pageCount: Math.min(Math.ceil(totalCount / 10), 100),
+      totalCount: Math.min(totalCount, 1000)
+    }
+  }
 
-  const mockUsers = [
-    { id: 1, username: 'alice_smith', email: 'alice@company.com', status: 'Active' },
-    { id: 2, username: 'bob_jones', email: 'bob@company.com', status: 'Active' },
-    { id: 3, username: 'charlie_brown', email: 'charlie@company.com', status: 'Inactive' },
-    { id: 4, username: 'diana_prince', email: 'diana@company.com', status: 'Active' },
-    { id: 5, username: 'edward_norton', email: 'edward@company.com', status: 'Active' }
-  ]
+  isSuccess(response: any): boolean {
+    return !response.message
+  }
 
-  return {
-    success: true,
-    data: mockUsers,
-    page: 1,
-    totalPages: 1,
-    pageSize: 10,
-    total: mockUsers.length
+  getErrorMessage(response: any): string {
+    return response.message || 'API request failed'
   }
 }
 
-// Configure HttpDataProvider
+const adapter = new GitHubSearchAdapter()
+
+async function githubHttpClient(fullUrl: string): Promise&lt;any&gt; {
+  const urlObj = new URL(fullUrl)
+  const q = urlObj.searchParams.get('gh-q') || 'vue table'
+  const sort = urlObj.searchParams.get('gh-sort') || 'stars'
+  const page = urlObj.searchParams.get('page') || '1'
+
+  adapter.setCurrentPage(parseInt(page))
+
+  const params = new URLSearchParams({
+    q, sort, order: 'desc', per_page: '10', page
+  })
+
+  const response = await fetch(\`https://api.github.com/search/repositories?\${params}\`)
+  return response.json()
+}
+
 const provider = new HttpDataProvider({
-  url: '/api/users',
+  url: 'https://api.github.com/search/repositories',
   pagination: true,
   paginationMode: 'page',
   pageSize: 10,
-  httpClient: mockHttpClient,
-  responseAdapter: customAdapter,
-  headers: {
-    'Authorization': 'Bearer token123'
-  }
-})
-
-const columns: Column[] = [
-  { key: 'id', label: 'ID', sortable: true },
-  { key: 'username', label: 'Username', sortable: true },
-  { key: 'email', label: 'Email', sortable: true },
-  { key: 'status', label: 'Status', sortable: true }
-]
-&lt;/script&gt;</code></pre>
-              </div>
-
-              <div class="example-section">
-                <h3>Real-World Example</h3>
-                <pre class="code-block"><code>// Using with a real API endpoint
-import axios from 'axios'
-
-const provider = new HttpDataProvider({
-  url: 'https://api.example.com/users',
-  pagination: true,
-  paginationMode: 'page',
-  pageSize: 20,
-  httpClient: async (url) => {
-    const response = await axios.get(url)
-    return response.data
-  },
-  responseAdapter: customAdapter,
-  headers: {
-    'Authorization': `Bearer ${authToken}`
-  }
+  responseAdapter: adapter,
+  httpClient: githubHttpClient,
+  stateProvider: new QueryParamsStateProvider({
+    router,
+    prefix: 'gh'
+  })
 })</code></pre>
               </div>
             </div>
@@ -532,124 +535,6 @@ const usersProvider = new HttpDataProvider({
 })
 
 // URL will contain both: ?products-sort=name&products-page=2&users-sort=email&users-page=1</code></pre>
-              </div>
-            </div>
-          </section>
-
-          <!-- GitHub API Example Section -->
-          <section id="github-api" class="section">
-            <div>
-              <h2>GitHub API Example</h2>
-              <p>
-                This example demonstrates HttpDataProvider with the real GitHub API.
-                Search for repositories, sort by stars/forks/updated, and navigate pages - all state synced with URL!
-              </p>
-
-              <div class="example-section">
-                <h3>Search & Filters</h3>
-                <div class="controls">
-                  <div class="control-group">
-                    <label for="search">Search Repositories:</label>
-                    <input
-                      id="search"
-                      v-model="githubSearchQuery"
-                      type="text"
-                      placeholder="e.g., vue datatable"
-                      class="search-input"
-                      @keyup.enter="handleGithubSearch"
-                    />
-                    <button @click="handleGithubSearch" class="btn btn-primary">Search</button>
-                  </div>
-
-                  <div class="control-group">
-                    <label for="sort">Sort By:</label>
-                    <select id="sort" v-model="githubSortBy" @change="handleGithubSearch" class="sort-select">
-                      <option value="stars">⭐ Stars</option>
-                      <option value="forks">🔱 Forks</option>
-                      <option value="updated">🕐 Recently Updated</option>
-                      <option value="help-wanted-issues">🙋 Help Wanted</option>
-                    </select>
-                  </div>
-
-                  <div class="control-group" v-if="githubTotalCount > 0">
-                    <span>Results: {{ githubTotalCount.toLocaleString() }} repositories</span>
-                  </div>
-                </div>
-              </div>
-
-              <div class="example-section">
-                <h3>Results</h3>
-                <Grid
-                  ref="githubGridRef"
-                  :data-provider="githubProvider"
-                  :columns="githubColumns"
-                  :auto-load="false"
-                />
-              </div>
-
-              <div class="example-section">
-                <h3>Code</h3>
-                <pre class="code-block"><code>// Custom adapter for GitHub API response format
-class GitHubSearchAdapter {
-  private currentPage = 1
-
-  setCurrentPage(page: number) {
-    this.currentPage = page
-  }
-
-  extractItems(response: any): any[] {
-    return response.items || []
-  }
-
-  extractPagination(response: any) {
-    const totalCount = response.total_count || 0
-    return {
-      currentPage: this.currentPage,
-      perPage: 10,
-      pageCount: Math.min(Math.ceil(totalCount / 10), 100),
-      totalCount: Math.min(totalCount, 1000)
-    }
-  }
-
-  isSuccess(response: any): boolean {
-    return !response.message
-  }
-
-  getErrorMessage(response: any): string {
-    return response.message || 'API request failed'
-  }
-}
-
-const adapter = new GitHubSearchAdapter()
-
-async function githubHttpClient(fullUrl: string): Promise&lt;any&gt; {
-  const urlObj = new URL(fullUrl)
-  const q = urlObj.searchParams.get('gh-q') || 'vue table'
-  const sort = urlObj.searchParams.get('gh-sort') || 'stars'
-  const page = urlObj.searchParams.get('page') || '1'
-
-  adapter.setCurrentPage(parseInt(page))
-
-  const params = new URLSearchParams({
-    q, sort, order: 'desc', per_page: '10', page
-  })
-
-  const response = await fetch(\`https://api.github.com/search/repositories?\${params}\`)
-  return response.json()
-}
-
-const provider = new HttpDataProvider({
-  url: 'https://api.github.com/search/repositories',
-  pagination: true,
-  paginationMode: 'page',
-  pageSize: 10,
-  responseAdapter: adapter,
-  httpClient: githubHttpClient,
-  stateProvider: new QueryParamsStateProvider({
-    router,
-    prefix: 'gh'
-  })
-})</code></pre>
               </div>
             </div>
           </section>
@@ -1274,59 +1159,6 @@ const arrayColumns: Column[] = [
   { key: 'stock', label: 'Stock', sortable: true }
 ]
 
-// HTTP Provider Example
-const customAdapter: ResponseAdapter = {
-  extractItems: (response) => response.data || [],
-  extractPagination: (response) => ({
-    currentPage: response.page || 1,
-    pageCount: response.totalPages || 1,
-    pageSize: response.pageSize || 10,
-    totalCount: response.total || 0
-  }),
-  isSuccess: (response) => response.success === true,
-  getErrorMessage: (response) => response.error || 'Unknown error'
-}
-
-const mockHttpClient = async (url: string) => {
-  await new Promise(resolve => setTimeout(resolve, 500))
-
-  const mockUsers = [
-    { id: 1, username: 'alice_smith', email: 'alice@company.com', status: 'Active' },
-    { id: 2, username: 'bob_jones', email: 'bob@company.com', status: 'Active' },
-    { id: 3, username: 'charlie_brown', email: 'charlie@company.com', status: 'Inactive' },
-    { id: 4, username: 'diana_prince', email: 'diana@company.com', status: 'Active' },
-    { id: 5, username: 'edward_norton', email: 'edward@company.com', status: 'Active' }
-  ]
-
-  return {
-    success: true,
-    data: mockUsers,
-    page: 1,
-    totalPages: 1,
-    pageSize: 10,
-    total: mockUsers.length
-  }
-}
-
-const httpProvider = new HttpDataProvider({
-  url: '/api/users',
-  pagination: true,
-  paginationMode: 'page',
-  pageSize: 10,
-  httpClient: mockHttpClient,
-  responseAdapter: customAdapter,
-  headers: {
-    'Authorization': 'Bearer token123'
-  }
-})
-
-const httpColumns: Column[] = [
-  { key: 'id', label: 'ID', sortable: true },
-  { key: 'username', label: 'Username', sortable: true },
-  { key: 'email', label: 'Email', sortable: true },
-  { key: 'status', label: 'Status', sortable: true }
-]
-
 // State Providers Example
 const stateUsers = [
   { id: 1, name: 'Alice Johnson', email: 'alice@example.com', role: 'Admin', status: 'Active' },
@@ -1409,6 +1241,39 @@ const multiStateArrayColumns: Column[] = [
 ]
 
 // Multi-State Example: HTTP Provider (mock)
+const customAdapter: ResponseAdapter = {
+  extractItems: (response) => response.data || [],
+  extractPagination: (response) => ({
+    currentPage: response.page || 1,
+    pageCount: response.totalPages || 1,
+    pageSize: response.pageSize || 10,
+    totalCount: response.total || 0
+  }),
+  isSuccess: (response) => response.success === true,
+  getErrorMessage: (response) => response.error || 'Unknown error'
+}
+
+const mockHttpClient = async (url: string) => {
+  await new Promise(resolve => setTimeout(resolve, 500))
+
+  const mockUsers = [
+    { id: 1, username: 'alice_smith', email: 'alice@company.com', status: 'Active' },
+    { id: 2, username: 'bob_jones', email: 'bob@company.com', status: 'Active' },
+    { id: 3, username: 'charlie_brown', email: 'charlie@company.com', status: 'Inactive' },
+    { id: 4, username: 'diana_prince', email: 'diana@company.com', status: 'Active' },
+    { id: 5, username: 'edward_norton', email: 'edward@company.com', status: 'Active' }
+  ]
+
+  return {
+    success: true,
+    data: mockUsers,
+    page: 1,
+    totalPages: 1,
+    pageSize: 10,
+    total: mockUsers.length
+  }
+}
+
 const multiStateHttpProvider = new HttpDataProvider({
   url: '/api/users',
   pagination: true,
@@ -1908,7 +1773,6 @@ const updateActiveSection = () => {
     'state-queryparams',
     'state-hash',
     'multi-state',
-    'github-api',
     'page-pagination',
     'cursor-pagination',
     'sorting',
