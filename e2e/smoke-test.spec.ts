@@ -66,14 +66,12 @@ test.describe('Smoke Test - Mock API', () => {
     await pageWithLogs.waitForTimeout(3000)
 
     console.log('[Smoke Test] Checking what environment variables the app sees...')
-    const envVars = await pageWithLogs.evaluate(() => {
-      return {
-        VITE_MOCK_GITHUB_API_URL: (import.meta as any).env.VITE_MOCK_GITHUB_API_URL,
-        MODE: (import.meta as any).env.MODE,
-        DEV: (import.meta as any).env.DEV,
-        PROD: (import.meta as any).env.PROD,
-      }
-    })
+    const envVars = await pageWithLogs.evaluate('({' +
+      'VITE_MOCK_GITHUB_API_URL: import.meta.env.VITE_MOCK_GITHUB_API_URL,' +
+      'MODE: import.meta.env.MODE,' +
+      'DEV: import.meta.env.DEV,' +
+      'PROD: import.meta.env.PROD' +
+    '})')
 
     console.log('[Smoke Test] App environment variables:', envVars)
 
