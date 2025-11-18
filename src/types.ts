@@ -7,11 +7,12 @@ import type { Component } from 'vue'
 export interface RouterLike {
   currentRoute: {
     value: {
+      path: string
       query: Record<string, string | string[]>
       hash: string
     }
   }
-  replace: (location: { query?: Record<string, string | string[]>; hash?: string }) => void
+  replace: (location: any) => void
 }
 
 /**

@@ -12,9 +12,6 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './e2e',
 
-  // Global setup to verify mock API is accessible
-  globalSetup: './playwright.global-setup.ts',
-
   // Maximum time one test can run
   timeout: 30 * 1000,
 
@@ -64,14 +61,26 @@ export default defineConfig({
     // },
   ],
 
-  // Run examples dev server before starting the tests
-  webServer: {
-    command: 'npm run build && cd examples && npm run dev',
-    url: 'http://localhost:3000/vue-datatable/',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-    // Changed from 'pipe' to 'inherit' to see mock API logs
-    stdout: 'inherit',
-    stderr: 'inherit',
-  },
+  // Run servers before starting the tests
+  // Array allows explicit control over each server
+  webServer: [
+    {
+      // Mock GitHub API server
+      command: 'node mock-server/index.js',
+      port: 3001,
+      reuseExistingServer: !process.env.CI,
+      timeout: 30 * 1000,
+      stdout: 'inherit',
+      stderr: 'inherit',
+    },
+    {
+      // Build library and start examples dev server
+      command: 'npm run build && cd examples && npm run dev',
+      url: 'http://localhost:3000/vue-datatable/',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000,
+      stdout: 'inherit',
+      stderr: 'inherit',
+    },
+  ],
 })

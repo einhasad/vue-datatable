@@ -76,11 +76,12 @@ export class HashStateProvider implements StateProvider {
    */
   private setHashParams(params: Record<string, string>): void {
     const newHash = this.buildHash(params)
+    // Use type assertion for full route location with path
     this.router.replace({
       path: this.router.currentRoute.value.path,
       query: this.router.currentRoute.value.query,
       hash: newHash
-    })
+    } as any)
   }
 
   /**
