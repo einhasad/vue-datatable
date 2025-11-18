@@ -1142,6 +1142,21 @@ function getRowOptions(user: any): RowOptions {
 </template>
 
 <script setup lang="ts">
+// ============================================
+// APP INITIALIZATION LOGGING
+// ============================================
+console.log('='.repeat(80))
+console.log('[App.vue] Initializing Grid Vue Examples App')
+console.log('[App.vue] Timestamp:', new Date().toISOString())
+console.log('[App.vue] Environment variables:')
+console.log('  - VITE_MOCK_GITHUB_API_URL:', import.meta.env.VITE_MOCK_GITHUB_API_URL)
+console.log('  - MODE:', import.meta.env.MODE)
+console.log('  - DEV:', import.meta.env.DEV)
+console.log('  - PROD:', import.meta.env.PROD)
+console.log('  - BASE_URL:', import.meta.env.BASE_URL)
+console.log('[App.vue] Window location:', window.location.href)
+console.log('='.repeat(80))
+
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
@@ -1411,23 +1426,54 @@ async function githubHttpClient(fullUrl: string): Promise<any> {
   const apiBaseUrl = import.meta.env.VITE_MOCK_GITHUB_API_URL || 'http://localhost:3001'
   const url = `${apiBaseUrl}/api/github/search/repositories?${params.toString()}`
 
-  const response = await fetch(url, {
-    headers: {
-      'Accept': 'application/vnd.github.v3+json'
+  console.log('[GitHub HTTP Client] Environment variable VITE_MOCK_GITHUB_API_URL:', import.meta.env.VITE_MOCK_GITHUB_API_URL)
+  console.log('[GitHub HTTP Client] Using API base URL:', apiBaseUrl)
+  console.log('[GitHub HTTP Client] Full request URL:', url)
+  console.log('[GitHub HTTP Client] Search params:', { q, sort, page })
+
+  try {
+    const response = await fetch(url, {
+      headers: {
+        'Accept': 'application/vnd.github.v3+json'
+      }
+    })
+
+    console.log('[GitHub HTTP Client] Response status:', response.status, response.statusText)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('[GitHub HTTP Client] Error response:', errorText)
+      throw new Error(`HTTP error! status: ${response.status}`)
     }
-  })
 
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`)
+    const data = await response.json()
+    console.log('[GitHub HTTP Client] Response data:', {
+      total_count: data.total_count,
+      items_count: data.items?.length,
+      incomplete_results: data.incomplete_results
+    })
+
+    return data
+  } catch (error) {
+    console.error('[GitHub HTTP Client] Fetch error:', error)
+    throw error
   }
-
-  return response.json()
 }
 
+const githubProviderUrl = import.meta.env.VITE_MOCK_GITHUB_API_URL
+  ? `${import.meta.env.VITE_MOCK_GITHUB_API_URL}/api/github/search/repositories`
+  : 'http://localhost:3001/api/github/search/repositories'
+
+console.log('[GitHub Provider] Initializing with URL:', githubProviderUrl)
+console.log('[GitHub Provider] Environment variables:', {
+  VITE_MOCK_GITHUB_API_URL: import.meta.env.VITE_MOCK_GITHUB_API_URL,
+  MODE: import.meta.env.MODE,
+  DEV: import.meta.env.DEV,
+  PROD: import.meta.env.PROD
+})
+
 const githubProvider = new HttpDataProvider({
-  url: import.meta.env.VITE_MOCK_GITHUB_API_URL
-    ? `${import.meta.env.VITE_MOCK_GITHUB_API_URL}/api/github/search/repositories`
-    : 'http://localhost:3001/api/github/search/repositories',
+  url: githubProviderUrl,
   pagination: true,
   paginationMode: 'page',
   pageSize: 10,

@@ -18,14 +18,18 @@ export function mockGitHubApiPlugin(options = {}) {
   } = options
 
   let server = null
+  let serverStarted = false
 
   return {
     name: 'mock-github-api',
 
     configureServer(viteServer) {
       if (!enabled) {
+        console.log('[Mock GitHub API] Plugin disabled')
         return
       }
+
+      console.log(`[Mock GitHub API] Attempting to start server on port ${port}...`)
 
       const app = createApp()
 
@@ -35,28 +39,38 @@ export function mockGitHubApiPlugin(options = {}) {
       }
 
       server = app.listen(port, () => {
-        if (verbose || process.env.NODE_ENV !== 'test') {
-          console.log(`\n[Mock GitHub API] Server running on http://localhost:${port}`)
-          console.log(`[Mock GitHub API] Health check: http://localhost:${port}/api/github/health\n`)
-        }
+        serverStarted = true
+        console.log(`\n[Mock GitHub API] ✓ Server running on http://localhost:${port}`)
+        console.log(`[Mock GitHub API] ✓ Health check: http://localhost:${port}/api/github/health`)
+        console.log(`[Mock GitHub API] ✓ Search endpoint: http://localhost:${port}/api/github/search/repositories\n`)
       })
 
       // Handle server errors
       server.on('error', (err) => {
         if (err.code === 'EADDRINUSE') {
-          console.warn(`[Mock GitHub API] Port ${port} is already in use. Mock server not started.`)
+          console.warn(`[Mock GitHub API] ⚠ Port ${port} is already in use. Mock server not started.`)
+          console.warn(`[Mock GitHub API] ⚠ You may need to stop other instances or use a different port.`)
         } else {
-          console.error('[Mock GitHub API] Server error:', err)
+          console.error('[Mock GitHub API] ✗ Server error:', err)
+        }
+      })
+
+      // Cleanup on Vite server close
+      viteServer.httpServer?.on('close', () => {
+        if (server && serverStarted) {
+          console.log('[Mock GitHub API] Stopping server...')
+          server.close(() => {
+            console.log('[Mock GitHub API] ✓ Server stopped')
+          })
         }
       })
     },
 
     closeBundle() {
-      if (server) {
+      // This is called during build, not dev server shutdown
+      if (server && serverStarted) {
         server.close(() => {
-          if (verbose || process.env.NODE_ENV !== 'test') {
-            console.log('[Mock GitHub API] Server stopped')
-          }
+          console.log('[Mock GitHub API] Server stopped (build complete)')
         })
       }
     }
