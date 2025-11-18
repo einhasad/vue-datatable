@@ -42,21 +42,23 @@ export default defineConfig({
   },
 
   // Configure projects for major browsers
+  // Note: Only Chromium is enabled due to environment restrictions
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
 
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
+    // Disabled: Firefox and Webkit require browser downloads that may not be available
+    // {
+    //   name: 'firefox',
+    //   use: { ...devices['Desktop Firefox'] },
+    // },
 
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
+    // {
+    //   name: 'webkit',
+    //   use: { ...devices['Desktop Safari'] },
+    // },
   ],
 
   // Run examples dev server before starting the tests

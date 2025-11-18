@@ -3,32 +3,41 @@
  *
  * This file is run before all tests. It starts the mock GitHub API server
  * for integration tests and sets up global test environment.
+ *
+ * The server persists across all test files to avoid port conflicts.
  */
 
 import { beforeAll, afterAll } from 'vitest'
 import { createApp } from '../mock-server/index.js'
 import type { Server } from 'http'
 
-let mockServer: Server | null = null
+// Global state to track server across all test files
+const globalState = globalThis as any
+const SERVER_KEY = '__mockGitHubApiServer__'
+const PORT = 3001
 
-// Start mock server before all tests
-beforeAll(() => {
+// Start mock server before all tests (shared across all workers)
+beforeAll(async () => {
+  // If server is already running globally, skip
+  if (globalState[SERVER_KEY]) {
+    return
+  }
+
   return new Promise<void>((resolve) => {
     const app = createApp()
-    const port = 3001
 
     // Disable verbose logging in tests
     process.env.MOCK_API_VERBOSE = 'false'
 
-    mockServer = app.listen(port, () => {
-      console.log(`[Test Setup] Mock GitHub API started on port ${port}`)
+    const server = app.listen(PORT, () => {
+      console.log(`[Test Setup] Mock GitHub API started on port ${PORT}`)
+      globalState[SERVER_KEY] = server
       resolve()
     })
 
-    mockServer.on('error', (err: any) => {
+    server.on('error', (err: any) => {
       if (err.code === 'EADDRINUSE') {
-        console.warn(`[Test Setup] Port ${port} already in use, assuming server is already running`)
-        mockServer = null
+        console.warn(`[Test Setup] Port ${PORT} already in use, assuming server is already running`)
         resolve()
       } else {
         console.error('[Test Setup] Failed to start mock server:', err)
@@ -38,16 +47,9 @@ beforeAll(() => {
   })
 })
 
-// Stop mock server after all tests
+// Keep server running - it will be cleaned up when process exits
+// This avoids race conditions between test files
 afterAll(() => {
-  return new Promise<void>((resolve) => {
-    if (mockServer) {
-      mockServer.close(() => {
-        console.log('[Test Setup] Mock GitHub API stopped')
-        resolve()
-      })
-    } else {
-      resolve()
-    }
-  })
+  // Do not stop the server here - let it run for all tests
+  // The process will clean it up when exiting
 })
