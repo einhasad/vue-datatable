@@ -61,9 +61,11 @@ export default defineConfig({
 
   // Run examples dev server before starting the tests
   webServer: {
-    command: 'cd examples && npm run dev',
+    command: 'npm run build && cd examples && npm run dev',
     url: 'http://localhost:3000/vue-datatable/',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 })
