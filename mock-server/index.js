@@ -34,11 +34,28 @@ function createApp() {
   app.use(cors())
   app.use(express.json())
 
-  // Request logging middleware (optional, can be disabled in tests)
+  // Request logging middleware - always log to help debugging
   app.use((req, res, next) => {
-    if (process.env.MOCK_API_VERBOSE === 'true') {
-      console.log(`[Mock GitHub API] ${req.method} ${req.path}`, req.query)
+    const timestamp = new Date().toISOString()
+    console.log(`[Mock GitHub API] ${timestamp} - ${req.method} ${req.path}`)
+
+    if (Object.keys(req.query).length > 0) {
+      console.log(`[Mock GitHub API] Query params:`, JSON.stringify(req.query, null, 2))
     }
+
+    if (process.env.MOCK_API_VERBOSE === 'true') {
+      console.log(`[Mock GitHub API] Headers:`, req.headers)
+    }
+
+    // Log response after it's sent
+    const originalJson = res.json
+    res.json = function(data) {
+      if (req.path.includes('/search/repositories')) {
+        console.log(`[Mock GitHub API] Response: ${data.total_count} results, ${data.items?.length || 0} items returned`)
+      }
+      return originalJson.call(this, data)
+    }
+
     next()
   })
 
