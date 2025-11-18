@@ -1407,7 +1407,9 @@ async function githubHttpClient(fullUrl: string): Promise<any> {
     page
   })
 
-  const url = `https://api.github.com/search/repositories?${params.toString()}`
+  // Use mock GitHub API instead of real API
+  const apiBaseUrl = import.meta.env.VITE_MOCK_GITHUB_API_URL || 'http://localhost:3001'
+  const url = `${apiBaseUrl}/api/github/search/repositories?${params.toString()}`
 
   const response = await fetch(url, {
     headers: {
@@ -1423,7 +1425,9 @@ async function githubHttpClient(fullUrl: string): Promise<any> {
 }
 
 const githubProvider = new HttpDataProvider({
-  url: 'https://api.github.com/search/repositories',
+  url: import.meta.env.VITE_MOCK_GITHUB_API_URL
+    ? `${import.meta.env.VITE_MOCK_GITHUB_API_URL}/api/github/search/repositories`
+    : 'http://localhost:3001/api/github/search/repositories',
   pagination: true,
   paginationMode: 'page',
   pageSize: 10,
