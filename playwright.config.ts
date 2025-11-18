@@ -15,6 +15,11 @@ export default defineConfig({
   // Maximum time one test can run
   timeout: 30 * 1000,
 
+  // Default timeout for all expect() assertions and locators
+  expect: {
+    timeout: 1000, // 1 second default for all assertions
+  },
+
   // Run tests in files in parallel
   fullyParallel: true,
 
