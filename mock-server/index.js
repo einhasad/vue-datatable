@@ -1,12 +1,13 @@
 /**
- * Mock GitHub API Server
+ * Mock Search API Server
  *
- * This server provides a mock implementation of the GitHub Search API
- * for testing purposes, eliminating the need to depend on the external
- * GitHub API and avoiding rate limiting issues.
+ * This server provides a mock implementation of a repository search API
+ * for testing purposes, eliminating the need to depend on external APIs
+ * and avoiding rate limiting issues.
  *
  * Endpoints:
- * - GET /api/github/search/repositories - Search repositories
+ * - GET /api/health - Health check
+ * - GET /api/search/repositories - Search repositories
  *
  * Query Parameters:
  * - q: Search query
@@ -37,21 +38,21 @@ function createApp() {
   // Request logging middleware - always log to help debugging
   app.use((req, res, next) => {
     const timestamp = new Date().toISOString()
-    console.log(`[Mock GitHub API] ${timestamp} - ${req.method} ${req.path}`)
+    console.log(`[Mock API] ${timestamp} - ${req.method} ${req.path}`)
 
     if (Object.keys(req.query).length > 0) {
-      console.log(`[Mock GitHub API] Query params:`, JSON.stringify(req.query, null, 2))
+      console.log(`[Mock API] Query params:`, JSON.stringify(req.query, null, 2))
     }
 
     if (process.env.MOCK_API_VERBOSE === 'true') {
-      console.log(`[Mock GitHub API] Headers:`, req.headers)
+      console.log(`[Mock API] Headers:`, req.headers)
     }
 
     // Log response after it's sent
     const originalJson = res.json
     res.json = function(data) {
       if (req.path.includes('/search/repositories')) {
-        console.log(`[Mock GitHub API] Response: ${data.total_count} results, ${data.items?.length || 0} items returned`)
+        console.log(`[Mock API] Response: ${data.total_count} results, ${data.items?.length || 0} items returned`)
       }
       return originalJson.call(this, data)
     }
@@ -60,16 +61,17 @@ function createApp() {
   })
 
   // Health check endpoint
-  app.get('/api/github/health', (req, res) => {
+  app.get('/api/health', (req, res) => {
     res.json({
       status: 'ok',
-      message: 'Mock GitHub API is running',
+      message: 'Mock API is running',
+      timestamp: new Date().toISOString(),
       totalRepositories: mockRepositories.length
     })
   })
 
   // Search repositories endpoint
-  app.get('/api/github/search/repositories', (req, res) => {
+  app.get('/api/search/repositories', (req, res) => {
     try {
       const result = processSearchRequest(mockRepositories, req.query)
 
@@ -91,7 +93,10 @@ function createApp() {
   app.use((req, res) => {
     res.status(404).json({
       message: 'Not Found',
-      documentation_url: 'https://docs.github.com/rest'
+      available_endpoints: [
+        '/api/health',
+        '/api/search/repositories'
+      ]
     })
   })
 
@@ -105,9 +110,9 @@ function startServer(port = 3001) {
   const app = createApp()
 
   const server = app.listen(port, () => {
-    console.log(`Mock GitHub API server running on http://localhost:${port}`)
-    console.log(`Health check: http://localhost:${port}/api/github/health`)
-    console.log(`Search endpoint: http://localhost:${port}/api/github/search/repositories`)
+    console.log(`Mock API server running on http://localhost:${port}`)
+    console.log(`Health check: http://localhost:${port}/api/health`)
+    console.log(`Search endpoint: http://localhost:${port}/api/search/repositories`)
   })
 
   return server

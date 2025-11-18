@@ -149,7 +149,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
 
     // Wait for initial mock GitHub API request to complete
     await page.waitForResponse(response =>
-      response.url().includes('localhost:3001/api/github/search/repositories') && response.status() === 200
+      response.url().includes('localhost:3001/api/search/repositories') && response.status() === 200
     )
 
     // Verify initial data loaded
@@ -161,7 +161,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
 
     // Click search button and wait for API response
     const responsePromise = page.waitForResponse(response =>
-      response.url().includes('localhost:3001/api/github/search/repositories') &&
+      response.url().includes('localhost:3001/api/search/repositories') &&
       response.url().includes('q=react')
     )
     await section.locator('button.btn-primary').click()
@@ -183,7 +183,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     // Change sort order and wait for new API request
     const sortSelect = section.locator('select#sort')
     const responsePromise = page.waitForResponse(response =>
-      response.url().includes('localhost:3001/api/github/search/repositories') &&
+      response.url().includes('localhost:3001/api/search/repositories') &&
       response.url().includes('sort=forks')
     )
     await sortSelect.selectOption('forks')
@@ -201,7 +201,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
 
     // Wait for mock GitHub API response
     await page.waitForResponse(response =>
-      response.url().includes('localhost:3001/api/github/search/repositories') && response.status() === 200
+      response.url().includes('localhost:3001/api/search/repositories') && response.status() === 200
     )
 
     // Verify grid has data (should have table headers)
@@ -223,7 +223,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
 
     // Wait for API response
     await page.waitForResponse(response =>
-      response.url().includes('localhost:3001/api/github/search/repositories')
+      response.url().includes('localhost:3001/api/search/repositories')
     )
 
     // Verify results count is shown
@@ -251,7 +251,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
 
     if (await page2Button.isVisible()) {
       const responsePromise = page.waitForResponse(response =>
-        response.url().includes('localhost:3001/api/github/search/repositories') &&
+        response.url().includes('localhost:3001/api/search/repositories') &&
         response.url().includes('page=2')
       )
       await page2Button.click()
@@ -278,7 +278,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
 
     // Click search and wait for API response
     const responsePromise = page.waitForResponse(response =>
-      response.url().includes('localhost:3001/api/github/search/repositories') &&
+      response.url().includes('localhost:3001/api/search/repositories') &&
       response.url().includes('q=typescript') &&
       response.url().includes('sort=updated')
     )
@@ -301,7 +301,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     // Type and press Enter, wait for API response
     await searchInput.fill('vue3')
     const responsePromise = page.waitForResponse(response =>
-      response.url().includes('localhost:3001/api/github/search/repositories') &&
+      response.url().includes('localhost:3001/api/search/repositories') &&
       response.url().includes('q=vue3')
     )
     await searchInput.press('Enter')
@@ -324,7 +324,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
 
     // Click search and wait for API response
     const responsePromise = page.waitForResponse(response =>
-      response.url().includes('localhost:3001/api/github/search/repositories') &&
+      response.url().includes('localhost:3001/api/search/repositories') &&
       response.url().includes('q=react+hooks') &&
       response.url().includes('sort=forks')
     )
