@@ -65,21 +65,8 @@ test.describe('Smoke Test - Mock API', () => {
     // Wait a bit for any network requests
     await pageWithLogs.waitForTimeout(3000)
 
-    console.log('[Smoke Test] Checking what environment variables the app sees...')
-    const envVars = await pageWithLogs.evaluate('({' +
-      'VITE_MOCK_GITHUB_API_URL: import.meta.env.VITE_MOCK_GITHUB_API_URL,' +
-      'MODE: import.meta.env.MODE,' +
-      'DEV: import.meta.env.DEV,' +
-      'PROD: import.meta.env.PROD' +
-    '})')
-
-    console.log('[Smoke Test] App environment variables:', envVars)
-
-    if (!envVars.VITE_MOCK_GITHUB_API_URL) {
-      console.warn('⚠️  [Smoke Test] WARNING: VITE_MOCK_GITHUB_API_URL is not set!')
-      console.warn('   The app will fall back to http://localhost:3001')
-      console.warn('   Check that examples/.env file exists and is loaded')
-    }
+    console.log('[Smoke Test] Environment variables are logged in browser console above')
+    console.log('[Smoke Test] Look for "Environment variables:" in the logs')
 
     // Check if the HTTP provider section loaded
     const httpProviderSection = pageWithLogs.locator('#http-provider')
