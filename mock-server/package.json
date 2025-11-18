@@ -1,0 +1,18 @@
+{
+  "name": "mock-github-api",
+  "version": "1.0.0",
+  "description": "Mock GitHub API server for testing",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "keywords": ["mock", "github", "api", "testing"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  }
+}

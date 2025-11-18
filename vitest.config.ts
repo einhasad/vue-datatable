@@ -13,6 +13,7 @@ export default mergeConfig(
     test: {
       globals: true,
       environment: 'happy-dom',
+      setupFiles: ['__tests__/setup.ts'],
       exclude: [
         '**/node_modules/**',
         '**/dist/**',
@@ -28,6 +29,7 @@ export default mergeConfig(
           'dist/',
           'doc/',
           'examples/',
+          'mock-server/',
           '*.config.ts',
           '*.config.js',
           'src/providers/DSTElasticDataProvider.ts', // Not exported
