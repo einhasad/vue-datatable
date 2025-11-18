@@ -545,8 +545,9 @@ const usersProvider = new HttpDataProvider({
 
               <div class="example-description">
                 <p>
-                  This example shows traditional page-based pagination with page numbers.
-                  Users can navigate between pages using Previous, Next, and numbered page buttons.
+                  This example shows traditional page-based pagination with page numbers using the new
+                  <code>PagePagination</code> component. Users can navigate between pages using Previous,
+                  Next, and numbered page buttons with customizable options.
                 </p>
               </div>
 
@@ -555,13 +556,35 @@ const usersProvider = new HttpDataProvider({
                 <Grid
                   :data-provider="pagePaginationProvider"
                   :columns="pagePaginationColumns"
-                />
+                >
+                  <template #pagination="{ pagination }">
+                    <PagePagination
+                      :pagination="pagination"
+                      :max-visible-pages="5"
+                      :show-summary="true"
+                      @page-change="pagePaginationProvider.setPage($event)"
+                    />
+                  </template>
+                </Grid>
               </div>
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>&lt;script setup lang="ts"&gt;
-import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
+                <pre class="code-block"><code>&lt;template&gt;
+  &lt;Grid :data-provider="provider" :columns="columns"&gt;
+    &lt;template #pagination="{ pagination }"&gt;
+      &lt;PagePagination
+        :pagination="pagination"
+        :max-visible-pages="5"
+        :show-summary="true"
+        @page-change="provider.setPage($event)"
+      /&gt;
+    &lt;/template&gt;
+  &lt;/Grid&gt;
+&lt;/template&gt;
+
+&lt;script setup lang="ts"&gt;
+import { Grid, ArrayDataProvider, PagePagination, type Column } from '@grid-vue/grid'
 
 // Generate sample data
 const users = Array.from({ length: 47 }, (_, i) => ({
@@ -592,12 +615,13 @@ const columns: Column[] = [
           <!-- Cursor Pagination Section -->
           <section id="cursor-pagination" class="section">
             <div>
-              <h2>Cursor Pagination Example</h2>
+              <h2>Cursor Pagination Example (Load More)</h2>
 
               <div class="example-description">
                 <p>
-                  This example demonstrates cursor-based pagination with a "Load More" button.
-                  This pattern is ideal for infinite scroll implementations and mobile-friendly interfaces.
+                  This example demonstrates cursor-based pagination with a "Load More" button using the new
+                  <code>LoadModePagination</code> component. This pattern is ideal for infinite scroll
+                  implementations and mobile-friendly interfaces.
                 </p>
               </div>
 
@@ -606,13 +630,33 @@ const columns: Column[] = [
                 <Grid
                   :data-provider="cursorPaginationProvider"
                   :columns="cursorPaginationColumns"
-                />
+                >
+                  <template #pagination="{ pagination, loading }">
+                    <LoadModePagination
+                      :pagination="pagination"
+                      :loading="loading"
+                      @load-more="cursorPaginationProvider.loadMore()"
+                    />
+                  </template>
+                </Grid>
               </div>
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>&lt;script setup lang="ts"&gt;
-import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
+                <pre class="code-block"><code>&lt;template&gt;
+  &lt;Grid :data-provider="provider" :columns="columns"&gt;
+    &lt;template #pagination="{ pagination, loading }"&gt;
+      &lt;LoadModePagination
+        :pagination="pagination"
+        :loading="loading"
+        @load-more="provider.loadMore()"
+      /&gt;
+    &lt;/template&gt;
+  &lt;/Grid&gt;
+&lt;/template&gt;
+
+&lt;script setup lang="ts"&gt;
+import { Grid, ArrayDataProvider, LoadModePagination, type Column } from '@grid-vue/grid'
 
 // Generate sample data
 const products = Array.from({ length: 35 }, (_, i) => ({
@@ -1100,7 +1144,21 @@ function getRowOptions(user: any): RowOptions {
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Grid, ArrayDataProvider, HttpDataProvider, InMemoryStateProvider, LocalStorageStateProvider, QueryParamsStateProvider, HashStateProvider, type Column, type ResponseAdapter, type RowOptions } from '@grid-vue/grid'
+import {
+  Grid,
+  ArrayDataProvider,
+  HttpDataProvider,
+  InMemoryStateProvider,
+  LocalStorageStateProvider,
+  QueryParamsStateProvider,
+  HashStateProvider,
+  LoadModePagination,
+  PagePagination,
+  PaginationRequest,
+  type Column,
+  type ResponseAdapter,
+  type RowOptions
+} from '@grid-vue/grid'
 
 const router = useRouter()
 const route = useRoute()

@@ -58,7 +58,9 @@
     "examples:dev": "npm run extract:examples && cd examples && npm run dev",
     "examples:build": "npm run extract:examples && cd examples && npm run build",
     "lint": "eslint . --ext .vue,.ts,.tsx",
-    "lint:fix": "eslint . --ext .vue,.ts,.tsx --fix"
+    "lint:fix": "eslint . --ext .vue,.ts,.tsx --fix",
+    "mock-api": "node mock-server/index.js",
+    "mock-api:dev": "node --watch mock-server/index.js"
   },
   "peerDependencies": {
     "vue": "^3.3.0"
@@ -70,16 +72,22 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.48.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
     "@types/node": "^20.11.0",
+    "@types/supertest": "^6.0.2",
     "@vitejs/plugin-vue": "^5.0.0",
     "@vitest/coverage-v8": "^3.2.4",
     "@vitest/ui": "^3.2.4",
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/test-utils": "^2.4.6",
+    "cors": "^2.8.5",
     "eslint": "^9.39.1",
     "eslint-plugin-vue": "^10.5.1",
+    "express": "^4.18.2",
     "happy-dom": "^18.0.1",
     "jsdom": "^27.2.0",
+    "supertest": "^7.0.0",
     "tsx": "^4.19.2",
     "typescript": "^5.3.0",
     "typescript-eslint": "^8.46.4",

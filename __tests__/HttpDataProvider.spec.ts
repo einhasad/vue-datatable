@@ -330,7 +330,6 @@ describe('HttpDataProvider', () => {
 
     it('should track loading state', async () => {
       mockHttpClient.mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 10))
         return { items: [], nextCursor: '', hasMore: false }
       })
 
