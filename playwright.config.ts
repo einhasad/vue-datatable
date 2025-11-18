@@ -12,6 +12,9 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './e2e',
 
+  // Global setup to verify mock API is accessible
+  globalSetup: './playwright.global-setup.ts',
+
   // Maximum time one test can run
   timeout: 30 * 1000,
 
@@ -67,7 +70,8 @@ export default defineConfig({
     url: 'http://localhost:3000/vue-datatable/',
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
-    stdout: 'pipe',
-    stderr: 'pipe',
+    // Changed from 'pipe' to 'inherit' to see mock API logs
+    stdout: 'inherit',
+    stderr: 'inherit',
   },
 })
