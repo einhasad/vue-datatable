@@ -142,15 +142,18 @@ test.describe('GitHub API HTTP Provider Example', () => {
   })
 
   test('should perform search and update URL with gh prefix', async ({ page }) => {
+    // Set up response waiter BEFORE navigation to avoid race condition
+    const initialResponsePromise = page.waitForResponse(response =>
+      response.url().includes('localhost:3001/api/search/repositories') && response.status() === 200
+    )
+
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
     const grid = section.locator('[data-qa="grid"]')
 
-    // Wait for initial mock GitHub API request to complete
-    await page.waitForResponse(response =>
-      response.url().includes('localhost:3001/api/search/repositories') && response.status() === 200
-    )
+    // Wait for initial mock API request to complete
+    await initialResponsePromise
 
     // Verify initial data loaded
     await expect(grid.locator('tbody tr').first()).toBeVisible()
@@ -194,15 +197,18 @@ test.describe('GitHub API HTTP Provider Example', () => {
   })
 
   test('should display repository results from GitHub API', async ({ page }) => {
+    // Set up response waiter BEFORE navigation to avoid race condition
+    const responsePromise = page.waitForResponse(response =>
+      response.url().includes('localhost:3001/api/search/repositories') && response.status() === 200
+    )
+
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
     const grid = section.locator('[data-qa="grid"]')
 
-    // Wait for mock GitHub API response
-    await page.waitForResponse(response =>
-      response.url().includes('localhost:3001/api/search/repositories') && response.status() === 200
-    )
+    // Wait for mock API response
+    await responsePromise
 
     // Verify grid has data (should have table headers)
     await expect(grid.locator('thead')).toBeVisible()
@@ -217,14 +223,20 @@ test.describe('GitHub API HTTP Provider Example', () => {
   })
 
   test('should show total results count', async ({ page }) => {
+    // Set up response waiter BEFORE navigation to avoid race condition
+    const responsePromise = page.waitForResponse(response =>
+      response.url().includes('localhost:3001/api/search/repositories')
+    )
+
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
 
     // Wait for API response
-    await page.waitForResponse(response =>
-      response.url().includes('localhost:3001/api/search/repositories')
-    )
+    await responsePromise
+
+    // Wait for Vue to update the DOM with the total count
+    await page.waitForTimeout(500)
 
     // Verify results count is shown
     const resultsText = section.locator('.control-group:has-text("Results:")')
@@ -233,10 +245,18 @@ test.describe('GitHub API HTTP Provider Example', () => {
   })
 
   test('should handle pagination with page parameter', async ({ page }) => {
+    // Set up response waiter BEFORE navigation to avoid race condition
+    const initialResponsePromise = page.waitForResponse(response =>
+      response.url().includes('localhost:3001/api/search/repositories')
+    )
+
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
     const grid = section.locator('[data-qa="grid"]')
+
+    // Wait for initial API response
+    await initialResponsePromise
 
     // Wait for initial data to load
     await expect(grid.locator('tbody tr').first()).toBeVisible()
@@ -312,11 +332,19 @@ test.describe('GitHub API HTTP Provider Example', () => {
   })
 
   test('should restore state after page refresh', async ({ page }) => {
+    // Set up response waiter BEFORE navigation to avoid race condition
+    const initialResponsePromise = page.waitForResponse(response =>
+      response.url().includes('localhost:3001/api/search/repositories')
+    )
+
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
     const searchInput = section.locator('input#search')
     const sortSelect = section.locator('select#sort')
+
+    // Wait for initial API response
+    await initialResponsePromise
 
     // Set custom search query and sort
     await searchInput.fill('react hooks')
@@ -336,8 +364,18 @@ test.describe('GitHub API HTTP Provider Example', () => {
     expect(urlBeforeRefresh).toContain('gh-q=react+hooks')
     expect(urlBeforeRefresh).toContain('gh-sort=forks')
 
+    // Set up response waiter BEFORE reload
+    const reloadResponsePromise = page.waitForResponse(response =>
+      response.url().includes('localhost:3001/api/search/repositories') &&
+      response.url().includes('q=react') &&
+      response.url().includes('sort=forks')
+    )
+
     // Reload the page
     await page.reload()
+
+    // Wait for API response after reload
+    await reloadResponsePromise
 
     // Wait for grid to be visible after reload
     const grid = section.locator('[data-qa="grid"]')
@@ -351,6 +389,9 @@ test.describe('GitHub API HTTP Provider Example', () => {
     // Verify input values are restored from URL
     await expect(searchInput).toHaveValue('react hooks')
     await expect(sortSelect).toHaveValue('forks')
+
+    // Wait for Vue to update the DOM with the total count
+    await page.waitForTimeout(500)
 
     // Verify results count is still displayed
     const resultsText = section.locator('.control-group:has-text("Results:")')
@@ -383,12 +424,15 @@ test.describe('Multi-State Example', () => {
     const grids = section.locator('[data-qa="grid"]')
 
     // Wait for both grids to have data
-    await expect(grids.first().locator('tbody tr').first()).toBeVisible()
-    await expect(grids.last().locator('tbody tr').first()).toBeVisible()
+    await expect(grids.first().locator('tbody tr').first()).toBeVisible({ timeout: 10000 })
+    await expect(grids.last().locator('tbody tr').first()).toBeVisible({ timeout: 10000 })
 
     // Get first grid (products) and sort by a column
     const firstGrid = grids.first()
     const firstSortableHeader = firstGrid.locator('th[data-sortable="true"]').first()
+
+    // Wait for sortable header to be available
+    await firstSortableHeader.waitFor({ state: 'visible', timeout: 10000 })
 
     // Click first grid's sortable header
     await firstSortableHeader.click()
@@ -432,12 +476,15 @@ test.describe('LocalStorage State Provider', () => {
     const section = page.locator('#state-localstorage')
     const grid = section.locator('[data-qa="grid"]')
 
-    // Wait for grid to load
-    await expect(grid.locator('tbody tr').first()).toBeVisible()
+    // Wait for grid to load with longer timeout
+    await expect(grid.locator('tbody tr').first()).toBeVisible({ timeout: 10000 })
+
+    // Wait for pagination to render
+    await page.waitForTimeout(1000)
 
     // Should start on page 1
     const page1Button = grid.locator('button.active:has-text("1")')
-    await expect(page1Button).toBeVisible()
+    await expect(page1Button).toBeVisible({ timeout: 5000 })
 
     // Navigate to page 2
     const page2Button = grid.locator('button:has-text("2")')
@@ -496,10 +543,15 @@ test.describe('LocalStorage State Provider', () => {
     const localStorageSection = page.locator('#state-localstorage')
     const localStorageGrid = localStorageSection.locator('[data-qa="grid"]')
 
-    await expect(localStorageGrid.locator('tbody tr').first()).toBeVisible()
+    await expect(localStorageGrid.locator('tbody tr').first()).toBeVisible({ timeout: 10000 })
+
+    // Wait for pagination to render
+    await page.waitForTimeout(1000)
+
     const page2Button = localStorageGrid.locator('button:has-text("2")')
+    await page2Button.waitFor({ state: 'visible', timeout: 5000 })
     await page2Button.click()
-    await expect(localStorageGrid.locator('button.active:has-text("2")')).toBeVisible()
+    await expect(localStorageGrid.locator('button.active:has-text("2")')).toBeVisible({ timeout: 5000 })
 
     // Go to InMemory section
     await page.goto('/#state-inmemory')
