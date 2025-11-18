@@ -65,16 +65,16 @@ export default defineConfig({
   // Array allows explicit control over each server
   webServer: [
     {
-      // Mock GitHub API server
+      // Mock API server - health check ensures it's running
       command: 'node mock-server/server.js',
-      port: 3001,
+      url: 'http://localhost:3001/api/health',
       reuseExistingServer: !process.env.CI,
       timeout: 30 * 1000,
       stdout: 'inherit',
       stderr: 'inherit',
     },
     {
-      // Build library and start examples dev server
+      // Build library and start examples dev server - wait for page to load
       command: 'npm run build && cd examples && npm run dev',
       url: 'http://localhost:3000/vue-datatable/',
       reuseExistingServer: !process.env.CI,
