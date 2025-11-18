@@ -8,7 +8,8 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     {
-      path: '/',
+      // Match root and all hash-based navigation paths
+      path: '/:pathMatch(.*)*',
       component: App
     }
   ]
