@@ -77,34 +77,19 @@
 
     <slot
       name="pagination"
-      :pagination="pagination"
-      :has-more="hasMore"
+      :pagination="paginationInterface"
       :loading="loading"
       :load-more="loadMore"
       :set-page="setPage"
-      :mode="paginationMode"
-    >
-      <GridPagination
-        v-if="dataProvider.config.pagination"
-        :mode="paginationMode"
-        :pagination="pagination"
-        :has-more="hasMore"
-        :loading="loading"
-        :show-summary="showPaginationSummary"
-        :hide-prev-next-on-edge="hidePrevNextOnEdge"
-        :max-visible-pages="maxVisiblePages"
-        :on-load-more="loadMore"
-        :on-page-change="setPage"
-      />
-    </slot>
+      :provider="dataProvider"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import type { DataProvider, Column, RowOptions, PaginationData, SortState, PaginationMode } from './types'
+import type { DataProvider, Column, RowOptions, Pagination, SortState } from './types'
 import GridTable from './GridTable.vue'
-import GridPagination from './GridPagination.vue'
 
 const props = withDefaults(defineProps<{
   dataProvider: DataProvider<unknown>
@@ -137,14 +122,9 @@ const emit = defineEmits<{
 
 const items = ref<unknown[]>([])
 const loading = ref(false)
-const pagination = ref<PaginationData | null>(null)
 
-const paginationMode = computed<PaginationMode>(() => {
-  return props.dataProvider.config.paginationMode
-})
-
-const hasMore = computed(() => {
-  return props.dataProvider.hasMore()
+const paginationInterface = computed<Pagination | null>(() => {
+  return props.dataProvider.getPagination()
 })
 
 const sortState = computed<SortState | null>(() => {
@@ -156,7 +136,6 @@ async function loadData() {
   try {
     const result = await props.dataProvider.load()
     items.value = result.items
-    pagination.value = result.pagination || null
     emit('loaded', result.items)
   } catch (error) {
     emit('error', error as Error)
@@ -167,7 +146,7 @@ async function loadData() {
 }
 
 async function loadMore() {
-  if (!hasMore.value || loading.value) {
+  if (loading.value) {
     return
   }
 
@@ -175,7 +154,6 @@ async function loadMore() {
   try {
     const result = await props.dataProvider.loadMore()
     items.value = result.items
-    pagination.value = result.pagination || null
     emit('loaded', result.items)
   } catch (error) {
     emit('error', error as Error)
@@ -185,15 +163,11 @@ async function loadMore() {
   }
 }
 
-// Note: Do NOT provide context here - the wrapper Grid.vue handles that
-// Providing here would overwrite the wrapper's provide and break functionality
-
 async function refresh() {
   loading.value = true
   try {
     const result = await props.dataProvider.refresh()
     items.value = result.items
-    pagination.value = result.pagination || null
     emit('loaded', result.items)
   } catch (error) {
     emit('error', error as Error)
@@ -204,11 +178,6 @@ async function refresh() {
 }
 
 async function setPage(page: number) {
-  if (paginationMode.value !== 'page') {
-    console.warn('setPage() is only available for page-based pagination')
-    return
-  }
-
   if (!props.dataProvider.setPage) {
     console.warn('DataProvider does not support setPage()')
     return
@@ -218,7 +187,6 @@ async function setPage(page: number) {
   try {
     const result = await props.dataProvider.setPage(page)
     items.value = result.items
-    pagination.value = result.pagination || null
     emit('loaded', result.items)
   } catch (error) {
     emit('error', error as Error)
@@ -248,7 +216,6 @@ defineExpose({
   refresh,
   setPage,
   items,
-  loading,
-  pagination
+  loading
 })
 </script>

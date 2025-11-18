@@ -25,12 +25,43 @@ export interface ComponentOptions {
 }
 
 /**
- * Pagination mode types
+ * Pagination interface - returned by DataProvider.getPagination()
+ * UI components receive this interface to display pagination controls
+ */
+export interface Pagination {
+  getTotalCount(): number | null
+  getPageCount(): number | null
+  getCurrentPage(): number | null
+  getPageSize(): number | null
+  getNextToken(): string | null
+  hasMore(): boolean
+}
+
+/**
+ * Pagination request configuration for HTTP providers
+ */
+export class PaginationRequest {
+  next: string = ''
+  limit: number = 20
+  nextParamName: string = 'page'
+  limitParamName: string = 'pageSize'
+
+  constructor(options?: Partial<PaginationRequest>) {
+    if (options) {
+      Object.assign(this, options)
+    }
+  }
+}
+
+/**
+ * Pagination mode types (deprecated - kept for backward compatibility)
+ * @deprecated Use Pagination interface instead
  */
 export type PaginationMode = 'cursor' | 'page'
 
 /**
  * Cursor-based pagination data (for infinite scroll / load more)
+ * @deprecated Internal use only - use Pagination interface for public API
  */
 export interface CursorPaginationData {
   nextCursor: string
@@ -39,6 +70,7 @@ export interface CursorPaginationData {
 
 /**
  * Page-based pagination data (for traditional page navigation)
+ * @deprecated Internal use only - use Pagination interface for public API
  */
 export interface PagePaginationData {
   currentPage: number
@@ -49,11 +81,13 @@ export interface PagePaginationData {
 
 /**
  * Combined pagination data (supports both modes)
+ * @deprecated Internal use only - use Pagination interface for public API
  */
 export type PaginationData = CursorPaginationData | PagePaginationData
 
 /**
  * Helper type guards for pagination data
+ * @deprecated Internal use only
  */
 export function isCursorPagination(data: PaginationData): data is CursorPaginationData {
   return 'nextCursor' in data && 'hasMore' in data
@@ -68,7 +102,7 @@ export function isPagePagination(data: PaginationData): data is PagePaginationDa
  */
 export interface DataProviderConfig {
   pagination: boolean
-  paginationMode: PaginationMode
+  paginationMode?: PaginationMode // Deprecated - kept for backward compatibility
   url?: string
 }
 
@@ -122,6 +156,11 @@ export interface DataProvider<T = unknown> {
   isLoading(): boolean
   hasMore(): boolean
   getCurrentItems(): T[]
+
+  // New pagination interface
+  getPagination(): Pagination | null
+
+  // Deprecated - use getPagination() instead
   getCurrentPagination(): PaginationData | null
 
   // Page-based pagination methods (for page mode)

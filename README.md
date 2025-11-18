@@ -4,9 +4,11 @@ A flexible, configurable grid component library for Vue 3 applications with supp
 
 ## Features
 
-- ✅ **Dual Pagination Modes**: Cursor-based (Load More) and page-based (1, 2, 3...)
+- ✅ **Flexible Pagination UI**: Choose between LoadMore, PageNumbers, or InfiniteScroll components
+- ✅ **Dual Pagination Modes**: Cursor-based (next token) and page-based (page numbers)
 - ✅ **Data Provider Pattern**: Pluggable data sources (HTTP, Array, custom)
 - ✅ **State Provider Pattern**: Pluggable state persistence (InMemory, QueryParams, LocalStorage, Hash)
+- ✅ **Configurable Pagination Requests**: Customize HTTP parameter names (page, cursor, limit, etc.)
 - ✅ **Framework Agnostic**: No dependencies on UI frameworks (Ant Design, Bootstrap, etc.)
 - ✅ **TypeScript First**: Full TypeScript support with comprehensive type definitions
 - ✅ **Customizable**: Extensive props, slots, and CSS custom properties
@@ -57,68 +59,76 @@ import '@grid-vue/grid/style.css'
 
 ## Quick Start
 
-### Example 1: HTTP Data Provider with URL State
+### Example 1: HTTP Data Provider with Page Pagination
 
 ```vue
 <template>
-  <Grid
-    :data-provider="provider"
-    :columns="columns"
-  />
+  <Grid :data-provider="provider" :columns="columns">
+    <template #pagination="{ pagination, loading }">
+      <PagePagination
+        :pagination="pagination"
+        @page-change="provider.setPage($event)"
+      />
+    </template>
+  </Grid>
 </template>
 
 <script setup lang="ts">
-import { Grid, HttpDataProvider, QueryParamsStateProvider, type Column } from '@grid-vue/grid'
+import {
+  Grid,
+  HttpDataProvider,
+  PagePagination,
+  PaginationRequest,
+  QueryParamsStateProvider,
+  type Column
+} from '@grid-vue/grid'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-
-// State Provider manages grid state (filters, sorting, pagination)
-const stateProvider = new QueryParamsStateProvider({
-  router,
-  prefix: 'search'  // URL params will be ?search-name=John&search-sort=-email
-})
 
 const provider = new HttpDataProvider({
   url: '/api/users',
   pagination: true,
   paginationMode: 'page',
-  pageSize: 20,
-  stateProvider  // Grid state is persisted in URL
+  paginationRequest: new PaginationRequest({
+    nextParamName: 'page',      // Query param for page number
+    limitParamName: 'pageSize', // Query param for page size
+    limit: 20
+  }),
+  stateProvider: new QueryParamsStateProvider({ router, prefix: 'search' })
 })
 
 const columns: Column[] = [
-  {
-    key: 'id',
-    label: 'ID',
-    sort: 'id'
-  },
-  {
-    key: 'name',
-    label: 'Name',
-    value: (user) => user.name
-  },
-  {
-    key: 'email',
-    label: 'Email',
-    value: (user) => user.email
-  }
+  { key: 'id', label: 'ID', sort: 'id' },
+  { key: 'name', label: 'Name', value: (user) => user.name },
+  { key: 'email', label: 'Email', value: (user) => user.email }
 ]
 </script>
 ```
 
-### Example 2: Array Data Provider with LocalStorage State
+### Example 2: Array Data Provider with Load More Button
 
 ```vue
 <template>
-  <Grid
-    :data-provider="provider"
-    :columns="columns"
-  />
+  <Grid :data-provider="provider" :columns="columns">
+    <template #pagination="{ pagination, loading }">
+      <LoadModePagination
+        :pagination="pagination"
+        :loading="loading"
+        @load-more="provider.loadMore()"
+      />
+    </template>
+  </Grid>
 </template>
 
 <script setup lang="ts">
-import { Grid, ArrayDataProvider, LocalStorageStateProvider, type Column } from '@grid-vue/grid'
+import {
+  Grid,
+  ArrayDataProvider,
+  LoadModePagination,
+  LocalStorageStateProvider,
+  type Column
+} from '@grid-vue/grid'
 
 const users = [
   { id: 1, name: 'John', email: 'john@example.com' },
@@ -126,17 +136,12 @@ const users = [
   // ... more items
 ]
 
-// State Provider persists grid state in localStorage
-const stateProvider = new LocalStorageStateProvider({
-  storageKey: 'my-users-grid'  // User preferences survive page refreshes
-})
-
 const provider = new ArrayDataProvider({
   items: users,
   pagination: true,
   paginationMode: 'cursor',
   pageSize: 10,
-  stateProvider
+  stateProvider: new LocalStorageStateProvider({ storageKey: 'my-users-grid' })
 })
 
 const columns: Column[] = [
@@ -147,18 +152,51 @@ const columns: Column[] = [
 </script>
 ```
 
+### Example 3: Infinite Scroll Pagination
+
+```vue
+<template>
+  <Grid :data-provider="provider" :columns="columns">
+    <template #pagination="{ pagination, loading }">
+      <ScrollPagination
+        :pagination="pagination"
+        :loading="loading"
+        :threshold="200"
+        @load-more="provider.loadMore()"
+      />
+    </template>
+  </Grid>
+</template>
+
+<script setup lang="ts">
+import { Grid, HttpDataProvider, ScrollPagination, PaginationRequest } from '@grid-vue/grid'
+
+const provider = new HttpDataProvider({
+  url: '/api/products',
+  pagination: true,
+  paginationMode: 'cursor',
+  paginationRequest: new PaginationRequest({
+    nextParamName: 'cursor',
+    limitParamName: 'limit',
+    limit: 30
+  })
+})
+</script>
+```
+
 ## Data Providers
 
 ### HttpDataProvider
 
-Fetches data from HTTP APIs with configurable pagination modes.
+Fetches data from HTTP APIs with configurable pagination modes and customizable request parameters.
 
 ```ts
 interface HttpDataProviderConfig {
   url: string                          // API endpoint
   pagination: boolean                  // Enable pagination
-  paginationMode: 'cursor' | 'page'    // Pagination mode
+  paginationMode?: 'cursor' | 'page'   // Pagination mode (optional)
   pageSize?: number                    // Items per page (default: 20)
+  paginationRequest?: PaginationRequest // Pagination parameter configuration
   stateProvider?: StateProvider        // State management (optional)
   router?: Router                      // Creates QueryParamsStateProvider if provided
   httpClient?: HttpClient              // Custom HTTP client function
@@ -166,24 +204,42 @@ interface HttpDataProviderConfig {
   headers?: Record<string, string>     // Custom headers
 }
 
-// Example with custom HTTP client (axios)
+// Example with custom pagination parameters
 const provider = new HttpDataProvider({
   url: '/api/users',
   pagination: true,
   paginationMode: 'page',
-  stateProvider: new QueryParamsStateProvider({ router, prefix: 'search' }),
+  paginationRequest: new PaginationRequest({
+    nextParamName: 'page',      // Default: 'page'
+    limitParamName: 'pageSize', // Default: 'pageSize'
+    limit: 25
+  }),
+  stateProvider: new QueryParamsStateProvider({ router, prefix: 'search' })
+})
+// Result: GET /api/users?page=1&pageSize=25
+
+// Cursor-based pagination with custom parameter names
+const cursorProvider = new HttpDataProvider({
+  url: '/api/products',
+  pagination: true,
+  paginationMode: 'cursor',
+  paginationRequest: new PaginationRequest({
+    nextParamName: 'cursor',
+    limitParamName: 'limit',
+    limit: 50
+  })
+})
+// Result: GET /api/products?cursor=abc123&limit=50
+
+// Example with custom HTTP client (axios)
+const axiosProvider = new HttpDataProvider({
+  url: '/api/users',
+  pagination: true,
+  paginationRequest: new PaginationRequest({ limit: 30 }),
   httpClient: async (url) => {
     const response = await axios.get(url)
     return response.data
   }
-})
-
-// Backward compatibility: pass router directly
-const provider2 = new HttpDataProvider({
-  url: '/api/users',
-  pagination: true,
-  paginationMode: 'page',
-  router  // Automatically creates QueryParamsStateProvider with prefix='search'
 })
 ```
 
@@ -331,6 +387,166 @@ class CustomStateProvider implements StateProvider {
   }
 
   // ... implement all required methods
+}
+```
+
+## Pagination UI Components
+
+The library provides three built-in pagination UI components. Choose the one that fits your UX needs:
+
+### LoadModePagination
+
+A "Load More" button for cursor-based pagination. Shows a button when more items are available.
+
+```vue
+<template>
+  <Grid :data-provider="provider" :columns="columns">
+    <template #pagination="{ pagination, loading }">
+      <LoadModePagination
+        :pagination="pagination"
+        :loading="loading"
+        @load-more="provider.loadMore()"
+      >
+        <!-- Optional: Custom button text -->
+        <template #load-more-text>
+          {{ loading ? 'Loading...' : 'Show More' }}
+        </template>
+
+        <!-- Optional: Custom "no more" text -->
+        <template #no-more-text>
+          That's all!
+        </template>
+      </LoadModePagination>
+    </template>
+  </Grid>
+</template>
+```
+
+**Props:**
+- `pagination: Pagination | null` - Pagination state from the data provider
+- `loading?: boolean` - Whether data is currently loading
+
+**Events:**
+- `loadMore` - Emitted when the "Load More" button is clicked
+
+**Slots:**
+- `load-more-text` - Custom text/content for the load more button
+- `no-more-text` - Custom text/content when all items are loaded
+
+### PagePagination
+
+Traditional numbered pagination with previous/next buttons. Best for page-based pagination.
+
+```vue
+<template>
+  <Grid :data-provider="provider" :columns="columns">
+    <template #pagination="{ pagination }">
+      <PagePagination
+        :pagination="pagination"
+        :max-visible-pages="7"
+        :show-summary="true"
+        :hide-prev-next-on-edge="true"
+        @page-change="provider.setPage($event)"
+      >
+        <!-- Optional: Custom previous button -->
+        <template #previous-text>← Prev</template>
+
+        <!-- Optional: Custom next button -->
+        <template #next-text>Next →</template>
+      </PagePagination>
+    </template>
+  </Grid>
+</template>
+```
+
+**Props:**
+- `pagination: Pagination | null` - Pagination state from the data provider
+- `maxVisiblePages?: number` - Maximum number of page buttons to show (default: 5)
+- `showSummary?: boolean` - Show "Showing 1-20 of 100" summary (default: true)
+- `hidePrevNextOnEdge?: boolean` - Hide prev/next buttons on first/last page (default: true)
+
+**Events:**
+- `pageChange: (page: number)` - Emitted when a page is selected
+
+**Slots:**
+- `previous-text` - Custom content for the previous button
+- `next-text` - Custom content for the next button
+
+### ScrollPagination
+
+Infinite scroll using Intersection Observer. Automatically loads more items when scrolling near the bottom.
+
+```vue
+<template>
+  <Grid :data-provider="provider" :columns="columns">
+    <template #pagination="{ pagination, loading }">
+      <ScrollPagination
+        :pagination="pagination"
+        :loading="loading"
+        :threshold="100"
+        @load-more="provider.loadMore()"
+      >
+        <!-- Optional: Custom loading indicator -->
+        <template #loading-text>
+          <div class="spinner">Loading more...</div>
+        </template>
+
+        <!-- Optional: Custom end message -->
+        <template #end-text>
+          You've reached the end
+        </template>
+      </ScrollPagination>
+    </template>
+  </Grid>
+</template>
+```
+
+**Props:**
+- `pagination: Pagination | null` - Pagination state from the data provider
+- `loading?: boolean` - Whether data is currently loading
+- `threshold?: number` - Distance from bottom (in pixels) to trigger load (default: 100)
+
+**Events:**
+- `loadMore` - Emitted when the user scrolls near the bottom
+
+**Slots:**
+- `loading-text` - Custom content while loading more items
+- `end-text` - Custom content when all items are loaded
+
+### Custom Pagination UI
+
+You can also create your own pagination UI component by using the `Pagination` interface:
+
+```vue
+<template>
+  <Grid :data-provider="provider" :columns="columns">
+    <template #pagination="{ pagination, loading }">
+      <div v-if="pagination" class="custom-pagination">
+        <span>Page {{ pagination.getCurrentPage() }} of {{ pagination.getPageCount() }}</span>
+        <span>Total: {{ pagination.getTotalCount() }} items</span>
+
+        <button
+          v-if="pagination.hasMore()"
+          :disabled="loading"
+          @click="provider.loadMore()"
+        >
+          Load More
+        </button>
+      </div>
+    </template>
+  </Grid>
+</template>
+```
+
+**Pagination Interface:**
+```ts
+interface Pagination {
+  getTotalCount(): number | null      // Total number of items
+  getPageCount(): number | null       // Total number of pages
+  getCurrentPage(): number | null     // Current page number
+  getPageSize(): number | null        // Items per page
+  getNextToken(): string | null       // Next cursor token (cursor mode)
+  hasMore(): boolean                  // Whether more items are available
 }
 ```
 
@@ -556,15 +772,30 @@ function getRowOptions(model) {
 
 ```vue
 <Grid :data-provider="provider" :columns="columns">
-  <template #pagination="{ pagination, setPage, mode }">
-    <div v-if="mode === 'page'">
-      <button
-        v-for="page in pagination.pageCount"
-        :key="page"
-        @click="setPage(page)"
-      >
-        {{ page }}
-      </button>
+  <template #pagination="{ pagination, loading, provider }">
+    <!-- The pagination object provides all the information you need -->
+    <div v-if="pagination" class="my-custom-pagination">
+      <div v-if="pagination.getCurrentPage()">
+        <!-- Page-based pagination -->
+        <button
+          v-for="page in pagination.getPageCount()"
+          :key="page"
+          :class="{ active: page === pagination.getCurrentPage() }"
+          @click="provider.setPage(page)"
+        >
+          {{ page }}
+        </button>
+      </div>
+
+      <div v-else-if="pagination.hasMore()">
+        <!-- Cursor-based pagination -->
+        <button
+          :disabled="loading"
+          @click="provider.loadMore()"
+        >
+          {{ loading ? 'Loading...' : 'Load More' }}
+        </button>
+      </div>
     </div>
   </template>
 </Grid>
@@ -731,6 +962,7 @@ import type {
   StateProvider,
   Column,
   LoadResult,
+  Pagination,                    // New: Pagination interface for UI components
   PaginationData,
   CursorPaginationData,
   PagePaginationData,
@@ -739,6 +971,52 @@ import type {
   ComponentOptions,
   ResponseAdapter
 } from '@grid-vue/grid'
+
+import {
+  PaginationRequest,             // New: Pagination configuration class
+  DefaultResponseAdapter,
+  LegacyResponseAdapter
+} from '@grid-vue/grid'
+```
+
+**Type Usage Examples:**
+
+```ts
+// DataProvider with custom types
+const provider: DataProvider<User> = new HttpDataProvider({
+  url: '/api/users',
+  pagination: true,
+  paginationRequest: new PaginationRequest({
+    nextParamName: 'page',
+    limitParamName: 'limit',
+    limit: 25
+  })
+})
+
+// Pagination interface for custom UI
+const renderPagination = (pagination: Pagination) => {
+  if (pagination.getCurrentPage()) {
+    // Page-based pagination
+    console.log(`Page ${pagination.getCurrentPage()} of ${pagination.getPageCount()}`)
+  } else if (pagination.getNextToken()) {
+    // Cursor-based pagination
+    console.log(`Next token: ${pagination.getNextToken()}`)
+  }
+}
+
+// Column definitions with types
+const columns: Column<User>[] = [
+  {
+    key: 'id',
+    label: 'ID',
+    value: (user: User) => user.id.toString()
+  },
+  {
+    key: 'name',
+    label: 'Name',
+    value: (user: User) => `${user.firstName} ${user.lastName}`
+  }
+]
 ```
 
 ## Browser Support

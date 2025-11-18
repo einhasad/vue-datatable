@@ -6,10 +6,12 @@ import type {
   PaginationData,
   CursorPaginationData,
   PagePaginationData,
-  SortState
+  SortState,
+  Pagination
 } from '../types'
 import type { StateProvider } from '../state/StateProvider'
 import { InMemoryStateProvider } from '../state/InMemoryStateProvider'
+import { ArrayPagination } from './ArrayPagination'
 
 /**
  * Configuration for ArrayDataProvider
@@ -316,6 +318,17 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
         totalCount: processedItems.length
       }
     }
+  }
+
+  /**
+   * Get pagination interface for UI components
+   */
+  getPagination(): Pagination | null {
+    const paginationData = this.getCurrentPagination()
+    if (!paginationData) {
+      return null
+    }
+    return new ArrayPagination(paginationData)
   }
 
   /**

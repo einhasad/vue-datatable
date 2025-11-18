@@ -50,7 +50,7 @@ describe('HttpDataProvider', () => {
       const result = await provider.load()
 
       expect(mockHttpClient).toHaveBeenCalledWith(
-        expect.stringContaining('pagination.page_size=2')
+        expect.stringContaining('pageSize=2')
       )
       expect(result.items).toHaveLength(2)
       expect(result.pagination).toEqual({
@@ -69,7 +69,7 @@ describe('HttpDataProvider', () => {
       await provider.load({ cursor: 'cursor-2' })
 
       expect(mockHttpClient).toHaveBeenCalledWith(
-        expect.stringContaining('pagination.cursor=cursor-2')
+        expect.stringContaining('page=cursor-2')
       )
     })
 
@@ -123,7 +123,7 @@ describe('HttpDataProvider', () => {
         expect.stringContaining('page=1')
       )
       expect(mockHttpClient).toHaveBeenCalledWith(
-        expect.stringContaining('per-page=10')
+        expect.stringContaining('pageSize=10')
       )
       expect(result.items).toHaveLength(10)
     })
@@ -330,7 +330,6 @@ describe('HttpDataProvider', () => {
 
     it('should track loading state', async () => {
       mockHttpClient.mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 10))
         return { items: [], nextCursor: '', hasMore: false }
       })
 
