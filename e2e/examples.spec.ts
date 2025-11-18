@@ -141,7 +141,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     await expect(section.locator('[data-qa="grid"]')).toBeVisible()
   })
 
-  test.skip('should perform search and update URL with gh prefix', async ({ page }) => {
+  test('should perform search and update URL with gh prefix', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -171,14 +171,14 @@ test.describe('GitHub API HTTP Provider Example', () => {
     expect(page.url()).toContain('gh-q=react')
   })
 
-  test.skip('should change sort order and update URL', async ({ page }) => {
+  test('should change sort order and update URL', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
 
     // Wait for initial load by checking for data
     const grid = section.locator('[data-qa="grid"]')
-    await expect(grid.locator('tbody tr').first()).toBeVisible({ timeout: 10000 })
+    await expect(grid.locator('tbody tr').first()).toBeVisible()
 
     // Change sort order and wait for new API request
     const sortSelect = section.locator('select#sort')
@@ -216,7 +216,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     await expect(grid.getByText('Forks')).toBeVisible()
   })
 
-  test.skip('should show total results count', async ({ page }) => {
+  test('should show total results count', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -239,13 +239,13 @@ test.describe('GitHub API HTTP Provider Example', () => {
     const grid = section.locator('[data-qa="grid"]')
 
     // Wait for initial data to load
-    await expect(grid.locator('tbody tr').first()).toBeVisible({ timeout: 10000 })
+    await expect(grid.locator('tbody tr').first()).toBeVisible()
 
     // Try to find page 2 button (GitHub API might not return enough results)
     const page2Button = grid.locator('button:has-text("2")')
 
     // Only test pagination if page 2 exists
-    await page2Button.waitFor({ state: 'visible', timeout: 1000 }).catch(() => {
+    await page2Button.waitFor({ state: 'visible' }).catch(() => {
       // Page 2 doesn't exist, skip this test
     })
 
@@ -263,7 +263,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     }
   })
 
-  test.skip('should maintain URL state with gh prefix for all parameters', async ({ page }) => {
+  test('should maintain URL state with gh prefix for all parameters', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -292,7 +292,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     expect(url).toContain('page=1')
   })
 
-  test.skip('should handle search on Enter key press', async ({ page }) => {
+  test('should handle search on Enter key press', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -311,7 +311,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     expect(page.url()).toContain('gh-q=vue3')
   })
 
-  test.skip('should restore state after page refresh', async ({ page }) => {
+  test('should restore state after page refresh', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
@@ -341,7 +341,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
 
     // Wait for grid to be visible after reload
     const grid = section.locator('[data-qa="grid"]')
-    await expect(grid.locator('tbody tr').first()).toBeVisible({ timeout: 10000 })
+    await expect(grid.locator('tbody tr').first()).toBeVisible()
 
     // Verify URL still has the same parameters after refresh
     const urlAfterRefresh = page.url()
@@ -376,7 +376,7 @@ test.describe('Multi-State Example', () => {
     await expect(section.getByRole('heading', { name: /Mock HTTP Provider with "users" prefix/i })).toBeVisible()
   })
 
-  test.skip('should maintain independent state with different URL prefixes', async ({ page }) => {
+  test('should maintain independent state with different URL prefixes', async ({ page }) => {
     await page.goto('/#multi-state')
 
     const section = page.locator('#multi-state')
@@ -423,7 +423,7 @@ test.describe('Multi-State Example', () => {
 })
 
 test.describe('LocalStorage State Provider', () => {
-  test.skip('should persist pagination state after page refresh', async ({ page }) => {
+  test('should persist pagination state after page refresh', async ({ page }) => {
     // Clear localStorage before test
     await page.goto('/#state-localstorage')
     await page.evaluate(() => localStorage.clear())
@@ -486,7 +486,7 @@ test.describe('LocalStorage State Provider', () => {
     expect(firstRowNameAfterReload).toBe(firstRowName)
   })
 
-  test.skip('should not share state with InMemory provider', async ({ page }) => {
+  test('should not share state with InMemory provider', async ({ page }) => {
     // Clear localStorage before test
     await page.goto('/#state-localstorage')
     await page.evaluate(() => localStorage.clear())
