@@ -69,7 +69,7 @@ export default defineConfig({
       command: 'node mock-server/server.js',
       url: 'http://localhost:3001/api/health',
       reuseExistingServer: !process.env.CI,
-      timeout: 30 * 1000,
+      timeout: 60 * 1000, // Increased to 60s to allow for slower startup
       stdout: 'inherit',
       stderr: 'inherit',
     },
@@ -78,7 +78,7 @@ export default defineConfig({
       command: 'npm run build && cd examples && npm run dev',
       url: 'http://localhost:3000/vue-datatable/',
       reuseExistingServer: !process.env.CI,
-      timeout: 120 * 1000,
+      timeout: 180 * 1000, // Increased to 180s to allow for build + server startup
       stdout: 'inherit',
       stderr: 'inherit',
     },
