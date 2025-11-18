@@ -54,6 +54,7 @@ export class QueryParamsStateProvider implements StateProvider {
     }
 
     this.router.replace({
+      path: this.router.currentRoute.value.path,
       query: currentQuery,
       hash: this.router.currentRoute.value.hash
     })

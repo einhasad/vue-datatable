@@ -77,6 +77,7 @@ export class HashStateProvider implements StateProvider {
   private setHashParams(params: Record<string, string>): void {
     const newHash = this.buildHash(params)
     this.router.replace({
+      path: this.router.currentRoute.value.path,
       query: this.router.currentRoute.value.query,
       hash: newHash
     })
