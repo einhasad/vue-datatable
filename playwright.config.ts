@@ -66,7 +66,7 @@ export default defineConfig({
   webServer: [
     {
       // Mock GitHub API server
-      command: 'node mock-server/index.js',
+      command: 'node mock-server/server.js',
       port: 3001,
       reuseExistingServer: !process.env.CI,
       timeout: 30 * 1000,
