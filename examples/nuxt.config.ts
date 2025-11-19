@@ -1,3 +1,9 @@
+import { fileURLToPath } from 'node:url'
+import { dirname, resolve } from 'node:path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
@@ -42,6 +48,12 @@ export default defineNuxtConfig({
 
   // Vite configuration
   vite: {
+    resolve: {
+      alias: {
+        '@grid-vue/grid/style.css': resolve(__dirname, '../dist/style.css'),
+        '@grid-vue/grid': resolve(__dirname, '../dist/grid.js'),
+      }
+    },
     server: {
       fs: {
         // Allow serving files from the parent directory (for the grid library)
