@@ -42,10 +42,10 @@ jobs:
           cd examples
           npm install
 
-      - name: Build examples
+      - name: Generate static site with Nuxt
         run: |
           cd examples
-          npm run build
+          npm run generate
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -53,7 +53,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./examples/dist
+          path: ./examples/.output/public
 
   deploy:
     environment:
