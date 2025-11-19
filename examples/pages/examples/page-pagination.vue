@@ -1,0 +1,1 @@
+<template><div class="section"><h2>Page-pagination</h2><p>Coming soon...</p></div></template><style scoped>.section { margin-bottom: 3rem; } .section h2 { font-size: 2rem; color: #2d3748; margin-bottom: 1rem; }</style>
