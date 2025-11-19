@@ -27,7 +27,7 @@ test.describe('Smoke Test - Mock API', () => {
     console.log('[Smoke Test] Testing mock API health endpoint from browser context...')
     const healthResponse = await pageWithLogs.evaluate(async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/health')
+        const response = await fetch('http://localhost:3001/api/github/health')
         return {
           ok: response.ok,
           status: response.status,
@@ -60,7 +60,7 @@ test.describe('Smoke Test - Mock API', () => {
 
     // Navigate to HTTP Provider example
     console.log('[Smoke Test] Navigating to HTTP Provider example...')
-    await pageWithLogs.goto('/#http-provider')
+    await pageWithLogs.goto('/examples/http-provider')
 
     // Wait a bit for any network requests
     await pageWithLogs.waitForTimeout(3000)
@@ -88,7 +88,7 @@ test.describe('Smoke Test - Mock API', () => {
     console.log('[Smoke Test] Fetching search results from browser...')
     const searchResponse = await pageWithLogs.evaluate(async () => {
       try {
-        const url = 'http://localhost:3001/api/search/repositories?q=vue&sort=stars&order=desc&page=1&per_page=5'
+        const url = 'http://localhost:3001/api/github/search/repositories?q=vue&sort=stars&order=desc&page=1&per_page=5'
         console.log('[Browser] Fetching:', url)
         const response = await fetch(url)
         const data = await response.json()
