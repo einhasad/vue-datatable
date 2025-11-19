@@ -1174,6 +1174,7 @@ import {
   type ResponseAdapter,
   type RowOptions
 } from '@grid-vue/grid'
+import CodeExample from './components/CodeExample.vue'
 
 const router = useRouter()
 const route = useRoute()
