@@ -12,10 +12,11 @@
 
       <div class="example-section">
         <h3>Demo</h3>
-        <Grid
-          :data-provider="sortingProvider"
-          :columns="sortingColumns"
-        />
+        <ClientOnly>
+          <Grid :data-provider="sortingProvider"
+            :columns="sortingColumns"
+          />
+        </ClientOnly>
       </div>
 
       <div class="example-section">

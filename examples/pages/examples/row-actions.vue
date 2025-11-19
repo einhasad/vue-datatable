@@ -15,12 +15,13 @@
 
       <div class="example-section">
         <h3>Demo</h3>
-        <Grid
-          :data-provider="rowActionsProvider"
-          :columns="rowActionsColumns"
-          :on-row-click="handleRowClick"
-          :row-options="getRowOptions"
-        />
+        <ClientOnly>
+          <Grid :data-provider="rowActionsProvider"
+            :columns="rowActionsColumns"
+            :on-row-click="handleRowClick"
+            :row-options="getRowOptions"
+          />
+        </ClientOnly>
       </div>
 
       <div class="example-section">

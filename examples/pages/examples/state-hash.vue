@@ -11,7 +11,9 @@
       </p>
       <div class="example-section">
         <h3>Demo</h3>
-        <Grid :data-provider="hashProvider" :columns="stateColumns" />
+        <ClientOnly>
+          <Grid :data-provider="hashProvider" :columns="stateColumns" />
+        </ClientOnly>
       </div>
       <div class="example-section">
         <h3>Code</h3>

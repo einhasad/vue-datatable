@@ -12,12 +12,16 @@
 
       <div class="example-section">
         <h3>Array Provider with "products" prefix</h3>
-        <Grid :data-provider="multiStateArrayProvider" :columns="multiStateArrayColumns" />
+        <ClientOnly>
+          <Grid :data-provider="multiStateArrayProvider" :columns="multiStateArrayColumns" />
+        </ClientOnly>
       </div>
 
       <div class="example-section">
         <h3>Mock HTTP Provider with "users" prefix</h3>
-        <Grid :data-provider="multiStateHttpProvider" :columns="multiStateHttpColumns" />
+        <ClientOnly>
+          <Grid :data-provider="multiStateHttpProvider" :columns="multiStateHttpColumns" />
+        </ClientOnly>
       </div>
 
       <div class="example-section">

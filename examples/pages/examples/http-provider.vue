@@ -41,11 +41,12 @@
 
       <div class="example-section">
         <h3>Results</h3>
-        <Grid
-          ref="githubGridRef"
-          :data-provider="githubProvider"
-          :columns="githubColumns"
-        />
+        <ClientOnly>
+          <Grid ref="githubGridRef"
+            :data-provider="githubProvider"
+            :columns="githubColumns"
+          />
+        </ClientOnly>
       </div>
 
       <div class="example-section">

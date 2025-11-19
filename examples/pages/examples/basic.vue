@@ -11,7 +11,9 @@
       </div>
 
       <div class="example-demo" data-qa="basic-example">
-        <Grid v-if="provider" :data-provider="provider" :columns="columns" />
+        <ClientOnly>
+          <Grid v-if="provider" :data-provider="provider" :columns="columns" />
+        </ClientOnly>
       </div>
 
       <div class="example-code">

@@ -13,8 +13,8 @@
 
       <div class="example-section">
         <h3>Demo</h3>
-        <Grid
-          :data-provider="pagePaginationProvider"
+        <ClientOnly>
+        <Grid :data-provider="pagePaginationProvider"
           :columns="pagePaginationColumns"
         >
           <template #pagination="{ pagination }">
@@ -26,6 +26,7 @@
             />
           </template>
         </Grid>
+        </ClientOnly>
       </div>
 
       <div class="example-section">

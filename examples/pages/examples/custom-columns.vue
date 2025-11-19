@@ -12,10 +12,11 @@
 
       <div class="example-section">
         <h3>Demo</h3>
-        <Grid
-          :data-provider="customColumnsProvider"
-          :columns="customColumnsColumns"
-        />
+        <ClientOnly>
+          <Grid :data-provider="customColumnsProvider"
+            :columns="customColumnsColumns"
+          />
+        </ClientOnly>
       </div>
 
       <div class="example-section">

@@ -9,9 +9,12 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-11-19',
   devtools: { enabled: false },
 
+  // Disable SSR for examples app (Grid library not SSR-compatible)
+  ssr: false,
+
   // GitHub Pages deployment with base path
   app: {
-    baseURL: process.env.NODE_ENV === 'production' ? '/vue-datatable/' : '/',
+    baseURL: '/',
     head: {
       title: 'Grid Vue - Examples',
       meta: [
@@ -46,6 +49,11 @@ export default defineNuxtConfig({
     }
   },
 
+  // Transpile the grid library for SSR compatibility
+  build: {
+    transpile: ['@grid-vue/grid']
+  },
+
   // Vite configuration
   vite: {
     resolve: {
@@ -59,6 +67,10 @@ export default defineNuxtConfig({
         // Allow serving files from the parent directory (for the grid library)
         allow: ['..']
       }
+    },
+    // Optimize dependencies
+    optimizeDeps: {
+      include: ['@grid-vue/grid']
     }
   }
 })

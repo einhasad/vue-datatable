@@ -14,8 +14,8 @@
 
       <div class="example-section">
         <h3>Demo</h3>
-        <Grid
-          :data-provider="searchSortProvider"
+        <ClientOnly>
+        <Grid :data-provider="searchSortProvider"
           :columns="searchSortColumns"
         >
           <template #filters>
@@ -35,6 +35,7 @@
             </td>
           </template>
         </Grid>
+        </ClientOnly>
       </div>
 
       <div class="example-section">
