@@ -83,7 +83,7 @@ export function getCellComponent<T = unknown>(column: Column<T>, model: T, index
  */
 export function getCellOptions<T = unknown>(column: Column<T>, model: T): Record<string, unknown> {
   if (column.options) {
-    return (column.options(model) || {}) as Record<string, unknown>
+    return (column.options(model) || {})
   }
 
   return {}
@@ -116,7 +116,7 @@ export function getFooterContent<T = unknown>(column: Column<T>, models: T[]): s
  */
 export function getFooterOptions<T = unknown>(column: Column<T>, models: T[]): Record<string, unknown> {
   if (column.footerOptions) {
-    return (column.footerOptions(models) || {}) as Record<string, unknown>
+    return (column.footerOptions(models) || {})
   }
 
   return {}
