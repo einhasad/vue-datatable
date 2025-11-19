@@ -15,6 +15,11 @@ export default defineConfig({
   // Maximum time one test can run
   timeout: 30 * 1000,
 
+  // Default timeout for all expect() assertions and locators
+  expect: {
+    timeout: 1000, // 1 second default for all assertions
+  },
+
   // Run tests in files in parallel
   fullyParallel: true,
 
@@ -42,28 +47,45 @@ export default defineConfig({
   },
 
   // Configure projects for major browsers
+  // Note: Only Chromium is enabled due to environment restrictions
   projects: [
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
 
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
+    // Disabled: Firefox and Webkit require browser downloads that may not be available
+    // {
+    //   name: 'firefox',
+    //   use: { ...devices['Desktop Firefox'] },
+    // },
 
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
+    // {
+    //   name: 'webkit',
+    //   use: { ...devices['Desktop Safari'] },
+    // },
   ],
 
-  // Run examples dev server before starting the tests
-  webServer: {
-    command: 'cd examples && npm run dev',
-    url: 'http://localhost:3000/vue-datatable/',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
-  },
+  // Run servers before starting the tests
+  // Array allows explicit control over each server
+  webServer: [
+    {
+      // Mock API server - health check ensures it's running
+      command: 'node mock-server/server.js',
+      url: 'http://localhost:3001/api/health',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60 * 1000, // Increased to 60s to allow for slower startup
+      stdout: 'inherit',
+      stderr: 'inherit',
+    },
+    {
+      // Build library and start examples dev server - wait for page to load
+      command: 'npm run build && cd examples && npm run dev',
+      url: 'http://localhost:3000/vue-datatable/',
+      reuseExistingServer: !process.env.CI,
+      timeout: 180 * 1000, // Increased to 180s to allow for build + server startup
+      stdout: 'inherit',
+      stderr: 'inherit',
+    },
+  ],
 })

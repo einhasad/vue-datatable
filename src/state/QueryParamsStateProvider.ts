@@ -53,10 +53,12 @@ export class QueryParamsStateProvider implements StateProvider {
       currentQuery[paramName] = value
     }
 
+    // Use type assertion for full route location with path
     this.router.replace({
+      path: this.router.currentRoute.value.path,
       query: currentQuery,
       hash: this.router.currentRoute.value.hash
-    })
+    } as any)
   }
 
   /**
@@ -170,8 +172,9 @@ export class QueryParamsStateProvider implements StateProvider {
     })
 
     this.router.replace({
+      path: this.router.currentRoute.value.path,
       query: currentQuery,
       hash: this.router.currentRoute.value.hash
-    })
+    } as any)
   }
 }
