@@ -123,14 +123,14 @@ test.describe('Example Integrity', () => {
   })
 })
 
-test.describe('GitHub API HTTP Provider Example', () => {
-  test('should render GitHub API section with search controls', async ({ page }) => {
+test.describe('HTTP Provider Example', () => {
+  test('should render HTTP Provider section with search controls', async ({ page }) => {
     await page.goto('/#http-provider')
 
     const section = page.locator('#http-provider')
 
     // Verify section loaded
-    await expect(section.locator('h2')).toContainText('HTTP Provider Example - GitHub API')
+    await expect(section.locator('h2')).toContainText('HTTP Provider Example')
 
     // Verify search controls are present
     await expect(section.locator('input#search')).toBeVisible()
@@ -196,7 +196,7 @@ test.describe('GitHub API HTTP Provider Example', () => {
     expect(page.url()).toContain('gh-sort=forks')
   })
 
-  test('should display repository results from GitHub API', async ({ page }) => {
+  test('should display repository results from mock API', async ({ page }) => {
     // Set up response waiter BEFORE navigation to avoid race condition
     const responsePromise = page.waitForResponse(response =>
       response.url().includes('localhost:3001/api/search/repositories') && response.status() === 200
