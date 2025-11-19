@@ -61,7 +61,7 @@ export default defineConfig({
     {
       // Mock API server - health check ensures it's running
       command: 'node mock-server/server.js',
-      url: 'http://localhost:3001/api/health',
+      url: 'http://localhost:3001/api/github/health',
       reuseExistingServer: !process.env.CI,
       timeout: 60 * 1000,
       stdout: 'inherit',

@@ -10,7 +10,7 @@ import { HttpDataProvider } from '../src/providers/HttpDataProvider'
 import { InMemoryStateProvider } from '../src/state/InMemoryStateProvider'
 
 describe('Mock GitHub API Integration', () => {
-  const MOCK_API_URL = 'http://localhost:3001/api/search/repositories'
+  const MOCK_API_URL = 'http://localhost:3001/api/github/search/repositories'
 
   // Custom adapter for GitHub API response format
   class GitHubSearchAdapter {

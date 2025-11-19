@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import request from 'supertest'
 import type { Server } from 'http'
-import { createApp } from '../mock-server/index.js'
+import { createApp } from '../examples/mock-server/index.js'
 import type { Express } from 'express'
 
 describe('Mock GitHub API Server', () => {

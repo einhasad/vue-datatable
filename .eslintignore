@@ -1,0 +1,11 @@
+node_modules
+dist
+.nuxt
+.output
+examples/mock-server
+examples/e2e
+examples/.nuxt
+examples/node_modules
+examples/dist
+mock-server
+e2e

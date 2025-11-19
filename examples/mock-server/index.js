@@ -61,17 +61,17 @@ function createApp() {
   })
 
   // Health check endpoint
-  app.get('/api/health', (req, res) => {
+  app.get('/api/github/health', (req, res) => {
     res.json({
       status: 'ok',
-      message: 'Mock API is running',
+      message: 'Mock GitHub API is running',
       timestamp: new Date().toISOString(),
       totalRepositories: mockRepositories.length
     })
   })
 
   // Search repositories endpoint
-  app.get('/api/search/repositories', (req, res) => {
+  app.get('/api/github/search/repositories', (req, res) => {
     try {
       const result = processSearchRequest(mockRepositories, req.query)
 
@@ -94,8 +94,8 @@ function createApp() {
     res.status(404).json({
       message: 'Not Found',
       available_endpoints: [
-        '/api/health',
-        '/api/search/repositories'
+        '/api/github/health',
+        '/api/github/search/repositories'
       ]
     })
   })
@@ -111,8 +111,8 @@ function startServer(port = 3001) {
 
   const server = app.listen(port, () => {
     console.log(`Mock API server running on http://localhost:${port}`)
-    console.log(`Health check: http://localhost:${port}/api/health`)
-    console.log(`Search endpoint: http://localhost:${port}/api/search/repositories`)
+    console.log(`Health check: http://localhost:${port}/api/github/health`)
+    console.log(`Search endpoint: http://localhost:${port}/api/github/search/repositories`)
   })
 
   return server
