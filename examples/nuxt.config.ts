@@ -6,6 +6,7 @@ const __dirname = dirname(__filename)
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+  compatibilityDate: '2024-11-19',
   devtools: { enabled: false },
 
   // GitHub Pages deployment with base path
