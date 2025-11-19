@@ -60,8 +60,8 @@
     "examples:build": "npm run extract:examples && cd examples && npm run build",
     "lint": "eslint . --ext .vue,.ts,.tsx",
     "lint:fix": "eslint . --ext .vue,.ts,.tsx --fix",
-    "mock-api": "node mock-server/server.js",
-    "mock-api:dev": "node --watch mock-server/server.js",
+    "mock-api": "node examples/mock-server/server.js",
+    "mock-api:dev": "node --watch examples/mock-server/server.js",
     "verify:servers": "node scripts/verify-servers.js"
   },
   "peerDependencies": {

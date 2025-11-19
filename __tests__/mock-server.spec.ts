@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 import request from 'supertest'
 import type { Server } from 'http'
-import { createApp } from '../mock-server/index.js'
+import { createApp } from '../examples/mock-server/index.js'
 import type { Express } from 'express'
 
 describe('Mock GitHub API Server', () => {
@@ -28,12 +28,12 @@ describe('Mock GitHub API Server', () => {
   describe('Health Check', () => {
     it('should return health status', async () => {
       const response = await request(app)
-        .get('/api/github/health')
+        .get('/api/health')
         .expect(200)
 
       expect(response.body).toMatchObject({
         status: 'ok',
-        message: 'Mock GitHub API is running',
+        message: 'Mock API is running',
         totalRepositories: expect.any(Number)
       })
       expect(response.body.totalRepositories).toBeGreaterThan(0)
@@ -43,7 +43,7 @@ describe('Mock GitHub API Server', () => {
   describe('Search Repositories', () => {
     it('should return all repositories when no query provided', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .expect(200)
 
       expect(response.body).toHaveProperty('total_count')
@@ -55,7 +55,7 @@ describe('Mock GitHub API Server', () => {
 
     it('should search repositories by query', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ q: 'vue' })
         .expect(200)
 
@@ -76,7 +76,7 @@ describe('Mock GitHub API Server', () => {
 
     it('should return empty results for non-matching query', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ q: 'xyz123nonexistent456' })
         .expect(200)
 
@@ -86,7 +86,7 @@ describe('Mock GitHub API Server', () => {
 
     it('should search with multiple terms', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ q: 'vue table' })
         .expect(200)
 
@@ -108,7 +108,7 @@ describe('Mock GitHub API Server', () => {
   describe('Sorting', () => {
     it('should sort by stars in descending order by default', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ sort: 'stars', per_page: 10 })
         .expect(200)
 
@@ -123,7 +123,7 @@ describe('Mock GitHub API Server', () => {
 
     it('should sort by stars in ascending order', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ sort: 'stars', order: 'asc', per_page: 10 })
         .expect(200)
 
@@ -138,7 +138,7 @@ describe('Mock GitHub API Server', () => {
 
     it('should sort by forks', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ sort: 'forks', order: 'desc', per_page: 10 })
         .expect(200)
 
@@ -153,7 +153,7 @@ describe('Mock GitHub API Server', () => {
 
     it('should sort by updated date', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ sort: 'updated', order: 'desc', per_page: 10 })
         .expect(200)
 
@@ -170,7 +170,7 @@ describe('Mock GitHub API Server', () => {
 
     it('should sort by help-wanted-issues', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ sort: 'help-wanted-issues', order: 'desc', per_page: 10 })
         .expect(200)
 
@@ -187,7 +187,7 @@ describe('Mock GitHub API Server', () => {
   describe('Pagination', () => {
     it('should paginate results with default page size', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .expect(200)
 
       expect(response.body.items.length).toBeLessThanOrEqual(30) // Default per_page is 30
@@ -196,7 +196,7 @@ describe('Mock GitHub API Server', () => {
     it('should respect per_page parameter', async () => {
       const perPage = 5
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ per_page: perPage })
         .expect(200)
 
@@ -208,13 +208,13 @@ describe('Mock GitHub API Server', () => {
 
       // Get first page
       const page1Response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ per_page: perPage, page: 1 })
         .expect(200)
 
       // Get second page
       const page2Response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ per_page: perPage, page: 2 })
         .expect(200)
 
@@ -229,7 +229,7 @@ describe('Mock GitHub API Server', () => {
 
     it('should limit per_page to 100', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ per_page: 200 })
         .expect(200)
 
@@ -238,7 +238,7 @@ describe('Mock GitHub API Server', () => {
 
     it('should handle page beyond available results', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ page: 9999, per_page: 10 })
         .expect(200)
 
@@ -249,7 +249,7 @@ describe('Mock GitHub API Server', () => {
   describe('Combined Operations', () => {
     it('should search, sort, and paginate together', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({
           q: 'vue',
           sort: 'stars',
@@ -287,7 +287,7 @@ describe('Mock GitHub API Server', () => {
   describe('Response Format', () => {
     it('should return GitHub API compatible format', async () => {
       const response = await request(app)
-        .get('/api/github/search/repositories')
+        .get('/api/search/repositories')
         .query({ per_page: 1 })
         .expect(200)
 
@@ -321,7 +321,7 @@ describe('Mock GitHub API Server', () => {
   describe('Error Handling', () => {
     it('should return 404 for unknown endpoints', async () => {
       const response = await request(app)
-        .get('/api/github/unknown')
+        .get('/api/unknown')
         .expect(404)
 
       expect(response.body).toHaveProperty('message')
@@ -338,7 +338,7 @@ describe('Mock GitHub API Data Generation', () => {
 
   it('should generate repositories with valid structure', async () => {
     const response = await request(app)
-      .get('/api/github/search/repositories')
+      .get('/api/search/repositories')
       .query({ per_page: 1 })
       .expect(200)
 
@@ -357,7 +357,7 @@ describe('Mock GitHub API Data Generation', () => {
 
   it('should generate repositories with diverse languages', async () => {
     const response = await request(app)
-      .get('/api/github/search/repositories')
+      .get('/api/search/repositories')
       .query({ per_page: 50 })
       .expect(200)
 
@@ -373,7 +373,7 @@ describe('Mock GitHub API Data Generation', () => {
 
   it('should generate repositories with realistic star counts', async () => {
     const response = await request(app)
-      .get('/api/github/search/repositories')
+      .get('/api/search/repositories')
       .query({ per_page: 20 })
       .expect(200)
 

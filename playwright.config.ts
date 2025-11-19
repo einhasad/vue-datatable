@@ -10,7 +10,7 @@ import { defineConfig, devices } from '@playwright/test'
  * Reference: https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
-  testDir: './e2e',
+  testDir: './examples/e2e',
 
   // Maximum time one test can run
   timeout: 30 * 1000,
@@ -71,7 +71,7 @@ export default defineConfig({
   webServer: [
     {
       // Mock API server - health check ensures it's running
-      command: 'node mock-server/server.js',
+      command: 'node examples/mock-server/server.js',
       url: 'http://localhost:3001/api/health',
       reuseExistingServer: !process.env.CI,
       timeout: 60 * 1000, // Increased to 60s to allow for slower startup

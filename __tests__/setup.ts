@@ -8,7 +8,7 @@
  */
 
 import { beforeAll, afterAll } from 'vitest'
-import { createApp } from '../mock-server/index.js'
+import { createApp } from '../examples/mock-server/index.js'
 import type { Server } from 'http'
 
 // Global state to track server across all test files
