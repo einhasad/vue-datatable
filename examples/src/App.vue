@@ -222,9 +222,9 @@ const columns: Column[] = [
           <!-- HTTP Provider Section -->
           <section id="http-provider" class="section">
             <div>
-              <h2>HTTP Provider Example - GitHub API</h2>
+              <h2>HTTP Provider Example</h2>
               <p>
-                This example demonstrates <strong>HttpDataProvider</strong> with the real GitHub API.
+                This example demonstrates <strong>HttpDataProvider</strong> with a mock REST API.
                 Search for repositories, sort by stars/forks/updated, and navigate pages - all state synced with URL!
               </p>
 
@@ -271,7 +271,7 @@ const columns: Column[] = [
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>// Custom adapter for GitHub API response format
+                <pre class="code-block"><code>// Custom adapter for mock API response format
 class GitHubSearchAdapter {
   private currentPage = 1
 
@@ -1366,7 +1366,7 @@ const multiStateHttpColumns: Column[] = [
   { key: 'status', label: 'Status', sortable: true, sort: 'status' }
 ]
 
-// GitHub API Example
+// Mock API Example
 class GitHubSearchAdapter {
   private currentPage = 1
 
