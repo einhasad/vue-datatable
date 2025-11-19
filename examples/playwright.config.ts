@@ -37,7 +37,7 @@ export default defineConfig({
 
   use: {
     // Base URL for navigation
-    baseURL: 'http://localhost:3000/vue-datatable',
+    baseURL: 'http://localhost:3000',
 
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
@@ -68,11 +68,11 @@ export default defineConfig({
       stderr: 'inherit',
     },
     {
-      // Build library and start Nuxt dev server
-      command: 'cd .. && npm run build && cd examples && npm run dev',
-      url: 'http://localhost:3000/vue-datatable/',
+      // Start Nuxt dev server (assumes library is already built)
+      command: 'npm run dev',
+      url: 'http://localhost:3000',
       reuseExistingServer: !process.env.CI,
-      timeout: 180 * 1000,
+      timeout: 60 * 1000,
       stdout: 'inherit',
       stderr: 'inherit',
     },
