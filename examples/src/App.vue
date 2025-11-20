@@ -109,37 +109,7 @@
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>&lt;template&gt;
-  &lt;Grid
-    :data-provider="provider"
-    :columns="columns"
-  /&gt;
-&lt;/template&gt;
-
-&lt;script setup lang="ts"&gt;
-import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
-
-const users = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin' },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'User' },
-  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'User' },
-  { id: 4, name: 'Alice Brown', email: 'alice@example.com', role: 'Editor' },
-  { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', role: 'User' }
-]
-
-const provider = new ArrayDataProvider({
-  items: users,
-  pagination: false,
-  paginationMode: 'cursor'
-})
-
-const columns: Column[] = [
-  { key: 'id', label: 'ID' },
-  { key: 'name', label: 'Name' },
-  { key: 'email', label: 'Email' },
-  { key: 'role', label: 'Role' }
-]
-&lt;/script&gt;</code></pre>
+                <CodeExample examplePath="/examples/code/BasicExample.vue" />
               </div>
             </div>
           </section>
@@ -177,44 +147,7 @@ const columns: Column[] = [
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>&lt;template&gt;
-  &lt;Grid
-    :data-provider="provider"
-    :columns="columns"
-  /&gt;
-&lt;/template&gt;
-
-&lt;script setup lang="ts"&gt;
-import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
-
-const products = [
-  { id: 1, name: 'Laptop Pro', category: 'Electronics', price: 1299, stock: 45 },
-  { id: 2, name: 'Wireless Mouse', category: 'Accessories', price: 29, stock: 150 },
-  { id: 3, name: 'USB-C Cable', category: 'Accessories', price: 15, stock: 200 },
-  { id: 4, name: 'Monitor 27"', category: 'Electronics', price: 399, stock: 30 },
-  { id: 5, name: 'Keyboard Mechanical', category: 'Accessories', price: 129, stock: 75 },
-  { id: 6, name: 'Webcam HD', category: 'Electronics', price: 79, stock: 60 },
-  { id: 7, name: 'Desk Lamp', category: 'Office', price: 45, stock: 90 },
-  { id: 8, name: 'Office Chair', category: 'Office', price: 299, stock: 25 },
-  { id: 9, name: 'Headphones', category: 'Electronics', price: 199, stock: 40 },
-  { id: 10, name: 'Tablet Stand', category: 'Accessories', price: 35, stock: 100 }
-]
-
-const provider = new ArrayDataProvider({
-  items: products,
-  pagination: true,
-  paginationMode: 'page',
-  pageSize: 5
-})
-
-const columns: Column[] = [
-  { key: 'id', label: 'ID', sortable: true },
-  { key: 'name', label: 'Product Name', sortable: true },
-  { key: 'category', label: 'Category', sortable: true },
-  { key: 'price', label: 'Price ($)', sortable: true },
-  { key: 'stock', label: 'Stock', sortable: true }
-]
-&lt;/script&gt;</code></pre>
+                <CodeExample examplePath="/examples/code/ArrayProviderExample.vue" />
               </div>
             </div>
           </section>
@@ -271,67 +204,7 @@ const columns: Column[] = [
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>// Custom adapter for mock API response format
-class GitHubSearchAdapter {
-  private currentPage = 1
-
-  setCurrentPage(page: number) {
-    this.currentPage = page
-  }
-
-  extractItems(response: any): any[] {
-    return response.items || []
-  }
-
-  extractPagination(response: any) {
-    const totalCount = response.total_count || 0
-    return {
-      currentPage: this.currentPage,
-      perPage: 10,
-      pageCount: Math.min(Math.ceil(totalCount / 10), 100),
-      totalCount: Math.min(totalCount, 1000)
-    }
-  }
-
-  isSuccess(response: any): boolean {
-    return !response.message
-  }
-
-  getErrorMessage(response: any): string {
-    return response.message || 'API request failed'
-  }
-}
-
-const adapter = new GitHubSearchAdapter()
-
-async function githubHttpClient(fullUrl: string): Promise&lt;any&gt; {
-  const urlObj = new URL(fullUrl)
-  const q = urlObj.searchParams.get('gh-q') || 'vue table'
-  const sort = urlObj.searchParams.get('gh-sort') || 'stars'
-  const page = urlObj.searchParams.get('page') || '1'
-
-  adapter.setCurrentPage(parseInt(page))
-
-  const params = new URLSearchParams({
-    q, sort, order: 'desc', per_page: '10', page
-  })
-
-  const response = await fetch(\`https://api.github.com/search/repositories?\${params}\`)
-  return response.json()
-}
-
-const provider = new HttpDataProvider({
-  url: 'https://api.github.com/search/repositories',
-  pagination: true,
-  paginationMode: 'page',
-  pageSize: 10,
-  responseAdapter: adapter,
-  httpClient: githubHttpClient,
-  stateProvider: new QueryParamsStateProvider({
-    router,
-    prefix: 'gh'
-  })
-})</code></pre>
+                <CodeExample examplePath="/examples/code/HttpProviderExample.ts" />
               </div>
             </div>
           </section>
@@ -349,17 +222,7 @@ const provider = new HttpDataProvider({
               </div>
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>import { ArrayDataProvider, InMemoryStateProvider } from '@grid-vue/grid'
-
-const stateProvider = new InMemoryStateProvider()
-
-const provider = new ArrayDataProvider({
-  items: users,
-  pagination: true,
-  paginationMode: 'page',
-  pageSize: 5,
-  stateProvider
-})</code></pre>
+                <CodeExample examplePath="/examples/code/InMemoryStateProvider.ts" />
               </div>
             </div>
           </section>
@@ -381,19 +244,7 @@ const provider = new ArrayDataProvider({
               </div>
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>import { ArrayDataProvider, LocalStorageStateProvider } from '@grid-vue/grid'
-
-const stateProvider = new LocalStorageStateProvider({
-  storageKey: 'my-grid-state' // default: 'grid-state'
-})
-
-const provider = new ArrayDataProvider({
-  items: users,
-  pagination: true,
-  paginationMode: 'page',
-  pageSize: 5,
-  stateProvider
-})</code></pre>
+                <CodeExample examplePath="/examples/code/LocalStorageStateProvider.ts" />
               </div>
             </div>
           </section>
@@ -415,23 +266,7 @@ const provider = new ArrayDataProvider({
               </div>
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>import { useRouter } from 'vue-router'
-import { ArrayDataProvider, QueryParamsStateProvider } from '@grid-vue/grid'
-
-const router = useRouter()
-
-const stateProvider = new QueryParamsStateProvider({
-  router,
-  prefix: 'qp' // query params will be: ?qp-sort=name
-})
-
-const provider = new ArrayDataProvider({
-  items: users,
-  pagination: true,
-  paginationMode: 'page',
-  pageSize: 5,
-  stateProvider
-})</code></pre>
+                <CodeExample examplePath="/examples/code/QueryParamsStateProvider.ts" />
               </div>
             </div>
           </section>
@@ -453,23 +288,7 @@ const provider = new ArrayDataProvider({
               </div>
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>import { useRouter } from 'vue-router'
-import { ArrayDataProvider, HashStateProvider } from '@grid-vue/grid'
-
-const router = useRouter()
-
-const stateProvider = new HashStateProvider({
-  router,
-  prefix: 'hash' // hash will be: #hash-sort=name
-})
-
-const provider = new ArrayDataProvider({
-  items: users,
-  pagination: true,
-  paginationMode: 'page',
-  pageSize: 5,
-  stateProvider
-})</code></pre>
+                <CodeExample examplePath="/examples/code/HashStateProvider.ts" />
               </div>
             </div>
           </section>
@@ -498,42 +317,7 @@ const provider = new ArrayDataProvider({
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>import { useRouter } from 'vue-router'
-import { ArrayDataProvider, HttpDataProvider, QueryParamsStateProvider } from '@grid-vue/grid'
-
-const router = useRouter()
-
-// First grid: Array provider with "products" prefix
-const productsStateProvider = new QueryParamsStateProvider({
-  router,
-  prefix: 'products'
-})
-
-const productsProvider = new ArrayDataProvider({
-  items: products,
-  pagination: true,
-  paginationMode: 'page',
-  pageSize: 5,
-  stateProvider: productsStateProvider
-})
-
-// Second grid: HTTP provider with "users" prefix
-const usersStateProvider = new QueryParamsStateProvider({
-  router,
-  prefix: 'users'
-})
-
-const usersProvider = new HttpDataProvider({
-  url: '/api/users',
-  pagination: true,
-  paginationMode: 'page',
-  pageSize: 5,
-  stateProvider: usersStateProvider,
-  httpClient: mockHttpClient,
-  responseAdapter: customAdapter
-})
-
-// URL will contain both: ?products-sort=name&products-page=2&users-sort=email&users-page=1</code></pre>
+                <CodeExample examplePath="/examples/code/MultiStateExample.ts" />
               </div>
             </div>
           </section>
@@ -570,44 +354,7 @@ const usersProvider = new HttpDataProvider({
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>&lt;template&gt;
-  &lt;Grid :data-provider="provider" :columns="columns"&gt;
-    &lt;template #pagination="{ pagination }"&gt;
-      &lt;PagePagination
-        :pagination="pagination"
-        :max-visible-pages="5"
-        :show-summary="true"
-        @page-change="provider.setPage($event)"
-      /&gt;
-    &lt;/template&gt;
-  &lt;/Grid&gt;
-&lt;/template&gt;
-
-&lt;script setup lang="ts"&gt;
-import { Grid, ArrayDataProvider, PagePagination, type Column } from '@grid-vue/grid'
-
-// Generate sample data
-const users = Array.from({ length: 47 }, (_, i) => ({
-  id: i + 1,
-  name: \`User \${i + 1}\`,
-  email: \`user\${i + 1}@example.com\`,
-  status: ['Active', 'Inactive'][i % 2]
-}))
-
-const provider = new ArrayDataProvider({
-  items: users,
-  pagination: true,
-  paginationMode: 'page',
-  pageSize: 10
-})
-
-const columns: Column[] = [
-  { key: 'id', label: 'ID' },
-  { key: 'name', label: 'Name' },
-  { key: 'email', label: 'Email' },
-  { key: 'status', label: 'Status' }
-]
-&lt;/script&gt;</code></pre>
+                <CodeExample examplePath="/examples/code/PagePaginationExample.vue" />
               </div>
             </div>
           </section>
@@ -643,43 +390,7 @@ const columns: Column[] = [
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>&lt;template&gt;
-  &lt;Grid :data-provider="provider" :columns="columns"&gt;
-    &lt;template #pagination="{ pagination, loading }"&gt;
-      &lt;LoadModePagination
-        :pagination="pagination"
-        :loading="loading"
-        @load-more="provider.loadMore()"
-      /&gt;
-    &lt;/template&gt;
-  &lt;/Grid&gt;
-&lt;/template&gt;
-
-&lt;script setup lang="ts"&gt;
-import { Grid, ArrayDataProvider, LoadModePagination, type Column } from '@grid-vue/grid'
-
-// Generate sample data
-const products = Array.from({ length: 35 }, (_, i) => ({
-  id: i + 1,
-  name: \`Product \${i + 1}\`,
-  price: \`$\${(Math.random() * 100 + 10).toFixed(2)}\`,
-  category: ['Electronics', 'Clothing', 'Books', 'Home'][i % 4]
-}))
-
-const provider = new ArrayDataProvider({
-  items: products,
-  pagination: true,
-  paginationMode: 'cursor',
-  pageSize: 8
-})
-
-const columns: Column[] = [
-  { key: 'id', label: 'ID' },
-  { key: 'name', label: 'Product Name' },
-  { key: 'price', label: 'Price' },
-  { key: 'category', label: 'Category' }
-]
-&lt;/script&gt;</code></pre>
+                <CodeExample examplePath="/examples/code/CursorPaginationExample.vue" />
               </div>
             </div>
           </section>
@@ -706,39 +417,7 @@ const columns: Column[] = [
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>&lt;script setup lang="ts"&gt;
-import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
-
-const employees = [
-  { id: 1, name: 'Alice Johnson', department: 'Engineering', salary: 95000 },
-  { id: 2, name: 'Bob Smith', department: 'Marketing', salary: 75000 },
-  { id: 3, name: 'Charlie Brown', department: 'Sales', salary: 82000 },
-  { id: 4, name: 'Diana Prince', department: 'Engineering', salary: 105000 },
-  { id: 5, name: 'Ethan Hunt', department: 'Operations', salary: 88000 },
-  { id: 6, name: 'Fiona Gallagher', department: 'Marketing', salary: 78000 },
-  { id: 7, name: 'George Miller', department: 'Engineering', salary: 98000 },
-  { id: 8, name: 'Hannah Montana', department: 'Sales', salary: 85000 }
-]
-
-const provider = new ArrayDataProvider({
-  items: employees,
-  pagination: false,
-  paginationMode: 'cursor'
-})
-
-// Add 'sort' property to enable sorting on columns
-const columns: Column[] = [
-  { key: 'id', label: 'ID', sort: 'id' },
-  { key: 'name', label: 'Name', sort: 'name' },
-  { key: 'department', label: 'Department', sort: 'department' },
-  {
-    key: 'salary',
-    label: 'Salary',
-    sort: 'salary',
-    value: (row) => \`$\${row.salary.toLocaleString()}\`
-  }
-]
-&lt;/script&gt;</code></pre>
+                <CodeExample examplePath="/examples/code/SortingExample.vue" />
               </div>
             </div>
           </section>
@@ -784,112 +463,7 @@ const columns: Column[] = [
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>&lt;template&gt;
-  &lt;Grid
-    :data-provider="provider"
-    :columns="columns"
-  &gt;
-    &lt;template #filters&gt;
-      &lt;td
-        v-for="column in columns"
-        :key="column.key"
-        class="grid-filter-cell"
-      &gt;
-        &lt;input
-          v-model="filters[column.key]"
-          type="text"
-          class="filter-input"
-          :placeholder="\`Search \${column.label}...\`"
-          @input="onFilterChange"
-        &gt;
-      &lt;/td&gt;
-    &lt;/template&gt;
-  &lt;/Grid&gt;
-&lt;/template&gt;
-
-&lt;script setup lang="ts"&gt;
-import { ref } from 'vue'
-import { Grid, ArrayDataProvider, InMemoryStateProvider, type Column } from '@grid-vue/grid'
-
-// Sample dataset
-const employees = [
-  { id: 1, name: 'Alice Johnson', department: 'Engineering', position: 'Senior Developer', salary: 95000 },
-  { id: 2, name: 'Bob Smith', department: 'Marketing', position: 'Marketing Manager', salary: 75000 },
-  { id: 3, name: 'Carol Williams', department: 'Engineering', position: 'Tech Lead', salary: 120000 },
-  { id: 4, name: 'David Brown', department: 'Sales', position: 'Sales Representative', salary: 65000 },
-  { id: 5, name: 'Emma Davis', department: 'HR', position: 'HR Specialist', salary: 60000 },
-  { id: 6, name: 'Frank Miller', department: 'Engineering', position: 'Junior Developer', salary: 70000 },
-  { id: 7, name: 'Grace Wilson', department: 'Marketing', position: 'Content Writer', salary: 55000 },
-  { id: 8, name: 'Henry Moore', department: 'Sales', position: 'Sales Manager', salary: 85000 },
-  { id: 9, name: 'Iris Taylor', department: 'Engineering', position: 'DevOps Engineer', salary: 90000 },
-  { id: 10, name: 'Jack Anderson', department: 'HR', position: 'Recruiter', salary: 58000 }
-]
-
-// Create state provider for managing filter state
-const stateProvider = new InMemoryStateProvider()
-
-// Configure ArrayDataProvider with state provider
-const provider = new ArrayDataProvider({
-  items: employees,
-  pagination: true,
-  paginationMode: 'page',
-  pageSize: 5,
-  stateProvider
-})
-
-// Reactive filters object
-const filters = ref&lt;Record&lt;string, string&gt;&gt;({
-  id: '',
-  name: '',
-  department: '',
-  position: '',
-  salary: ''
-})
-
-// Handle filter changes
-const onFilterChange = async () =&gt; {
-  // Update state provider with filter values
-  Object.entries(filters.value).forEach(([key, value]) =&gt; {
-    if (value.trim()) {
-      stateProvider.setFilter(key, value)
-    } else {
-      stateProvider.clearFilter(key)
-    }
-  })
-
-  // Refresh data with new filters
-  await provider.refresh()
-}
-
-const columns: Column[] = [
-  { key: 'id', label: 'ID', sortable: true, sort: 'id' },
-  { key: 'name', label: 'Name', sortable: true, sort: 'name' },
-  { key: 'department', label: 'Department', sortable: true, sort: 'department' },
-  { key: 'position', label: 'Position', sortable: true, sort: 'position' },
-  { key: 'salary', label: 'Salary ($)', sortable: true, sort: 'salary' }
-]
-&lt;/script&gt;
-
-&lt;style scoped&gt;
-.filter-input {
-  width: 100%;
-  padding: 6px 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-.filter-input:focus {
-  outline: none;
-  border-color: #4CAF50;
-  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
-}
-
-:deep(.grid-filter-cell) {
-  padding: 8px;
-  background: #f9f9f9;
-}
-&lt;/style&gt;</code></pre>
+                <CodeExample examplePath="/examples/code/SearchSortExample.vue" />
               </div>
             </div>
           </section>
@@ -916,108 +490,7 @@ const columns: Column[] = [
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block"><code>&lt;script setup lang="ts"&gt;
-import { Grid, ArrayDataProvider, type Column } from '@grid-vue/grid'
-
-const tasks = [
-  { id: 1, title: 'Update documentation', priority: 'high', status: 'completed', progress: 100 },
-  { id: 2, title: 'Fix login bug', priority: 'critical', status: 'in_progress', progress: 75 },
-  { id: 3, title: 'Add dark mode', priority: 'medium', status: 'in_progress', progress: 40 },
-  { id: 4, title: 'Optimize performance', priority: 'low', status: 'pending', progress: 0 },
-  { id: 5, title: 'Write tests', priority: 'high', status: 'in_progress', progress: 60 }
-]
-
-const provider = new ArrayDataProvider({
-  items: tasks,
-  pagination: false,
-  paginationMode: 'cursor'
-})
-
-const columns: Column[] = [
-  { key: 'id', label: 'ID' },
-  { key: 'title', label: 'Task' },
-  {
-    key: 'priority',
-    label: 'Priority',
-    component: (row) => ({
-      is: 'span',
-      props: {
-        style: {
-          padding: '0.25rem 0.5rem',
-          borderRadius: '0.25rem',
-          fontSize: '0.875rem',
-          fontWeight: 'bold',
-          background: getPriorityColor(row.priority),
-          color: 'white'
-        }
-      },
-      content: row.priority.toUpperCase()
-    })
-  },
-  {
-    key: 'status',
-    label: 'Status',
-    value: (row) => row.status.replace('_', ' ').toUpperCase()
-  },
-  {
-    key: 'progress',
-    label: 'Progress',
-    component: (row) => ({
-      is: 'div',
-      props: { style: { width: '100%' } },
-      children: [
-        {
-          is: 'div',
-          props: {
-            style: {
-              width: '100%',
-              height: '20px',
-              background: '#e2e8f0',
-              borderRadius: '10px',
-              overflow: 'hidden'
-            }
-          },
-          children: [
-            {
-              is: 'div',
-              props: {
-                style: {
-                  width: row.progress + '%',
-                  height: '100%',
-                  background: '#667eea',
-                  transition: 'width 0.3s'
-                }
-              }
-            }
-          ]
-        },
-        {
-          is: 'span',
-          props: {
-            style: {
-              fontSize: '0.75rem',
-              color: '#4a5568',
-              marginTop: '0.25rem',
-              display: 'block'
-            }
-          },
-          content: row.progress + '%'
-        }
-      ]
-    })
-  }
-]
-
-function getPriorityColor(priority: string) {
-  const colors = {
-    critical: '#e53e3e',
-    high: '#dd6b20',
-    medium: '#d69e2e',
-    low: '#38a169'
-  }
-  return colors[priority] || '#718096'
-}
-&lt;/script&gt;</code></pre>
+                <CodeExample examplePath="/examples/code/CustomColumnsExample.vue" />
               </div>
             </div>
           </section>
@@ -1049,80 +522,7 @@ function getPriorityColor(priority: string) {
 
               <div class="example-section">
                 <h3>Code</h3>
-                <pre class="code-block" v-pre><code>&lt;template&gt;
-  &lt;div v-if="selectedUser"&gt;
-    Selected: {{ selectedUser.name }}
-  &lt;/div&gt;
-  &lt;Grid
-    :data-provider="provider"
-    :columns="columns"
-    :on-row-click="handleRowClick"
-    :row-options="getRowOptions"
-  /&gt;
-&lt;/template&gt;
-
-&lt;script setup lang="ts"&gt;
-import { ref } from 'vue'
-import { Grid, ArrayDataProvider, type Column, type RowOptions } from '@grid-vue/grid'
-
-const selectedUser = ref(null)
-
-const users = [
-  { id: 1, name: 'John Doe', email: 'john@example.com', active: true },
-  { id: 2, name: 'Jane Smith', email: 'jane@example.com', active: true },
-  { id: 3, name: 'Bob Johnson', email: 'bob@example.com', active: false },
-  { id: 4, name: 'Alice Brown', email: 'alice@example.com', active: true }
-]
-
-const provider = new ArrayDataProvider({
-  items: users,
-  pagination: false,
-  paginationMode: 'cursor'
-})
-
-const columns: Column[] = [
-  { key: 'id', label: 'ID' },
-  { key: 'name', label: 'Name' },
-  { key: 'email', label: 'Email' },
-  {
-    key: 'active',
-    label: 'Status',
-    value: (row) => row.active ? 'Active' : 'Inactive'
-  }
-]
-
-function handleRowClick(user: any) {
-  selectedUser.value = user
-}
-
-function getRowOptions(user: any): RowOptions {
-  return {
-    class: {
-      'row-clickable': true,
-      'row-selected': selectedUser.value?.id === user.id,
-      'row-inactive': !user.active
-    },
-    style: {
-      cursor: 'pointer'
-    }
-  }
-}
-&lt;/script&gt;
-
-&lt;style&gt;
-.row-clickable:hover {
-  background: #f7fafc !important;
-}
-
-.row-selected {
-  background: #e6fffa !important;
-  border-left: 4px solid #38b2ac !important;
-}
-
-.row-inactive {
-  opacity: 0.6;
-}
-&lt;/style&gt;</code></pre>
+                <CodeExample examplePath="/examples/code/RowActionsExample.vue" />
               </div>
             </div>
           </section>
