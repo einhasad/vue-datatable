@@ -1,0 +1,33 @@
+/**
+ * Grid Theme - Classic
+ * Clean, minimal design using light-dark() for automatic mode support
+ */
+
+.grid-theme-classic .grid,
+.grid {
+  --grid-border-color: light-dark(#e8e8e8, #444);
+  --grid-header-bg: light-dark(#fafafa, #1f1f1f);
+  --grid-header-color: light-dark(rgba(0, 0, 0, 0.85), rgba(255, 255, 255, 0.85));
+  --grid-row-hover-bg: light-dark(#f5f5f5, #303030);
+  --grid-body-bg: light-dark(#fff, #141414);
+  --grid-cell-color: light-dark(rgba(0, 0, 0, 0.85), rgba(255, 255, 255, 0.85));
+  --grid-table-bg: light-dark(#fff, #141414);
+  --grid-input-bg: light-dark(#fff, #1f1f1f);
+  --grid-input-color: light-dark(rgba(0, 0, 0, 0.85), rgba(255, 255, 255, 0.85));
+  --grid-button-bg: light-dark(#fff, #303030);
+  --grid-button-border: light-dark(#d9d9d9, #444);
+  --grid-button-color: light-dark(rgba(0, 0, 0, 0.85), rgba(255, 255, 255, 0.85));
+  --grid-button-hover-bg: light-dark(#f5f5f5, #404040);
+  --grid-button-active-bg: light-dark(#1890ff, #177ddc);
+  --grid-button-active-color: #fff;
+  --grid-button-disabled-bg: light-dark(#f5f5f5, #1f1f1f);
+  --grid-button-disabled-color: light-dark(#999, #666);
+  --grid-empty-color: light-dark(#999, #666);
+  --grid-loader-color: light-dark(#1890ff, #177ddc);
+  --grid-pagination-summary-color: light-dark(rgba(0, 0, 0, 0.65), rgba(255, 255, 255, 0.65));
+  --grid-focus-shadow-color: light-dark(rgba(24, 144, 255, 0.2), rgba(23, 125, 220, 0.2));
+  --grid-cell-bg: transparent;
+  --grid-cell-padding: 8px;
+  --grid-font-size: 14px;
+  --grid-border-radius: 0;
+}

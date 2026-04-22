@@ -4,44 +4,45 @@
       <thead>
         <tr class="grid-header-row">
           <th
-            v-for="column in visibleColumns"
-            :key="column.key"
+            v-for="(column, colIndex) in visibleColumns"
+            :key="column.sort || colIndex"
             class="grid-header-cell"
           >
-            <template v-if="column.sort && onSort">
-              <button
-                type="button"
-                class="grid-sort-button"
-                :class="{
-                  'grid-sort-active': sortState && sortState.field === column.sort,
-                  'grid-sort-asc': sortState && sortState.field === column.sort && sortState.order === 'asc',
-                  'grid-sort-desc': sortState && sortState.field === column.sort && sortState.order === 'desc'
-                }"
-                @click="onSort(column.sort!, sortState && sortState.field === column.sort && sortState.order === 'asc' ? 'desc' : 'asc')"
-              >
-                {{ getColumnLabel(column, items) }}
-              </button>
-            </template>
-            <DynamicComponent
-              v-else-if="column.labelComponent"
-              :options="column.labelComponent"
-            />
-            <span v-else>
-              {{ getColumnLabel(column, items) }}
-            </span>
+            <slot
+              name="headerCell"
+              :column="column"
+              :col-index="colIndex"
+              :sort-state="sortState"
+              :on-sort="onSort"
+            >
+              <GridColumnHeader
+                :column="column"
+                :sort-state="sortState"
+                @sort="onSortSortState"
+              />
+            </slot>
           </th>
-        </tr>
-        <tr
-          v-if="$slots.filters"
-          class="grid-filter-row"
-        >
-          <slot name="filters" />
         </tr>
       </thead>
 
       <tbody>
+        <slot
+          name="searchRow"
+          :columns="visibleColumns"
+          :state-provider="props.stateProvider"
+        >
+          <GridSearch
+            v-if="props.stateProvider && hasFilterColumns"
+            :columns="columns"
+            :state-provider="props.stateProvider"
+            @filter-change="emit('filterChange')"
+          />
+        </slot>
         <template v-if="loading && showLoader">
-          <tr class="grid-loading-row">
+          <tr
+            class="grid-loading-row"
+            data-qa="grid-loading"
+          >
             <td
               :colspan="visibleColumns.length"
               class="grid-loading-cell"
@@ -62,13 +63,14 @@
             <tr
               v-for="(item, rowIndex) in items"
               :key="getRowKey(item, rowIndex)"
+              :data-qa="'row-' + rowIndex"
               class="grid-row"
               v-bind="buildAttributes(getRowOptions(rowOptions, item))"
-              @click="onRowClick && onRowClick(item)"
+              @click="handleRowClick(item)"
             >
               <td
-                v-for="column in visibleColumns"
-                :key="column.key"
+                v-for="(column, colIndex) in visibleColumns"
+                :key="column.sort || colIndex"
                 class="grid-cell"
                 v-bind="buildAttributes(getCellOptions(column, item))"
                 @click="column.action && column.action(item)"
@@ -106,8 +108,8 @@
             class="grid-footer-row"
           >
             <td
-              v-for="column in visibleColumns"
-              :key="column.key"
+              v-for="(column, colIndex) in visibleColumns"
+              :key="column.sort || colIndex"
               class="grid-footer-cell"
               v-bind="buildAttributes(getFooterOptions(column, items))"
             >
@@ -120,12 +122,12 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T">
 import { computed } from 'vue'
-import type { Column, RowOptions, SortState } from './types'
+import type { Column, RowOptions, SortOrder, SortState } from './types'
+import type { StateProvider } from './state/StateProvider'
 import {
   getCellValue,
-  getColumnLabel,
   shouldShowColumn,
   shouldShowCell,
   getCellComponent,
@@ -136,17 +138,21 @@ import {
   buildAttributes
 } from './utils'
 import DynamicComponent from './DynamicComponent.vue'
+import GridColumnHeader from './GridColumnHeader.vue'
+import GridSearch from './GridSearch.vue'
+
 
 const props = withDefaults(defineProps<{
-  columns: Column<unknown>[]
-  items: unknown[]
+  columns: Column<T>[]
+  items: T[]
+  stateProvider?: StateProvider
   loading?: boolean
   showLoader?: boolean
   showFooter?: boolean
   emptyText?: string
-  rowOptions?: (model: unknown) => RowOptions
-  onRowClick?: (model: unknown) => void
-  onSort?: (field: string, order: 'asc' | 'desc') => void
+  rowOptions?: (model: T) => RowOptions
+  onRowClick?: (model: T) => void
+  onSort?: (field: string, order: SortOrder) => void
   sortState?: SortState | null
   rowKeyField?: string
 }>(), {
@@ -157,6 +163,11 @@ const props = withDefaults(defineProps<{
   rowKeyField: 'id'
 })
 
+const emit = defineEmits<{
+  filterChange: []
+}>()
+
+
 const visibleColumns = computed(() => {
   return props.columns.filter(column => shouldShowColumn(column))
 })
@@ -165,7 +176,11 @@ const hasFooter = computed(() => {
   return visibleColumns.value.some(column => column.footer)
 })
 
-function getRowKey(item: unknown, index: number): string | number {
+const hasFilterColumns = computed(() => {
+  return visibleColumns.value.some(column => column.filter)
+})
+
+function getRowKey(item: T, index: number): string | number {
   if (props.rowKeyField && typeof item === 'object' && item !== null) {
     const key = (item as Record<string, unknown>)[props.rowKeyField]
     if (key !== undefined) {
@@ -173,5 +188,17 @@ function getRowKey(item: unknown, index: number): string | number {
     }
   }
   return index
+}
+
+function handleRowClick(item: T): void {
+  if (props.onRowClick) {
+    props.onRowClick(item)
+  }
+}
+
+function onSortSortState(newSort: SortState): void {
+  if (props.onSort) {
+    props.onSort(newSort.field, newSort.order)
+  }
 }
 </script>

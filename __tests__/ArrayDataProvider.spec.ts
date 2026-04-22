@@ -1,321 +1,218 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { ArrayDataProvider } from '../src/providers/ArrayDataProvider'
+import type { SortState, OffsetPaginationState, KeysetPaginationState } from '../src/types'
+
+interface TestItem {
+  id: number
+  name: string
+}
+
+const sampleItems: TestItem[] = [
+  { id: 3, name: 'Charlie' },
+  { id: 1, name: 'Alice' },
+  { id: 2, name: 'Bob' }
+]
 
 describe('ArrayDataProvider', () => {
-  const sampleData = [
-    { id: 1, name: 'Alice', age: 25 },
-    { id: 2, name: 'Bob', age: 30 },
-    { id: 3, name: 'Charlie', age: 35 },
-    { id: 4, name: 'David', age: 40 },
-    { id: 5, name: 'Eve', age: 45 }
-  ]
+  let provider: ArrayDataProvider<TestItem>
 
-  describe('Cursor-based Pagination', () => {
-    let provider: ArrayDataProvider
+  beforeEach(() => {
+    provider = new ArrayDataProvider<TestItem>({ items: sampleItems })
+  })
 
-    beforeEach(() => {
-      provider = new ArrayDataProvider({
-        items: sampleData,
-        pagination: true,
-        paginationMode: 'cursor',
-        pageSize: 2
-      })
-    })
+  it('load returns all items when no pagination and no sort', async () => {
+    const result = await provider.load()
 
-    it('should load first page', async () => {
-      const result = await provider.load()
-      expect(result.items).toHaveLength(2)
-      expect(result.items[0]).toEqual(sampleData[0])
-      expect(result.items[1]).toEqual(sampleData[1])
-      expect(result.pagination).toEqual({
-        nextCursor: '2',
-        hasMore: true
-      })
-    })
+    expect(result.items).toHaveLength(3)
+    expect(result.items).toEqual(sampleItems)
+    expect(provider.getCurrentItems()).toEqual(sampleItems)
+  })
 
-    it('should load more data', async () => {
-      await provider.load()
-      const result = await provider.loadMore()
-      expect(result.items).toHaveLength(4)
-      expect(result.pagination).toEqual({
-        nextCursor: '4',
-        hasMore: true
-      })
-    })
+  it('load applies client-side string sorting asc', async () => {
+    const result = await provider.load({ sortField: 'name', sortOrder: 'asc' })
 
-    it('should detect no more data', async () => {
-      await provider.load()
-      await provider.loadMore()
-      const result = await provider.loadMore()
-      expect(result.items).toHaveLength(5)
-      expect(result.pagination).toEqual({
-        nextCursor: '',
-        hasMore: false
-      })
-    })
+    expect(result.items).toHaveLength(3)
+    expect(result.items[0]).toEqual({ id: 1, name: 'Alice' })
+    expect(result.items[1]).toEqual({ id: 2, name: 'Bob' })
+    expect(result.items[2]).toEqual({ id: 3, name: 'Charlie' })
+    expect(provider.getCurrentItems()).toEqual(result.items)
+  })
 
-    it('should load with cursor', async () => {
-      const result = await provider.load({ cursor: '2' })
-      expect(result.items).toHaveLength(2)
-      expect(result.items[0]).toEqual(sampleData[2])
-    })
+  it('load applies client-side string sorting desc', async () => {
+    const result = await provider.load({ sortField: 'name', sortOrder: 'desc' })
 
-    it('should refresh data', async () => {
-      await provider.load()
-      await provider.loadMore()
-      const result = await provider.refresh()
-      expect(result.items).toHaveLength(2)
-      expect(result.items[0]).toEqual(sampleData[0])
-    })
+    expect(result.items).toHaveLength(3)
+    expect(result.items[0]).toEqual({ id: 3, name: 'Charlie' })
+    expect(result.items[1]).toEqual({ id: 2, name: 'Bob' })
+    expect(result.items[2]).toEqual({ id: 1, name: 'Alice' })
+  })
 
-    it('should return hasMore correctly', async () => {
-      await provider.load()
-      expect(provider.hasMore()).toBe(true)
-      await provider.loadMore()
-      await provider.loadMore()
-      expect(provider.hasMore()).toBe(false)
+  it('load applies client-side number sorting asc', async () => {
+    const result = await provider.load({ sortField: 'id', sortOrder: 'asc' })
+
+    expect(result.items[0]).toEqual({ id: 1, name: 'Alice' })
+    expect(result.items[1]).toEqual({ id: 2, name: 'Bob' })
+    expect(result.items[2]).toEqual({ id: 3, name: 'Charlie' })
+  })
+
+  it('load applies client-side number sorting desc', async () => {
+    const result = await provider.load({ sortField: 'id', sortOrder: 'desc' })
+
+    expect(result.items[0]).toEqual({ id: 3, name: 'Charlie' })
+    expect(result.items[1]).toEqual({ id: 2, name: 'Bob' })
+    expect(result.items[2]).toEqual({ id: 1, name: 'Alice' })
+  })
+
+  it('setSort applies sorting and updates getCurrentItems', () => {
+    expect(provider.getSort()).toBeNull()
+
+    const sort: SortState = { field: 'name', order: 'asc' }
+    provider.setSort(sort)
+
+    expect(provider.getSort()).toEqual({ field: 'name', order: 'asc' })
+    const items = provider.getCurrentItems()
+    expect(items[0]).toEqual({ id: 1, name: 'Alice' })
+    expect(items[1]).toEqual({ id: 2, name: 'Bob' })
+    expect(items[2]).toEqual({ id: 3, name: 'Charlie' })
+  })
+
+  it('setSort with desc order sorts in reverse', () => {
+    provider.setSort({ field: 'id', order: 'desc' })
+
+    const items = provider.getCurrentItems()
+    expect(items[0]).toEqual({ id: 3, name: 'Charlie' })
+    expect(items[1]).toEqual({ id: 2, name: 'Bob' })
+    expect(items[2]).toEqual({ id: 1, name: 'Alice' })
+  })
+
+  it('offset pagination slices items on page 1', async () => {
+    provider.setOffsetPagination({ page: 1, pageSize: 2 })
+    const result = await provider.load()
+
+    expect(result.items).toHaveLength(2)
+    expect(result.items[0]).toEqual({ id: 3, name: 'Charlie' })
+    expect(result.items[1]).toEqual({ id: 1, name: 'Alice' })
+    expect(provider.getCurrentItems()).toEqual(result.items)
+  })
+
+  it('offset pagination slices items on page 2', async () => {
+    provider.setOffsetPagination({ page: 2, pageSize: 2 })
+    const result = await provider.load()
+
+    expect(result.items).toHaveLength(1)
+    expect(result.items[0]).toEqual({ id: 2, name: 'Bob' })
+  })
+
+  it('offset pagination returns totalItems and totalPages', () => {
+    provider.setOffsetPagination({ page: 1, pageSize: 2 })
+
+    const pagination = provider.getOffsetPagination()
+    expect(pagination).toEqual({
+      page: 1,
+      pageSize: 2,
+      totalItems: 3,
+      totalPages: 2
     })
   })
 
-  describe('Page-based Pagination', () => {
-    let provider: ArrayDataProvider
-
-    beforeEach(() => {
-      provider = new ArrayDataProvider({
-        items: sampleData,
-        pagination: true,
-        paginationMode: 'page',
-        pageSize: 2
-      })
-    })
-
-    it('should load first page', async () => {
-      const result = await provider.load()
-      expect(result.items).toHaveLength(2)
-      expect(result.items[0]).toEqual(sampleData[0])
-      expect(result.pagination).toEqual({
-        currentPage: 1,
-        pageCount: 3,
-        perPage: 2,
-        totalCount: 5
-      })
-    })
-
-    it('should load specific page', async () => {
-      const result = await provider.setPage(2)
-      expect(result.items).toHaveLength(2)
-      expect(result.items[0]).toEqual(sampleData[2])
-      expect(result.pagination).toMatchObject({
-        currentPage: 2,
-        pageCount: 3
-      })
-    })
-
-    it('should load last page with fewer items', async () => {
-      const result = await provider.setPage(3)
-      expect(result.items).toHaveLength(1)
-      expect(result.items[0]).toEqual(sampleData[4])
-    })
-
-    it('should get current page', async () => {
-      await provider.setPage(2)
-      expect(provider.getCurrentPage()).toBe(2)
-    })
-
-    it('should handle loadMore in page mode', async () => {
-      await provider.load()
-      const result = await provider.loadMore()
-      expect(result.pagination).toMatchObject({
-        currentPage: 2
-      })
-    })
+  it('getOffsetPagination returns null when not set', () => {
+    expect(provider.getOffsetPagination()).toBeNull()
   })
 
-  describe('Filtering', () => {
-    let provider: ArrayDataProvider
+  it('pagination respects sorting', async () => {
+    provider.setSort({ field: 'name', order: 'asc' })
+    provider.setOffsetPagination({ page: 1, pageSize: 2 })
+    const result = await provider.load()
 
-    beforeEach(() => {
-      provider = new ArrayDataProvider({
-        items: sampleData,
-        pagination: true,
-        paginationMode: 'page',
-        pageSize: 10
-      })
-    })
-
-    it('should filter by string field', async () => {
-      const result = await provider.load({ searchParams: { name: 'ali' } })
-      expect(result.items).toHaveLength(1)
-      expect(result.items[0].name).toBe('Alice')
-    })
-
-    it('should filter by number field', async () => {
-      const result = await provider.load({ searchParams: { age: '30' } })
-      expect(result.items).toHaveLength(1)
-      expect(result.items[0].age).toBe(30)
-    })
-
-    it('should handle multiple filters', async () => {
-      const result = await provider.load({ searchParams: { name: 'e', age: '45' } })
-      expect(result.items).toHaveLength(1)
-      expect(result.items[0].name).toBe('Eve')
-    })
-
-    it('should handle no matches', async () => {
-      const result = await provider.load({ searchParams: { name: 'xyz' } })
-      expect(result.items).toHaveLength(0)
-    })
+    expect(result.items).toHaveLength(2)
+    expect(result.items[0]).toEqual({ id: 1, name: 'Alice' })
+    expect(result.items[1]).toEqual({ id: 2, name: 'Bob' })
   })
 
-  describe('Sorting', () => {
-    let provider: ArrayDataProvider
+  it('refresh reloads with current state', async () => {
+    provider.setSort({ field: 'id', order: 'asc' })
+    const result = await provider.refresh()
 
-    beforeEach(() => {
-      provider = new ArrayDataProvider({
-        items: sampleData,
-        pagination: false
-      })
-    })
-
-    it('should sort by string field ascending', async () => {
-      const result = await provider.load({ sortField: 'name', sortOrder: 'asc' })
-      expect(result.items[0].name).toBe('Alice')
-      expect(result.items[4].name).toBe('Eve')
-    })
-
-    it('should sort by string field descending', async () => {
-      const result = await provider.load({ sortField: 'name', sortOrder: 'desc' })
-      expect(result.items[0].name).toBe('Eve')
-      expect(result.items[4].name).toBe('Alice')
-    })
-
-    it('should sort by number field ascending', async () => {
-      const result = await provider.load({ sortField: 'age', sortOrder: 'asc' })
-      expect(result.items[0].age).toBe(25)
-      expect(result.items[4].age).toBe(45)
-    })
-
-    it('should sort by number field descending', async () => {
-      const result = await provider.load({ sortField: 'age', sortOrder: 'desc' })
-      expect(result.items[0].age).toBe(45)
-      expect(result.items[4].age).toBe(25)
-    })
-
-    it('should maintain sort state', () => {
-      provider.setSort('name', 'asc')
-      const sortState = provider.getSort()
-      expect(sortState).toEqual({ field: 'name', order: 'asc' })
-    })
+    expect(result.items[0]).toEqual({ id: 1, name: 'Alice' })
+    expect(result.items[2]).toEqual({ id: 3, name: 'Charlie' })
   })
 
-  // Query parameter management is now handled by StateProvider
-  // ArrayDataProvider works with any StateProvider (InMemory, QueryParams, LocalStorage, Hash)
-  // See StateProvider tests for comprehensive coverage
+  it('setAllItems replaces dataset and re-sorts', () => {
+    provider.setSort({ field: 'name', order: 'asc' })
 
-  describe('No Pagination', () => {
-    it('should return all items without pagination', async () => {
-      const provider = new ArrayDataProvider({
-        items: sampleData,
-        pagination: false
-      })
-      const result = await provider.load()
-      expect(result.items).toHaveLength(5)
-      expect(result.pagination).toBeUndefined()
-      expect(provider.hasMore()).toBe(false)
-    })
+    const newItems: TestItem[] = [
+      { id: 10, name: 'Zoe' },
+      { id: 5, name: 'Eve' }
+    ]
+    provider.setAllItems(newItems)
+
+    const items = provider.getCurrentItems()
+    expect(items).toHaveLength(2)
+    expect(items[0]).toEqual({ id: 5, name: 'Eve' })
+    expect(items[1]).toEqual({ id: 10, name: 'Zoe' })
   })
 
-  describe('State Management', () => {
-    let provider: ArrayDataProvider
+  it('getAllItems returns copy of all items', () => {
+    const allItems = provider.getAllItems()
 
-    beforeEach(() => {
-      provider = new ArrayDataProvider({
-        items: sampleData,
-        pagination: true,
-        paginationMode: 'cursor',
-        pageSize: 2
-      })
-    })
-
-    it('should track loading state', async () => {
-      expect(provider.isLoading()).toBe(false)
-      const loadPromise = provider.load()
-      expect(provider.isLoading()).toBe(true)
-      await loadPromise
-      expect(provider.isLoading()).toBe(false)
-    })
-
-    it('should return current items', async () => {
-      await provider.load()
-      const items = provider.getCurrentItems()
-      expect(items).toHaveLength(2)
-      expect(items[0]).toEqual(sampleData[0])
-    })
-
-    it('should return current pagination', async () => {
-      await provider.load()
-      const pagination = provider.getCurrentPagination()
-      expect(pagination).toEqual({
-        nextCursor: '2',
-        hasMore: true
-      })
-    })
-
-    it('should return null pagination when disabled', () => {
-      const noPaginationProvider = new ArrayDataProvider({
-        items: sampleData,
-        pagination: false
-      })
-      expect(noPaginationProvider.getCurrentPagination()).toBeNull()
-    })
+    expect(allItems).toEqual(sampleItems)
+    expect(allItems).not.toBe(sampleItems)
   })
 
-  describe('Edge Cases', () => {
-    it('should handle empty array', async () => {
-      const provider = new ArrayDataProvider({
-        items: [],
-        pagination: true,
-        paginationMode: 'page',
-        pageSize: 10
-      })
-      const result = await provider.load()
-      expect(result.items).toHaveLength(0)
-      expect(result.pagination).toMatchObject({
-        totalCount: 0,
-        pageCount: 0
-      })
-    })
+  it('getCurrentItems after setAllItems returns updated items', () => {
+    const newItems: TestItem[] = [{ id: 99, name: 'NewGuy' }]
+    provider.setAllItems(newItems)
 
-    it('should handle invalid cursor', async () => {
-      const provider = new ArrayDataProvider({
-        items: sampleData,
-        pagination: true,
-        paginationMode: 'cursor',
-        pageSize: 2
-      })
-      const result = await provider.load({ cursor: 'invalid' })
-      expect(result.items).toHaveLength(2)
-      expect(result.items[0]).toEqual(sampleData[0])
-    })
+    expect(provider.getCurrentItems()).toEqual([{ id: 99, name: 'NewGuy' }])
+    expect(provider.getAllItems()).toEqual([{ id: 99, name: 'NewGuy' }])
+  })
 
-    it('should use default page size', async () => {
-      const provider = new ArrayDataProvider({
-        items: Array.from({ length: 50 }, (_, i) => ({ id: i })),
-        pagination: true,
-        paginationMode: 'page'
-      })
-      const result = await provider.load()
-      expect(result.items).toHaveLength(20)
-    })
+  it('keyset pagination stores and retrieves state', () => {
+    expect(provider.getKeysetPagination()).toBeNull()
 
-    it('should warn when using setPage in cursor mode', async () => {
-      const provider = new ArrayDataProvider({
-        items: sampleData,
-        pagination: true,
-        paginationMode: 'cursor'
-      })
-      const result = await provider.setPage(2)
-      expect(result.items).toBeDefined()
-    })
+    const state: KeysetPaginationState = { cursor: ['abc'], pageSize: 10, hasNextPage: true }
+    provider.setKeysetPagination(state)
+
+    expect(provider.getKeysetPagination()).toEqual(state)
+  })
+
+  it('isLoading is false before and after load', async () => {
+    expect(provider.isLoading()).toBe(false)
+    await provider.load()
+    expect(provider.isLoading()).toBe(false)
+  })
+
+  it('getStateProvider returns null when not configured', () => {
+    expect(provider.getStateProvider('test')).toBeNull()
+  })
+
+  it('load returns all items without sort when sortOrder is null', async () => {
+    const result = await provider.load({ sortOrder: null })
+
+    expect(result.items).toEqual(sampleItems)
+  })
+
+  it('offset pagination with setOffsetPagination updates displayed items', () => {
+    provider.setSort({ field: 'name', order: 'asc' })
+    provider.setOffsetPagination({ page: 2, pageSize: 2 })
+
+    const items = provider.getCurrentItems()
+    expect(items).toHaveLength(1)
+    expect(items[0]).toEqual({ id: 3, name: 'Charlie' })
+
+    const pagination = provider.getOffsetPagination()
+    expect(pagination!.totalItems).toBe(3)
+    expect(pagination!.totalPages).toBe(2)
+  })
+
+  it('handles sorting with mixed types using string fallback', async () => {
+    const mixedItems = [
+      { id: 1, active: true },
+      { id: 2, active: false },
+    ]
+    const mixedProvider = new ArrayDataProvider<{ id: number; active: boolean }>({ items: mixedItems })
+    const result = await mixedProvider.load({ sortField: 'active', sortOrder: 'asc' })
+    expect(result.items[0].active).toBe(false)
+    expect(result.items[1].active).toBe(true)
   })
 })

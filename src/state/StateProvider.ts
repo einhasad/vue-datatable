@@ -1,10 +1,24 @@
 import type { SortState } from '../types'
 
 /**
- * StateProvider interface for managing grid state (filters, sorting, pagination)
+ * Reactive state object shared by all StateProvider implementations.
+ * Vue tracks this automatically — no version counters needed.
+ */
+export interface ReactiveState {
+  filters: Record<string, string>
+  sort: SortState | null
+}
+
+/**
+ * StateProvider interface for managing grid state (filters, sorting)
  * This separates state persistence from data fetching logic
  */
 export interface StateProvider {
+  getValue(key: string): string | null
+  setValue(key: string, value: string): void
+  deleteValue(key: string): void
+  getAllValues(): Record<string, string>
+
   /**
    * Filter management
    */
@@ -21,21 +35,13 @@ export interface StateProvider {
   clearSort(): void
 
   /**
-   * Pagination management (for page-based pagination)
-   */
-  getPage(): number | null
-  setPage(page: number): void
-  clearPage(): void
-
-  /**
-   * Cursor management (for cursor-based pagination)
-   */
-  getCursor(): string | null
-  setCursor(cursor: string): void
-  clearCursor(): void
-
-  /**
    * Clear all state
    */
   clear(): void
+
+  /**
+   * Reactive state object — Vue tracks mutations automatically.
+   * Grid.vue and consumers can watch/computed from this.
+   */
+  readonly state: ReactiveState
 }

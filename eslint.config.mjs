@@ -73,7 +73,7 @@ export default defineConfigWithVueTs(
       'vue/no-unused-vars': 'error',
       'vue/require-prop-types': 'error',
       'vue/require-default-prop': 'off', // Too opinionated, especially for required props
-      'vue/no-v-html': 'warn',
+      'vue/no-v-html': 'off',
       'vue/component-api-style': 'off', // Allow both composition and options API
       'vue/block-lang': 'off', // Don't force TypeScript in examples
       'vue/component-name-in-template-casing': ['error', 'PascalCase'],
@@ -111,12 +111,11 @@ export default defineConfigWithVueTs(
       '**/*.spec.tsx',
       '__tests__/**',
       'examples/**',
-      'e2e/**',
       'vite.config.ts',
       'vitest.config.ts',
-      'playwright.config.ts',
-      'playwright.config.simple.ts',
       'eslint.config.mjs',
+      'public/mockServiceWorker.js',
+      'src/mocks/**',
     ],
   }
 )

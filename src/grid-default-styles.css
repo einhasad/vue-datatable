@@ -1,0 +1,250 @@
+/**
+ * Grid Base Styles
+ * Minimal styling with CSS custom properties for easy theming
+ * Consumers can override these styles or add their own
+ */
+
+.grid {
+  color-scheme: light dark;
+  --grid-border-color: light-dark(#ddd, #444);
+  --grid-header-bg: light-dark(#f5f5f5, #1f1f1f);
+  --grid-header-color: light-dark(#333, rgba(255, 255, 255, 0.85));
+  --grid-row-hover-bg: light-dark(#f9f9f9, #303030);
+  --grid-button-bg: light-dark(#fff, #303030);
+  --grid-button-border: light-dark(#d9d9d9, #444);
+  --grid-button-color: light-dark(#333, rgba(255, 255, 255, 0.85));
+  --grid-button-hover-bg: light-dark(#f5f5f5, #404040);
+  --grid-button-active-bg: light-dark(#1890ff, #177ddc);
+  --grid-button-active-color: #fff;
+  --grid-button-disabled-bg: light-dark(#f5f5f5, #1f1f1f);
+  --grid-button-disabled-color: light-dark(#999, #666);
+  --grid-empty-color: light-dark(#999, #666);
+  --grid-loader-color: light-dark(#1890ff, #177ddc);
+  --grid-body-bg: light-dark(#fff, #141414);
+  --grid-input-bg: light-dark(#fff, #1f1f1f);
+  --grid-pagination-summary-color: light-dark(#666, rgba(255, 255, 255, 0.65));
+  --grid-focus-shadow-color: light-dark(rgba(24, 144, 255, 0.1), rgba(23, 125, 220, 0.2));
+  --grid-cell-color: light-dark(#333, rgba(255, 255, 255, 0.85));
+  --grid-cell-bg: transparent;
+  --grid-table-bg: light-dark(#fff, #141414);
+  --grid-input-color: light-dark(#333, rgba(255, 255, 255, 0.85));
+  --grid-cell-padding: 8px 12px;
+  --grid-font-size: 14px;
+  --grid-border-radius: 4px;
+}
+
+/* Grid Container */
+.grid {
+  width: 100%;
+}
+
+/* Table Wrapper */
+.grid-table-wrapper {
+  overflow-x: auto;
+  width: 100%;
+}
+
+/* Table */
+.grid-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--grid-border-color);
+  font-size: var(--grid-font-size);
+  background-color: var(--grid-table-bg);
+  color: var(--grid-cell-color);
+}
+
+/* Header */
+.grid-header-row {
+  background-color: var(--grid-header-bg);
+}
+
+.grid-header-cell {
+  padding: var(--grid-cell-padding);
+  text-align: left;
+  font-weight: 600;
+  color: var(--grid-header-color);
+  border-bottom: 1px solid var(--grid-border-color);
+  border-right: 1px solid var(--grid-border-color);
+}
+
+.grid-header-cell:last-child {
+  border-right: none;
+}
+
+/* Sort Link */
+a.grid-sort-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a.grid-sort-link:hover {
+  text-decoration: underline;
+}
+
+a.grid-sort-link.asc:after,
+a.grid-sort-link.desc:after {
+  display: inline-block;
+  padding-left: 5px;
+  font-weight: normal;
+}
+
+a.grid-sort-link.asc:after {
+  content: '↑';
+}
+
+a.grid-sort-link.desc:after {
+  content: '↓';
+}
+
+/* Filter Row */
+.grid-filter-row {
+  background-color: var(--grid-header-bg);
+}
+
+.grid-filter-row td {
+  padding: var(--grid-cell-padding);
+  border-bottom: 1px solid var(--grid-border-color);
+  border-right: 1px solid var(--grid-border-color);
+}
+
+.grid-filter-row td:last-child {
+  border-right: none;
+}
+
+/* Search Inputs */
+.grid-search-input,
+.grid-search-select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--grid-border-color);
+  border-radius: var(--grid-border-radius);
+  font-size: 13px;
+  background: var(--grid-input-bg);
+  color: var(--grid-input-color, var(--grid-cell-color));
+  box-sizing: border-box;
+}
+
+.grid-search-input:focus,
+.grid-search-select:focus {
+  outline: none;
+  border-color: var(--grid-button-active-bg);
+  box-shadow: 0 0 0 2px var(--grid-focus-shadow-color);
+}
+
+/* Body Rows */
+.grid-row {
+  transition: background-color 0.2s;
+}
+
+.grid-row:hover {
+  background-color: var(--grid-row-hover-bg);
+}
+
+.grid-cell {
+  padding: var(--grid-cell-padding);
+  border-bottom: 1px solid var(--grid-border-color);
+  border-right: 1px solid var(--grid-border-color);
+  background-color: var(--grid-cell-bg);
+  color: var(--grid-cell-color);
+}
+
+.grid-cell:last-child {
+  border-right: none;
+}
+
+/* Loading */
+.grid-loading-row,
+.grid-empty-row {
+  background-color: var(--grid-body-bg);
+}
+
+.grid-loading-cell,
+.grid-empty-cell {
+  padding: 40px;
+  text-align: center;
+  color: var(--grid-empty-color);
+  font-size: var(--grid-font-size);
+}
+
+.grid-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+}
+
+/* Footer */
+.grid-footer-row {
+  background-color: var(--grid-header-bg);
+  font-weight: 600;
+}
+
+.grid-footer-cell {
+  padding: var(--grid-cell-padding);
+  border-top: 2px solid var(--grid-border-color);
+  border-right: 1px solid var(--grid-border-color);
+}
+
+.grid-footer-cell:last-child {
+  border-right: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid-table {
+    font-size: 12px;
+  }
+
+  .grid-cell,
+  .grid-header-cell,
+  .grid-footer-cell {
+    padding: 6px 8px;
+  }
+}
+
+/* Pagination */
+.grid-pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 0;
+  flex-wrap: wrap;
+}
+
+a.grid-pagination-link {
+  width: 32px;
+  display: inline-block;
+  border: 1px solid var(--grid-button-border);
+  background: var(--grid-button-bg);
+  color: var(--grid-button-color);
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: var(--grid-font-size);
+  border-radius: var(--grid-border-radius);
+  text-decoration: none;
+  user-select: none;
+}
+
+a.grid-pagination-link:hover:not(.grid-pagination-disabled) {
+  background: var(--grid-button-hover-bg);
+}
+
+a.grid-pagination-disabled {
+  background: var(--grid-button-disabled-bg);
+  color: var(--grid-button-disabled-color);
+  cursor: not-allowed;
+}
+
+a.grid-pagination-active {
+  background: var(--grid-button-active-bg) !important;
+  color: var(--grid-button-active-color) !important;
+  border-color: var(--grid-button-active-bg) !important;
+}
+
+.grid-pagination-summary {
+  margin-left: auto;
+  color: var(--grid-pagination-summary-color);
+  font-size: var(--grid-font-size);
+}

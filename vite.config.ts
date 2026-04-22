@@ -2,7 +2,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import dts from 'vite-plugin-dts'
 import { resolve } from 'path'
-import { copyFileSync } from 'fs'
+import { copyFileSync, mkdirSync } from 'fs'
 
 export default defineConfig({
   plugins: [
@@ -11,14 +11,24 @@ export default defineConfig({
       insertTypesEntry: true,
       copyDtsFiles: false,
       outDir: 'dist',
-      exclude: ['src/providers/DSTElasticDataProvider.ts', 'doc/**', 'vite.config.ts', 'node_modules/**']
+      exclude: ['doc/**', 'vite.config.ts', 'node_modules/**']
     }),
     {
       name: 'copy-styles',
       closeBundle() {
         copyFileSync(
-          resolve(__dirname, 'src/styles.css'),
-          resolve(__dirname, 'dist/style.css')
+          resolve(__dirname, 'src/grid-default-styles.css'),
+          resolve(__dirname, 'dist/grid-default-styles.css')
+        )
+        const themesDir = resolve(__dirname, 'dist/themes')
+        mkdirSync(themesDir, { recursive: true })
+        copyFileSync(
+          resolve(__dirname, 'src/themes/classic.css'),
+          resolve(themesDir, 'classic.css')
+        )
+        copyFileSync(
+          resolve(__dirname, 'src/themes/material.css'),
+          resolve(themesDir, 'material.css')
         )
       }
     }

@@ -2,6 +2,7 @@
   <component
     :is="options.is"
     v-bind="options.props"
+    v-on="options.events || {}"
   >
     <span
       v-if="options.content"
@@ -10,7 +11,7 @@
     <template v-if="options.children">
       <DynamicComponent
         v-for="(child, index) in options.children"
-        :key="(child.props as any)?.key || index"
+        :key="child.props?.key ?? index"
         :options="child"
       />
     </template>

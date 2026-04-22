@@ -1,222 +1,125 @@
-import type { StateProvider } from './StateProvider'
+import type { StateProvider, ReactiveState } from './StateProvider'
 import type { SortState, RouterLike } from '../types'
+import { createStateCore } from './stateCore'
 
-/**
- * Configuration for HashStateProvider
- */
 export interface HashStateProviderConfig {
   router: RouterLike
   prefix?: string
 }
 
-/**
- * HashStateProvider - stores state in URL hash
- * State persists across page refreshes and can be shared via URL
- * Uses URL hash format: #key1=value1&key2=value2
- * Uses a prefix to organize parameters
- * Default prefix: 'search'
- */
 export class HashStateProvider implements StateProvider {
-  private router: RouterLike
-  private prefix: string
+  private readonly core = createStateCore()
+  private readonly router: RouterLike
+  private readonly prefix: string
+  readonly state: ReactiveState = this.core.state
 
   constructor(config: HashStateProviderConfig) {
     this.router = config.router
-    this.prefix = config.prefix || 'search'
+    this.prefix = config.prefix ?? 'search'
+    Object.assign(this.core.state.filters, this.readFiltersFromHash())
+    this.core.state.sort = this.readSortFromHash()
   }
 
-  /**
-   * Normalize parameter name with prefix
-   */
-  private normalizeParamName(key: string): string {
+  private paramName(key: string): string {
     return `${this.prefix}-${key}`
   }
 
-  /**
-   * Parse hash string into key-value pairs
-   */
-  private parseHash(hash: string): Record<string, string> {
-    const params: Record<string, string> = {}
-    if (!hash || hash === '#') return params
-
-    const hashContent = hash.startsWith('#') ? hash.substring(1) : hash
-    const pairs = hashContent.split('&')
-
-    pairs.forEach(pair => {
-      const [key, value] = pair.split('=')
-      if (key && value !== undefined) {
-        params[decodeURIComponent(key)] = decodeURIComponent(value)
-      }
-    })
-
-    return params
+  private parseHash(): Record<string, string> {
+    const hash = this.router.currentRoute.value.hash
+    if (!hash || hash === '#') return {}
+    const result: Record<string, string> = {}
+    for (const pair of hash.replace(/^#/, '').split('&')) {
+      const [k, v] = pair.split('=')
+      if (k && v !== undefined) result[decodeURIComponent(k)] = decodeURIComponent(v)
+    }
+    return result
   }
 
-  /**
-   * Build hash string from key-value pairs
-   */
   private buildHash(params: Record<string, string>): string {
     const pairs = Object.entries(params)
-      .filter(([_, value]) => value !== null && value !== undefined && value !== '')
-      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-
-    return pairs.length > 0 ? `#${pairs.join('&')}` : ''
+      .filter(([, v]) => v !== '' && v != null)
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+    return pairs.length ? `#${pairs.join('&')}` : ''
   }
 
-  /**
-   * Get current hash parameters
-   */
-  private getHashParams(): Record<string, string> {
-    const hash = this.router.currentRoute.value.hash
-    return this.parseHash(hash)
-  }
-
-  /**
-   * Set hash parameters
-   */
   private setHashParams(params: Record<string, string>): void {
-    const newHash = this.buildHash(params)
-    // Use type assertion for full route location with path
     this.router.replace({
       path: this.router.currentRoute.value.path,
       query: this.router.currentRoute.value.query,
-      hash: newHash
-    } as any)
-  }
-
-  /**
-   * Get hash parameter value
-   */
-  private getHashParam(key: string): string | null {
-    const params = this.getHashParams()
-    const paramName = this.normalizeParamName(key)
-    return params[paramName] || null
-  }
-
-  /**
-   * Set hash parameter value
-   */
-  private setHashParam(key: string, value: string | null): void {
-    const params = this.getHashParams()
-    const paramName = this.normalizeParamName(key)
-
-    if (value === '' || value === null || value === undefined) {
-      delete params[paramName]
-    } else {
-      params[paramName] = value
-    }
-
-    this.setHashParams(params)
-  }
-
-  /**
-   * Filter management
-   */
-  getFilter(key: string): string | null {
-    return this.getHashParam(key)
-  }
-
-  setFilter(key: string, value: string): void {
-    this.setHashParam(key, value)
-  }
-
-  clearFilter(key: string): void {
-    this.setHashParam(key, null)
-  }
-
-  getAllFilters(): Record<string, string> {
-    const filters: Record<string, string> = {}
-    const params = this.getHashParams()
-    const prefixWithDash = `${this.prefix}-`
-
-    Object.keys(params).forEach(key => {
-      if (key.startsWith(prefixWithDash) && key !== this.normalizeParamName('sort')) {
-        const originalKey = key.substring(prefixWithDash.length)
-        if (params[key]) {
-          filters[originalKey] = params[key]
-        }
-      }
+      hash: this.buildHash(params),
     })
+  }
 
+  private readFiltersFromHash(): Record<string, string> {
+    const filters: Record<string, string> = {}
+    const params = this.parseHash()
+    const prefixDash = `${this.prefix}-`
+    const sortKey = this.paramName('sort')
+    for (const [key, val] of Object.entries(params)) {
+      if (key.startsWith(prefixDash) && key !== sortKey && val) {
+        filters[key.slice(prefixDash.length)] = val
+      }
+    }
     return filters
   }
 
-  /**
-   * Sort management
-   */
-  getSort(): SortState | null {
-    const sortValue = this.getHashParam('sort')
-    if (!sortValue) return null
-
-    if (sortValue.startsWith('-')) {
-      return {
-        field: sortValue.substring(1),
-        order: 'desc'
-      }
-    } else {
-      return {
-        field: sortValue,
-        order: 'asc'
-      }
-    }
+  private readSortFromHash(): SortState | null {
+    const v = this.parseHash()[this.paramName('sort')]
+    if (!v) return null
+    return v.startsWith('-')
+      ? { field: v.slice(1), order: 'desc' }
+      : { field: v, order: 'asc' }
   }
 
+  getValue(key: string): string | null { return this.core.getFilter(key) }
+  setValue(key: string, value: string): void { this.setFilter(key, value) }
+  deleteValue(key: string): void { this.clearFilter(key) }
+  getAllValues(): Record<string, string> { return this.core.getAllFilters() }
+
+  getFilter(key: string): string | null { return this.core.getFilter(key) }
+  getAllFilters(): Record<string, string> { return this.core.getAllFilters() }
+
+  setFilter(key: string, value: string): void {
+    this.core.setFilterValue(key, value)
+    const params = this.parseHash()
+    if (value) {
+      params[this.paramName(key)] = value
+    } else {
+      delete params[this.paramName(key)]
+    }
+    this.setHashParams(params)
+  }
+
+  clearFilter(key: string): void {
+    this.core.clearFilterValue(key)
+    const params = this.parseHash()
+    delete params[this.paramName(key)]
+    this.setHashParams(params)
+  }
+
+  getSort(): SortState | null { return this.core.getSort() }
+
   setSort(field: string, order: 'asc' | 'desc'): void {
-    const sortValue = order === 'desc' ? `-${field}` : field
-    this.setHashParam('sort', sortValue)
+    this.core.setSortValue(field, order)
+    const params = this.parseHash()
+    params[this.paramName('sort')] = order === 'desc' ? `-${field}` : field
+    this.setHashParams(params)
   }
 
   clearSort(): void {
-    this.setHashParam('sort', null)
+    this.core.clearSortValue()
+    const params = this.parseHash()
+    delete params[this.paramName('sort')]
+    this.setHashParams(params)
   }
 
-  /**
-   * Pagination management
-   */
-  getPage(): number | null {
-    const pageValue = this.getHashParam('page')
-    if (!pageValue) return null
-    const page = parseInt(pageValue, 10)
-    return isNaN(page) ? null : page
-  }
-
-  setPage(page: number): void {
-    this.setHashParam('page', page.toString())
-  }
-
-  clearPage(): void {
-    this.setHashParam('page', null)
-  }
-
-  /**
-   * Cursor management
-   */
-  getCursor(): string | null {
-    return this.getHashParam('cursor')
-  }
-
-  setCursor(cursor: string): void {
-    this.setHashParam('cursor', cursor)
-  }
-
-  clearCursor(): void {
-    this.setHashParam('cursor', null)
-  }
-
-  /**
-   * Clear all state
-   */
   clear(): void {
-    const params = this.getHashParams()
-    const prefixWithDash = `${this.prefix}-`
-
-    // Remove all prefixed parameters
-    Object.keys(params).forEach(key => {
-      if (key.startsWith(prefixWithDash)) {
-        delete params[key]
-      }
-    })
-
+    const params = this.parseHash()
+    const prefixDash = `${this.prefix}-`
+    for (const key of Object.keys(params)) {
+      if (key.startsWith(prefixDash)) delete params[key]
+    }
+    this.core.clearAllValues()
     this.setHashParams(params)
   }
 }

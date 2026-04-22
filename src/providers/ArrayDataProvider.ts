@@ -1,84 +1,50 @@
+import {ref} from 'vue'
 import type {
   DataProvider,
   DataProviderConfig,
   LoadOptions,
   LoadResult,
-  PaginationData,
-  CursorPaginationData,
-  PagePaginationData,
   SortState,
-  Pagination
+  KeysetPaginationState,
+  OffsetPaginationState
 } from '../types'
 import type { StateProvider } from '../state/StateProvider'
-import { InMemoryStateProvider } from '../state/InMemoryStateProvider'
-import { ArrayPagination } from './ArrayPagination'
 
 /**
  * Configuration for ArrayDataProvider
  */
-export interface ArrayDataProviderConfig<T = unknown> extends DataProviderConfig {
+interface ArrayDataProviderConfig<T = unknown> extends DataProviderConfig {
   items: T[]
-  pageSize?: number
   stateProvider?: StateProvider
 }
 
 /**
- * ArrayDataProvider implementation supporting both cursor and page-based pagination
- * Client-side data provider for working with in-memory arrays
- * Uses StateProvider for state management (filters, sorting, pagination)
+ * ArrayDataProvider implementation
+ * Client-side data provider for working with in-memory arrays.
+ * Handles sorting internally, no StateProvider dependency.
  */
 export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
-  public config: ArrayDataProviderConfig<T>
-  private stateProvider: StateProvider
-  private loading = false
+  private loading = ref(false)
   private allItems: T[]
-  private displayedItems: T[] = []
-  private currentPage = 1
+  private displayedItems = ref<T[]>([])
+  private sortState: SortState | null = null
+  private keysetPaginationState: KeysetPaginationState | null = null
+  private offsetPaginationState: OffsetPaginationState | null = null
+  private readonly stateProvider: StateProvider | null
 
   constructor(config: ArrayDataProviderConfig<T>) {
-    this.config = {
-      pageSize: 20,
-      ...config,
-      paginationMode: config.paginationMode || 'cursor'
-    }
     this.allItems = [...config.items]
-
-    // Initialize StateProvider (default to InMemoryStateProvider)
-    this.stateProvider = config.stateProvider || new InMemoryStateProvider()
+    this.displayedItems.value = [...this.allItems]
+    this.stateProvider = config.stateProvider ?? null
   }
 
   /**
-   * Filter items based on state
-   */
-  private filterItems(): T[] {
-    let filtered = [...this.allItems]
-    const filters = this.stateProvider.getAllFilters()
-
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value && value.trim()) {
-        filtered = filtered.filter(item => {
-          const itemValue = (item as Record<string, unknown>)[key]
-          if (typeof itemValue === 'string') {
-            return itemValue.toLowerCase().includes(value.toLowerCase())
-          } else if (typeof itemValue === 'number') {
-            return itemValue.toString().includes(value)
-          }
-          return false
-        })
-      }
-    })
-
-    return filtered
-  }
-
-  /**
-   * Sort items based on state
+   * Sort items based on current sort state
    */
   private sortItems(items: T[]): T[] {
-    const sortState = this.stateProvider.getSort()
-    if (!sortState) return items
+    if (!this.sortState?.order) return items
 
-    const { field, order } = sortState
+    const { field, order } = this.sortState
 
     return [...items].sort((a, b) => {
       const aValue = (a as Record<string, unknown>)[field]
@@ -100,248 +66,138 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
   }
 
   /**
-   * Get cursor index for cursor-based pagination
+   * Load data with optional sorting
    */
-  private getCursorIndex(cursor: string): number {
-    if (!cursor) return 0
+  private filterItems(items: T[]): T[] {
+    if (!this.stateProvider) return items
 
-    const index = parseInt(cursor, 10)
-    return isNaN(index) ? 0 : index
+    const filters = this.stateProvider.getAllFilters()
+    const activeFilters = Object.entries(filters).filter(([, v]) => v !== '' && v != null)
+    if (activeFilters.length === 0) return items
+
+    return items.filter(item => {
+      return activeFilters.every(([key, value]) => {
+        const fieldValue = (item as Record<string, string|null>)[key]
+        if (fieldValue == null) return false
+        return String(fieldValue).toLowerCase().includes(value.toLowerCase())
+      })
+    })
   }
 
-  /**
-   * Load data with filtering, sorting, and pagination
-   */
-  async load(options: LoadOptions = {}): Promise<LoadResult<T>> {
-    this.loading = true
-
-    await new Promise(resolve => setTimeout(resolve, 10))
+  // eslint-disable-next-line @typescript-eslint/require-await
+  async load(options: LoadOptions = { sortOrder: null }): Promise<LoadResult<T>> {
+    this.loading.value = true
 
     try {
-      // Update state with search params
-      if (options.searchParams) {
-        Object.entries(options.searchParams).forEach(([key, value]) => {
-          this.stateProvider.setFilter(key, value)
-        })
-      }
-
-      // Update sort state
       if (options.sortField && options.sortOrder) {
-        this.stateProvider.setSort(options.sortField, options.sortOrder)
+        this.sortState = { field: options.sortField, order: options.sortOrder }
       }
 
-      let processedItems = this.filterItems()
-      processedItems = this.sortItems(processedItems)
+      const filtered = this.filterItems([...this.allItems])
+      const sorted = this.sortItems(filtered)
 
-      const pageSize = options.pageSize || this.config.pageSize || 20
-
-      if (this.config.pagination) {
-        if (this.config.paginationMode === 'cursor') {
-          const startIndex = this.getCursorIndex(options.cursor || '')
-          const endIndex = startIndex + pageSize
-          const pageItems = processedItems.slice(startIndex, endIndex)
-
-          const hasMore = endIndex < processedItems.length
-          const nextCursor = hasMore ? endIndex.toString() : ''
-
-          if (options.cursor && this.displayedItems.length > 0) {
-            this.displayedItems.push(...pageItems)
-          } else {
-            this.displayedItems = [...pageItems]
-          }
-
-          const pagination: CursorPaginationData = {
-            nextCursor,
-            hasMore
-          }
-
-          return {
-            items: this.displayedItems,
-            pagination
-          }
-        } else {
-          // Check options, then state provider, then default to 1
-          const page = options.page || this.stateProvider.getPage() || 1
-          this.currentPage = page
-          this.stateProvider.setPage(page)
-
-          const startIndex = (page - 1) * pageSize
-          const endIndex = startIndex + pageSize
-          const pageItems = processedItems.slice(startIndex, endIndex)
-
-          this.displayedItems = pageItems
-
-          const pagination: PagePaginationData = {
-            currentPage: page,
-            pageCount: Math.ceil(processedItems.length / pageSize),
-            perPage: pageSize,
-            totalCount: processedItems.length
-          }
-
-          return {
-            items: this.displayedItems,
-            pagination
-          }
-        }
+      // Apply offset pagination if configured
+      if (this.offsetPaginationState && this.offsetPaginationState.page >= 1 && this.offsetPaginationState.pageSize > 0) {
+        const { page, pageSize } = this.offsetPaginationState
+        this.displayedItems.value = sorted.slice((page - 1) * pageSize, page * pageSize)
       } else {
-        this.displayedItems = processedItems
-        return {
-          items: this.displayedItems
-        }
+        this.displayedItems.value = sorted
+      }
+
+      return {
+        items: this.displayedItems.value as T[]
       }
     } finally {
-      this.loading = false
+      this.loading.value = false
     }
   }
 
   /**
-   * Load more data (for cursor pagination)
-   */
-  async loadMore(): Promise<LoadResult<T>> {
-    if (!this.hasMore()) {
-      return {
-        items: this.displayedItems,
-        pagination: this.getCurrentPagination() || undefined
-      }
-    }
-
-    if (this.config.paginationMode === 'cursor') {
-      let processedItems = this.filterItems()
-      processedItems = this.sortItems(processedItems)
-
-      const currentIndex = this.displayedItems.length
-      const pageSize = this.config.pageSize || 20
-      const endIndex = currentIndex + pageSize
-      const moreItems = processedItems.slice(currentIndex, endIndex)
-
-      this.displayedItems.push(...moreItems)
-
-      const hasMore = endIndex < processedItems.length
-      const pagination: CursorPaginationData = {
-        nextCursor: hasMore ? endIndex.toString() : '',
-        hasMore
-      }
-
-      return {
-        items: this.displayedItems,
-        pagination
-      }
-    } else {
-      return this.setPage(this.currentPage + 1)
-    }
-  }
-
-  /**
-   * Refresh data (reload from beginning)
+   * Refresh data (re-process from current state)
    */
   async refresh(): Promise<LoadResult<T>> {
-    this.displayedItems = []
-    this.currentPage = 1
-    this.stateProvider.clearPage()
-    this.stateProvider.clearCursor()
     return this.load()
-  }
-
-  /**
-   * Set page (for page-based pagination)
-   */
-  async setPage(page: number): Promise<LoadResult<T>> {
-    if (this.config.paginationMode !== 'page') {
-      console.warn('setPage() is only available for page-based pagination')
-      return { items: this.displayedItems }
-    }
-
-    this.currentPage = page
-    return this.load({ page })
-  }
-
-  /**
-   * Get current page (for page-based pagination)
-   */
-  getCurrentPage(): number {
-    return this.currentPage
   }
 
   /**
    * Check if loading
    */
   isLoading(): boolean {
-    return this.loading
-  }
-
-  /**
-   * Check if more data available
-   */
-  hasMore(): boolean {
-    if (!this.config.pagination) return false
-
-    let processedItems = this.filterItems()
-    processedItems = this.sortItems(processedItems)
-
-    if (this.config.paginationMode === 'cursor') {
-      return this.displayedItems.length < processedItems.length
-    } else {
-      const pageData = this.getCurrentPagination() as PagePaginationData
-      return pageData ? this.currentPage < pageData.pageCount : false
-    }
+    return this.loading.value
   }
 
   /**
    * Get current items
    */
   getCurrentItems(): T[] {
-    return this.displayedItems
+    return this.displayedItems.value as T[]
   }
 
   /**
-   * Get current pagination data
+   * Set sort
    */
-  getCurrentPagination(): PaginationData | null {
-    if (!this.config.pagination) return null
-
-    let processedItems = this.filterItems()
-    processedItems = this.sortItems(processedItems)
-
-    if (this.config.paginationMode === 'cursor') {
-      const hasMore = this.displayedItems.length < processedItems.length
-
-      return {
-        nextCursor: hasMore ? this.displayedItems.length.toString() : '',
-        hasMore
-      }
-    } else {
-      const pageSize = this.config.pageSize || 20
-      return {
-        currentPage: this.currentPage,
-        pageCount: Math.ceil(processedItems.length / pageSize),
-        perPage: pageSize,
-        totalCount: processedItems.length
-      }
-    }
+  setSort(sort: SortState): void {
+    this.sortState = sort
+    this.displayedItems.value = this.sortItems([...this.allItems])
   }
 
   /**
-   * Get pagination interface for UI components
+   * Set all items (replace the entire dataset)
    */
-  getPagination(): Pagination | null {
-    const paginationData = this.getCurrentPagination()
-    if (!paginationData) {
-      return null
-    }
-    return new ArrayPagination(paginationData)
+  setAllItems(items: T[]): void {
+    this.allItems = [...items]
+    this.displayedItems.value = this.sortItems([...this.allItems])
   }
 
   /**
-   * Set sort (delegates to StateProvider)
+   * Get all items
    */
-  setSort(field: string, order: 'asc' | 'desc'): void {
-    this.stateProvider.setSort(field, order)
+  getAllItems(): T[] {
+    return [...this.allItems]
   }
 
   /**
-   * Get sort (delegates to StateProvider)
+   * Get sort state
    */
   getSort(): SortState | null {
-    return this.stateProvider.getSort()
+    return this.sortState
+  }
+
+  /**
+   * Get state provider
+   */
+  getStateProvider(_key: string): StateProvider | null {
+    return this.stateProvider
+  }
+
+  // --- Keyset pagination (supported by default) ---
+
+  setKeysetPagination(state: KeysetPaginationState): void {
+    this.keysetPaginationState = state
+  }
+
+  getKeysetPagination(): KeysetPaginationState | null {
+    return this.keysetPaginationState
+  }
+
+  // --- Offset pagination (supported by default) ---
+
+  setOffsetPagination(state: OffsetPaginationState): void {
+    this.offsetPaginationState = state
+    if (state.page >= 1 && state.pageSize > 0) {
+      const sorted = this.sortItems([...this.allItems])
+      const start = (state.page - 1) * state.pageSize
+      const end = start + state.pageSize
+      this.displayedItems.value = sorted.slice(start, end)
+    }
+  }
+
+  getOffsetPagination(): OffsetPaginationState | null {
+    if (!this.offsetPaginationState) return null
+    return {
+      ...this.offsetPaginationState,
+      totalItems: this.allItems.length,
+      totalPages: Math.ceil(this.allItems.length / this.offsetPaginationState.pageSize)
+    }
   }
 }

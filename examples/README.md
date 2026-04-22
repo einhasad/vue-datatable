@@ -66,4 +66,4 @@ The built files will be in the `examples/dist` directory.
 
 This examples directory is **not included** in the published npm package. It's only available in the source repository for development and demonstration purposes.
 
-When you install `@grid-vue/grid` via npm, you'll only get the compiled library files in the `dist` directory, keeping your `node_modules` clean and lightweight.
+When you install `@einhasad-vue/datatable-vue` via npm, you'll only get the compiled library files in the `dist` directory, keeping your `node_modules` clean and lightweight.

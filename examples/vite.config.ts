@@ -5,15 +5,14 @@ import { resolve } from 'path'
 export default defineConfig({
   plugins: [
     vue(),
-    // Mock GitHub API server runs separately in Playwright webServer array
   ],
   resolve: {
     alias: {
-      '@grid-vue/grid': resolve(__dirname, '../src'),
+      '@einhasad-vue/datatable-vue': resolve(__dirname, '../src'),
       '@': resolve(__dirname, 'src')
     }
   },
-  base: '/vue-datatable/',
+  base: process.env.NODE_ENV === 'production' ? '/vue-datatable/' : '/',
   server: {
     port: 3000
   }

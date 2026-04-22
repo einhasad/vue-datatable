@@ -5,11 +5,14 @@ import type { Column, ComponentOptions, RowOptions } from './types'
  */
 export function getCellValue<T = unknown>(column: Column<T>, model: T, index: number): string {
   if (column.value) {
-    return column.value(model, index)
+    const val = column.value(model, index)
+    if (val === null || val === undefined) return ''
+    return String(val)
   }
 
-  if (column.key && typeof model === 'object' && model !== null) {
-    const value = (model as Record<string, unknown>)[column.key]
+  const field = column.key || column.sort
+  if (field && typeof model === 'object' && model !== null) {
+    const value = (model as Record<string, unknown>)[field]
     if (value !== undefined && value !== null) {
       // Handle different value types explicitly to avoid [object Object] stringification
       const valueType = typeof value
@@ -38,13 +41,13 @@ export function getColumnLabel<T = unknown>(column: Column<T>, models: T[]): str
     return column.label(models)
   }
 
-  return column.label || column.key || ''
+  return column.label || column.sort || ''
 }
 
 /**
  * Check if a column should be shown
  */
-export function shouldShowColumn<T = unknown>(column: Column<T>): boolean {
+export function shouldShowColumn<T>(column: Column<T>): boolean {
   if (column.showColumn === undefined) {
     return true
   }
@@ -179,33 +182,4 @@ export function buildAttributes(options: Record<string, unknown>): Record<string
   }
 
   return attrs
-}
-
-/**
- * Calculate page range for pagination display
- */
-export function getPageRange(currentPage: number, pageCount: number, maxVisible: number = 5): number[] {
-  if (pageCount <= maxVisible) {
-    return Array.from({ length: pageCount }, (_, i) => i + 1)
-  }
-
-  const halfVisible = Math.floor(maxVisible / 2)
-  let startPage = Math.max(1, currentPage - halfVisible)
-  const endPage = Math.min(pageCount, startPage + maxVisible - 1)
-
-  if (endPage - startPage < maxVisible - 1) {
-    startPage = Math.max(1, endPage - maxVisible + 1)
-  }
-
-  return Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i)
-}
-
-/**
- * Format pagination summary text
- */
-export function getPaginationSummary(currentPage: number, perPage: number, totalCount: number): string {
-  const startItem = (currentPage - 1) * perPage + 1
-  const endItem = Math.min(currentPage * perPage, totalCount)
-
-  return `Showing ${startItem}-${endItem} of ${totalCount} items`
 }

@@ -1,0 +1,121 @@
+/**
+ * Material Theme - Example App Extension
+ * App shell dark mode styles for the material theme
+ */
+
+/* Material Dark */
+html.dark.grid-theme-material {
+  background: #0f0f0f;
+}
+
+html.dark.grid-theme-material body {
+  background: #121212;
+  color: #e0e0e0;
+}
+
+html.dark.grid-theme-material h2 {
+  color: #f0f0f0;
+}
+
+html.dark.grid-theme-material h3 {
+  color: #d0d0d0;
+}
+
+html.dark.grid-theme-material p {
+  color: #b8b8b8;
+}
+
+html.dark.grid-theme-material strong {
+  color: #e8e8e8;
+}
+
+html.dark.grid-theme-material .example-section {
+  background: #1e1e1e;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+html.dark.grid-theme-material .example-description {
+  background: #2c2c2c;
+  border-left-color: #bb86fc;
+  color: #c0c0c0;
+}
+
+html.dark.grid-theme-material .code-block {
+  background: #0d1117;
+  color: #c9d1d9;
+  border: 1px solid #30363d;
+}
+
+html.dark.grid-theme-material .btn {
+  background: #bb86fc;
+  color: #000;
+}
+
+html.dark.grid-theme-material .btn:hover {
+  background: #d4aaff;
+}
+
+html.dark.grid-theme-material .btn-secondary {
+  background: #2c2c2c;
+  color: #e0e0e0;
+  border: 1px solid #424242;
+}
+
+html.dark.grid-theme-material .btn-secondary:hover {
+  background: #383838;
+}
+
+html.dark.grid-theme-material .controls {
+  background: #1e1e1e;
+  border-color: #424242;
+}
+
+html.dark.grid-theme-material .info {
+  background: #1a2640;
+  border-left-color: #bb86fc;
+  color: #b0c4de;
+}
+
+html.dark.grid-theme-material .feature-list li::before {
+  color: #48bb78;
+}
+
+html.dark.grid-theme-material a:not(.nav-link):not(.grid-pagination-link):not(.grid-sort-link) {
+  color: #bb86fc;
+}
+
+html.dark.grid-theme-material .header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #2a1a3e 100%);
+}
+
+html.dark.grid-theme-material .sidebar {
+  background: #1e1e1e;
+  border-right-color: #424242;
+}
+
+html.dark.grid-theme-material .nav-section-title {
+  color: #888;
+}
+
+html.dark.grid-theme-material .nav-link {
+  color: #b0b0b0;
+}
+
+html.dark.grid-theme-material .nav-link:hover {
+  background: rgba(187, 134, 252, 0.1);
+  color: #d0d0d0;
+}
+
+html.dark.grid-theme-material .nav-link.active {
+  background: rgba(187, 134, 252, 0.15);
+  color: #bb86fc;
+}
+
+html.dark.grid-theme-material .footer {
+  background: #121212;
+  border-top-color: #424242;
+}
+
+html.dark.grid-theme-material .footer a {
+  color: #bb86fc;
+}

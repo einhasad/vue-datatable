@@ -1,180 +1,106 @@
-import type { StateProvider } from './StateProvider'
+import type { StateProvider, ReactiveState } from './StateProvider'
 import type { SortState, RouterLike } from '../types'
+import { createStateCore } from './stateCore'
 
-/**
- * Configuration for QueryParamsStateProvider
- */
 export interface QueryParamsStateProviderConfig {
   router: RouterLike
   prefix?: string
 }
 
-/**
- * QueryParamsStateProvider - stores state in URL query parameters
- * State persists across page refreshes and can be shared via URL
- * Uses a prefix to avoid conflicts with other query parameters
- * Default prefix: 'search'
- */
 export class QueryParamsStateProvider implements StateProvider {
-  private router: RouterLike
-  private prefix: string
+  private readonly core = createStateCore()
+  private readonly router: RouterLike
+  private readonly prefix: string
+  readonly state: ReactiveState = this.core.state
 
   constructor(config: QueryParamsStateProviderConfig) {
     this.router = config.router
-    this.prefix = config.prefix || 'search'
+    this.prefix = config.prefix ?? 'search'
+    Object.assign(this.core.state.filters, this.readFiltersFromUrl())
+    this.core.state.sort = this.readSortFromUrl()
   }
 
-  /**
-   * Normalize parameter name with prefix
-   */
-  private normalizeParamName(key: string): string {
+  private paramName(key: string): string {
     return `${this.prefix}-${key}`
   }
 
-  /**
-   * Get query parameter value
-   */
-  private getQueryParam(key: string): string | null {
-    const paramName = this.normalizeParamName(key)
-    const value = this.router.currentRoute.value.query[paramName]
-    return Array.isArray(value) ? (value[0] || null) : (value || null)
-  }
-
-  /**
-   * Set query parameter value
-   */
-  private setQueryParam(key: string, value: string | null): void {
-    const paramName = this.normalizeParamName(key)
-    const currentQuery = { ...this.router.currentRoute.value.query }
-
-    if (value === '' || value === null || value === undefined) {
-      delete currentQuery[paramName]
-    } else {
-      currentQuery[paramName] = value
-    }
-
-    // Use type assertion for full route location with path
-    this.router.replace({
-      path: this.router.currentRoute.value.path,
-      query: currentQuery,
-      hash: this.router.currentRoute.value.hash
-    } as any)
-  }
-
-  /**
-   * Filter management
-   */
-  getFilter(key: string): string | null {
-    return this.getQueryParam(key)
-  }
-
-  setFilter(key: string, value: string): void {
-    this.setQueryParam(key, value)
-  }
-
-  clearFilter(key: string): void {
-    this.setQueryParam(key, null)
-  }
-
-  getAllFilters(): Record<string, string> {
+  private readFiltersFromUrl(): Record<string, string> {
     const filters: Record<string, string> = {}
     const query = this.router.currentRoute.value.query
-    const prefixWithDash = `${this.prefix}-`
+    const prefixDash = `${this.prefix}-`
+    const sortKey = this.paramName('sort')
 
-    Object.keys(query).forEach(key => {
-      if (key.startsWith(prefixWithDash) && key !== this.normalizeParamName('sort')) {
-        const originalKey = key.substring(prefixWithDash.length)
-        const value = query[key]
-        const stringValue = Array.isArray(value) ? (value[0] || '') : (value || '')
-        if (stringValue) {
-          filters[originalKey] = stringValue
-        }
+    for (const [key, val] of Object.entries(query)) {
+      if (key.startsWith(prefixDash) && key !== sortKey) {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        const v = Array.isArray(val) ? (val[0] ?? '') : (val ?? '')
+        if (v) filters[key.slice(prefixDash.length)] = v
       }
-    })
-
+    }
     return filters
   }
 
-  /**
-   * Sort management
-   */
-  getSort(): SortState | null {
-    const sortValue = this.getQueryParam('sort')
-    if (!sortValue) return null
-
-    if (sortValue.startsWith('-')) {
-      return {
-        field: sortValue.substring(1),
-        order: 'desc'
-      }
-    } else {
-      return {
-        field: sortValue,
-        order: 'asc'
-      }
-    }
+  private readSortFromUrl(): SortState | null {
+    const v = this.getUrlParam('sort')
+    if (!v) return null
+    return v.startsWith('-')
+      ? { field: v.slice(1), order: 'desc' }
+      : { field: v, order: 'asc' }
   }
 
+  private getUrlParam(key: string): string | null {
+    const v = this.router.currentRoute.value.query[this.paramName(key)]
+    return Array.isArray(v) ? (v[0] ?? null) : (v ?? null)
+  }
+
+  private setUrlParam(key: string, value: string | null): void {
+    const query = { ...this.router.currentRoute.value.query }
+    const param = this.paramName(key)
+    if (!value) {
+      delete query[param]
+    } else {
+      query[param] = value
+    }
+    this.router.replace({ path: this.router.currentRoute.value.path, query, hash: this.router.currentRoute.value.hash })
+  }
+
+  getValue(key: string): string | null { return this.core.getFilter(key) }
+  setValue(key: string, value: string): void { this.core.setFilterValue(key, value); this.setUrlParam(key, value) }
+  deleteValue(key: string): void { this.core.clearFilterValue(key); this.setUrlParam(key, null) }
+  getAllValues(): Record<string, string> { return this.core.getAllFilters() }
+
+  getFilter(key: string): string | null { return this.core.getFilter(key) }
+  getAllFilters(): Record<string, string> { return this.core.getAllFilters() }
+
+  setFilter(key: string, value: string): void {
+    this.core.setFilterValue(key, value)
+    this.setUrlParam(key, value || null)
+  }
+
+  clearFilter(key: string): void {
+    this.core.clearFilterValue(key)
+    this.setUrlParam(key, null)
+  }
+
+  getSort(): SortState | null { return this.core.getSort() }
+
   setSort(field: string, order: 'asc' | 'desc'): void {
-    const sortValue = order === 'desc' ? `-${field}` : field
-    this.setQueryParam('sort', sortValue)
+    this.core.setSortValue(field, order)
+    this.setUrlParam('sort', order === 'desc' ? `-${field}` : field)
   }
 
   clearSort(): void {
-    this.setQueryParam('sort', null)
+    this.core.clearSortValue()
+    this.setUrlParam('sort', null)
   }
 
-  /**
-   * Pagination management
-   */
-  getPage(): number | null {
-    const pageValue = this.getQueryParam('page')
-    if (!pageValue) return null
-    const page = parseInt(pageValue, 10)
-    return isNaN(page) ? null : page
-  }
-
-  setPage(page: number): void {
-    this.setQueryParam('page', page.toString())
-  }
-
-  clearPage(): void {
-    this.setQueryParam('page', null)
-  }
-
-  /**
-   * Cursor management
-   */
-  getCursor(): string | null {
-    return this.getQueryParam('cursor')
-  }
-
-  setCursor(cursor: string): void {
-    this.setQueryParam('cursor', cursor)
-  }
-
-  clearCursor(): void {
-    this.setQueryParam('cursor', null)
-  }
-
-  /**
-   * Clear all state
-   */
   clear(): void {
-    const currentQuery = { ...this.router.currentRoute.value.query }
-    const prefixWithDash = `${this.prefix}-`
-
-    // Remove all prefixed parameters
-    Object.keys(currentQuery).forEach(key => {
-      if (key.startsWith(prefixWithDash)) {
-        delete currentQuery[key]
-      }
-    })
-
-    this.router.replace({
-      path: this.router.currentRoute.value.path,
-      query: currentQuery,
-      hash: this.router.currentRoute.value.hash
-    } as any)
+    const query = { ...this.router.currentRoute.value.query }
+    const prefixDash = `${this.prefix}-`
+    for (const key of Object.keys(query)) {
+      if (key.startsWith(prefixDash)) delete query[key]
+    }
+    this.core.clearAllValues()
+    this.router.replace({ path: this.router.currentRoute.value.path, query, hash: this.router.currentRoute.value.hash })
   }
 }

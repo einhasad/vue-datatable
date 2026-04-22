@@ -1,180 +1,86 @@
 <template>
   <div
-    v-if="pagination"
-    class="grid-pagination-page"
+    v-if="totalPages > 0"
+    class="grid-pagination"
   >
-    <div
-      v-if="showSummary && pagination.getTotalCount()"
-      class="grid-pagination-info"
+    <a
+      class="grid-pagination-link grid-pagination-prev"
+      :class="{ 'grid-pagination-disabled': currentPage <= 1 }"
+      @click.prevent="goToPage(currentPage - 1)"
     >
-      <span class="grid-pagination-summary">
-        {{ paginationSummary }}
-      </span>
-    </div>
+      &laquo;
+    </a>
 
-    <ul
-      v-if="pagination.getPageCount() && pagination.getPageCount()! > 1"
-      class="pagination"
+    <a
+      v-for="page in visiblePages"
+      :key="page"
+      class="grid-pagination-link grid-pagination-page-number"
+      :class="{ 'grid-pagination-active': page === currentPage }"
+      @click.prevent="goToPage(page)"
     >
-      <li v-if="!hidePrevNextOnEdge || (pagination.getCurrentPage() && pagination.getCurrentPage()! > 1)">
-        <button
-          type="button"
-          class="grid-pagination-button grid-pagination-previous"
-          :disabled="!pagination.getCurrentPage() || pagination.getCurrentPage()! <= 1"
-          @click="handlePrevious"
-        >
-          <slot name="previous-text">
-            <span aria-hidden="true">&laquo;</span>
-          </slot>
-        </button>
-      </li>
+      {{ page }}
+    </a>
 
-      <li
-        v-for="page in pageRange"
-        :key="page"
-        :class="{
-          'active': pagination.getCurrentPage() === page
-        }"
-      >
-        <button
-          type="button"
-          class="grid-pagination-button grid-pagination-page-number"
-          @click="handlePageChange(page)"
-        >
-          {{ page }}
-        </button>
-      </li>
+    <a
+      class="grid-pagination-link grid-pagination-next"
+      :class="{ 'grid-pagination-disabled': currentPage >= totalPages }"
+      @click.prevent="goToPage(currentPage + 1)"
+    >
+      &raquo;
+    </a>
 
-      <li v-if="!hidePrevNextOnEdge || (pagination.getCurrentPage() && pagination.getPageCount() && pagination.getCurrentPage()! < pagination.getPageCount()!)">
-        <button
-          type="button"
-          class="grid-pagination-button grid-pagination-next"
-          :disabled="!pagination.getCurrentPage() || !pagination.getPageCount() || pagination.getCurrentPage()! >= pagination.getPageCount()!"
-          @click="handleNext"
-        >
-          <slot name="next-text">
-            <span aria-hidden="true">&raquo;</span>
-          </slot>
-        </button>
-      </li>
-    </ul>
+    <span
+      v-if="showSummary"
+      class="grid-pagination-summary"
+    >
+      Showing {{ rangeStart }}-{{ rangeEnd }} of <span data-qa="grid-items-total">{{ totalItems }}</span> items
+    </span>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { Pagination } from './types'
-import { getPageRange, getPaginationSummary } from './utils'
 
 const props = withDefaults(defineProps<{
-  pagination: Pagination | null
+  currentPage: number
+  totalPages: number
+  totalItems: number
+  itemsPerPage: number
   maxVisiblePages?: number
   showSummary?: boolean
-  hidePrevNextOnEdge?: boolean
 }>(), {
   maxVisiblePages: 5,
-  showSummary: true,
-  hidePrevNextOnEdge: true
+  showSummary: false
 })
 
 const emit = defineEmits<{
-  pageChange: [page: number]
+  'pageChange': [page: number]
 }>()
 
-const pageRange = computed(() => {
-  if (!props.pagination) return []
+const rangeStart = computed(() => (props.currentPage - 1) * props.itemsPerPage + 1)
 
-  const currentPage = props.pagination.getCurrentPage()
-  const pageCount = props.pagination.getPageCount()
+const rangeEnd = computed(() => Math.min(props.currentPage * props.itemsPerPage, props.totalItems))
 
-  if (!currentPage || !pageCount) return []
+const visiblePages = computed(() => {
+  const pages: number[] = []
+  const half = Math.floor(props.maxVisiblePages / 2)
+  let start = Math.max(1, props.currentPage - half)
+  const end = Math.min(props.totalPages, start + props.maxVisiblePages - 1)
 
-  return getPageRange(currentPage, pageCount, props.maxVisiblePages)
-})
-
-const paginationSummary = computed(() => {
-  if (!props.pagination) return ''
-
-  const currentPage = props.pagination.getCurrentPage()
-  const pageSize = props.pagination.getPageSize()
-  const totalCount = props.pagination.getTotalCount()
-
-  if (!currentPage || !pageSize || !totalCount) return ''
-
-  return getPaginationSummary(currentPage, pageSize, totalCount)
-})
-
-function handlePageChange(page: number): void {
-  emit('pageChange', page)
-}
-
-function handlePrevious(): void {
-  if (props.pagination) {
-    const currentPage = props.pagination.getCurrentPage()
-    if (currentPage && currentPage > 1) {
-      handlePageChange(currentPage - 1)
-    }
+  if (end - start + 1 < props.maxVisiblePages) {
+    start = Math.max(1, end - props.maxVisiblePages + 1)
   }
-}
 
-function handleNext(): void {
-  if (props.pagination) {
-    const currentPage = props.pagination.getCurrentPage()
-    const pageCount = props.pagination.getPageCount()
-    if (currentPage && pageCount && currentPage < pageCount) {
-      handlePageChange(currentPage + 1)
-    }
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+
+  return pages
+})
+
+function goToPage(page: number): void {
+  if (page >= 1 && page <= props.totalPages && page !== props.currentPage) {
+    emit('pageChange', page)
   }
 }
 </script>
-
-<style scoped>
-.grid-pagination-page {
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.grid-pagination-info {
-  color: var(--grid-text-muted, #6c757d);
-  font-size: 0.875rem;
-}
-
-.pagination {
-  display: flex;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  gap: 0.25rem;
-}
-
-.pagination li {
-  display: inline-block;
-}
-
-.pagination li.active .grid-pagination-button {
-  background-color: var(--grid-button-active-bg, #007bff);
-  color: var(--grid-button-active-color, white);
-}
-
-.grid-pagination-button {
-  padding: 0.375rem 0.75rem;
-  background-color: var(--grid-button-bg, #f8f9fa);
-  color: var(--grid-button-color, #212529);
-  border: 1px solid var(--grid-border-color, #dee2e6);
-  cursor: pointer;
-  font-size: 0.875rem;
-  border-radius: 4px;
-}
-
-.grid-pagination-button:hover:not(:disabled) {
-  background-color: var(--grid-button-hover-bg, #e9ecef);
-}
-
-.grid-pagination-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-</style>

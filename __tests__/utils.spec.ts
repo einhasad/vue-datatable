@@ -11,331 +11,474 @@ import {
   getFooterOptions,
   mergeClasses,
   normalizeStyle,
-  buildAttributes,
-  getPageRange,
-  getPaginationSummary
+  buildAttributes
 } from '../src/utils'
-import type { Column } from '../src/types'
+import type { Column, ComponentOptions } from '../src/types'
 
 describe('utils', () => {
   describe('getCellValue', () => {
-    it('should return value from column.value function', () => {
-      const column: Column = {
-        key: 'name',
-        value: (model: any) => `Hello ${model.name}`
-      }
-      const model = { name: 'John' }
-      expect(getCellValue(column, model, 0)).toBe('Hello John')
+    it('returns value from column.value function when defined', () => {
+      const column = {
+        value: vi.fn().mockReturnValue('hello')
+      } as unknown as Column<{ name: string }>
+      expect(getCellValue(column, { name: 'test' }, 0)).toBe('hello')
     })
 
-    it('should return value from model using column.key', () => {
-      const column: Column = { key: 'name' }
-      const model = { name: 'John' }
-      expect(getCellValue(column, model, 0)).toBe('John')
+    it('converts number value to string', () => {
+      const column = {
+        value: vi.fn().mockReturnValue(42)
+      } as unknown as Column<{ name: string }>
+      expect(getCellValue(column, { name: 'test' }, 0)).toBe('42')
     })
 
-    it('should convert non-string values to string', () => {
-      const column: Column = { key: 'age' }
-      const model = { age: 25 }
-      expect(getCellValue(column, model, 0)).toBe('25')
+    it('converts boolean value to string', () => {
+      const column = {
+        value: vi.fn().mockReturnValue(true)
+      } as unknown as Column<{ name: string }>
+      expect(getCellValue(column, { name: 'test' }, 0)).toBe('true')
     })
 
-    it('should return empty string if key not found', () => {
-      const column: Column = { key: 'missing' }
-      const model = { name: 'John' }
-      expect(getCellValue(column, model, 0)).toBe('')
+    it('returns empty string when value function returns null', () => {
+      const column = {
+        value: vi.fn().mockReturnValue(null)
+      } as unknown as Column<{ name: string }>
+      expect(getCellValue(column, { name: 'test' }, 0)).toBe('')
     })
 
-    it('should return empty string if no value or key provided', () => {
-      const column: Column = {}
-      const model = { name: 'John' }
-      expect(getCellValue(column, model, 0)).toBe('')
+    it('returns empty string when value function returns undefined', () => {
+      const column = {
+        value: vi.fn().mockReturnValue(undefined)
+      } as unknown as Column<{ name: string }>
+      expect(getCellValue(column, { name: 'test' }, 0)).toBe('')
+    })
+
+    it('reads from model by column.key when no value function', () => {
+      const column = { key: 'name' } as Column<{ name: string }>
+      expect(getCellValue(column, { name: 'Alice' }, 0)).toBe('Alice')
+    })
+
+    it('reads from model by column.sort when no key and no value function', () => {
+      const column = { sort: 'age' } as Column<{ age: number }>
+      expect(getCellValue(column, { age: 30 }, 0)).toBe('30')
+    })
+
+    it('prefers column.key over column.sort', () => {
+      const column = { key: 'name', sort: 'age' } as Column<{ name: string; age: number }>
+      expect(getCellValue(column, { name: 'Alice', age: 30 }, 0)).toBe('Alice')
+    })
+
+    it('returns string property as-is', () => {
+      const column = { key: 'name' } as Column<{ name: string }>
+      expect(getCellValue(column, { name: 'Bob' }, 0)).toBe('Bob')
+    })
+
+    it('converts number property to string', () => {
+      const column = { key: 'count' } as Column<{ count: number }>
+      expect(getCellValue(column, { count: 99 }, 0)).toBe('99')
+    })
+
+    it('converts boolean property to string', () => {
+      const column = { key: 'active' } as Column<{ active: boolean }>
+      expect(getCellValue(column, { active: false }, 0)).toBe('false')
+    })
+
+    it('JSON-stringifies object properties', () => {
+      const column = { key: 'meta' } as Column<{ meta: object }>
+      expect(getCellValue(column, { meta: { a: 1 } }, 0)).toBe('{"a":1}')
+    })
+
+    it('returns empty string when model is null', () => {
+      const column = { key: 'name' } as Column<null>
+      expect(getCellValue(column, null, 0)).toBe('')
+    })
+
+    it('returns empty string when model is undefined', () => {
+      const column = { key: 'name' } as Column<undefined>
+      expect(getCellValue(column, undefined, 0)).toBe('')
+    })
+
+    it('returns empty string when model is a primitive', () => {
+      const column = { key: 'name' } as Column<number>
+      expect(getCellValue(column, 42, 0)).toBe('')
+    })
+
+    it('returns empty string when field value is null', () => {
+      const column = { key: 'name' } as Column<{ name: string | null }>
+      expect(getCellValue(column, { name: null }, 0)).toBe('')
+    })
+
+    it('returns empty string when field value is undefined', () => {
+      const column = { key: 'name' } as Column<{ name?: string }>
+      expect(getCellValue(column, {}, 0)).toBe('')
+    })
+
+    it('returns empty string when no key, sort, or value function', () => {
+      const column = {} as Column<{ name: string }>
+      expect(getCellValue(column, { name: 'test' }, 0)).toBe('')
+    })
+
+    it('converts symbol values to string', () => {
+      const sym = Symbol('foo')
+      const column = { key: 'sym' } as Column<{ sym: symbol }>
+      expect(getCellValue(column, { sym }, 0)).toBe(String(sym))
+    })
+
+    it('converts bigint values to string', () => {
+      const column = { key: 'big' } as Column<{ big: bigint }>
+      expect(getCellValue(column, { big: 9007199254740991n }, 0)).toBe('9007199254740991')
     })
   })
 
   describe('getColumnLabel', () => {
-    it('should return label from function', () => {
-      const column: Column = {
-        key: 'name',
-        label: (models: any[]) => `Count: ${models.length}`
-      }
-      const models = [{ id: 1 }, { id: 2 }]
-      expect(getColumnLabel(column, models)).toBe('Count: 2')
-    })
-
-    it('should return label string', () => {
-      const column: Column = { key: 'name', label: 'Name' }
+    it('returns label string when label is a string', () => {
+      const column = { label: 'Name' } as Column
       expect(getColumnLabel(column, [])).toBe('Name')
     })
 
-    it('should return key if label not provided', () => {
-      const column: Column = { key: 'name' }
+    it('calls label function when label is a function', () => {
+      const column = {
+        label: vi.fn().mockReturnValue('Dynamic Label')
+      } as unknown as Column
+      const models = [{ id: 1 }, { id: 2 }]
+      expect(getColumnLabel(column, models)).toBe('Dynamic Label')
+      expect(column.label).toHaveBeenCalledWith(models)
+    })
+
+    it('falls back to sort when no label', () => {
+      const column = { sort: 'name' } as Column
       expect(getColumnLabel(column, [])).toBe('name')
     })
 
-    it('should return empty string if no label or key', () => {
-      const column: Column = {}
+    it('returns empty string when no label or sort', () => {
+      const column = {} as Column
+      expect(getColumnLabel(column, [])).toBe('')
+    })
+
+    it('prefers label over sort', () => {
+      const column = { label: 'Label', sort: 'name' } as Column
+      expect(getColumnLabel(column, [])).toBe('Label')
+    })
+
+    it('returns empty string for empty string label', () => {
+      const column = { label: '' } as Column
       expect(getColumnLabel(column, [])).toBe('')
     })
   })
 
   describe('shouldShowColumn', () => {
-    it('should return true by default', () => {
-      const column: Column = { key: 'name' }
+    it('returns true when showColumn is undefined', () => {
+      const column = {} as Column
       expect(shouldShowColumn(column)).toBe(true)
     })
 
-    it('should return boolean value', () => {
-      const column: Column = { key: 'name', showColumn: false }
+    it('returns true when showColumn is true', () => {
+      const column = { showColumn: true } as Column
+      expect(shouldShowColumn(column)).toBe(true)
+    })
+
+    it('returns false when showColumn is false', () => {
+      const column = { showColumn: false } as Column
       expect(shouldShowColumn(column)).toBe(false)
     })
 
-    it('should call function to determine visibility', () => {
-      const showFn = vi.fn(() => true)
-      const column: Column = { key: 'name', showColumn: showFn }
+    it('calls showColumn function when it is a function', () => {
+      const column = {
+        showColumn: vi.fn().mockReturnValue(true)
+      } as unknown as Column
       expect(shouldShowColumn(column)).toBe(true)
-      expect(showFn).toHaveBeenCalled()
+      expect(column.showColumn).toHaveBeenCalled()
+    })
+
+    it('returns false when showColumn function returns false', () => {
+      const column = {
+        showColumn: vi.fn().mockReturnValue(false)
+      } as unknown as Column
+      expect(shouldShowColumn(column)).toBe(false)
     })
   })
 
   describe('shouldShowCell', () => {
-    it('should return true if no show function provided', () => {
-      const column: Column = { key: 'name' }
-      const model = { name: 'John' }
-      expect(shouldShowCell(column, model)).toBe(true)
+    it('returns true when show is not defined', () => {
+      const column = {} as Column<{ name: string }>
+      expect(shouldShowCell(column, { name: 'test' })).toBe(true)
     })
 
-    it('should call show function with model', () => {
-      const showFn = vi.fn((model: any) => model.active)
-      const column: Column = { key: 'name', show: showFn }
-      const model = { name: 'John', active: true }
+    it('returns result of show function', () => {
+      const column = {
+        show: vi.fn().mockReturnValue(true)
+      } as unknown as Column<{ name: string }>
+      const model = { name: 'test' }
       expect(shouldShowCell(column, model)).toBe(true)
-      expect(showFn).toHaveBeenCalledWith(model)
+      expect(column.show).toHaveBeenCalledWith(model)
+    })
+
+    it('returns false when show function returns false', () => {
+      const column = {
+        show: vi.fn().mockReturnValue(false)
+      } as unknown as Column<{ name: string }>
+      expect(shouldShowCell(column, { name: 'test' })).toBe(false)
     })
   })
 
   describe('getCellComponent', () => {
-    it('should return null if no component provided', () => {
-      const column: Column = { key: 'name' }
-      const model = { name: 'John' }
-      expect(getCellComponent(column, model, 0)).toBeNull()
+    it('returns null when no component function', () => {
+      const column = {} as Column
+      expect(getCellComponent(column, {}, 0)).toBe(null)
     })
 
-    it('should return component options from function', () => {
-      const componentFn = vi.fn(() => ({ name: 'TestComponent', props: {} }))
-      const column: Column = { key: 'name', component: componentFn }
-      const model = { name: 'John' }
-      const result = getCellComponent(column, model, 0)
-      expect(result).toEqual({ name: 'TestComponent', props: {} })
-      expect(componentFn).toHaveBeenCalledWith(model, 0)
+    it('returns component from component function', () => {
+      const componentOptions: ComponentOptions = { is: 'span', content: 'hi' }
+      const column = {
+        component: vi.fn().mockReturnValue(componentOptions)
+      } as unknown as Column
+      const model = { id: 1 }
+      const result = getCellComponent(column, model, 5)
+      expect(result).toEqual(componentOptions)
+      expect(column.component).toHaveBeenCalledWith(model, 5)
+    })
+
+    it('returns null when component function returns null', () => {
+      const column = {
+        component: vi.fn().mockReturnValue(null)
+      } as unknown as Column
+      expect(getCellComponent(column, {}, 0)).toBe(null)
     })
   })
 
   describe('getCellOptions', () => {
-    it('should return empty object if no options provided', () => {
-      const column: Column = { key: 'name' }
-      const model = { name: 'John' }
-      expect(getCellOptions(column, model)).toEqual({})
+    it('returns empty object when no options function', () => {
+      const column = {} as Column
+      expect(getCellOptions(column, {})).toEqual({})
     })
 
-    it('should return options from function', () => {
-      const optionsFn = vi.fn(() => ({ class: 'test-class' }))
-      const column: Column = { key: 'name', options: optionsFn }
-      const model = { name: 'John' }
-      const result = getCellOptions(column, model)
-      expect(result).toEqual({ class: 'test-class' })
-      expect(optionsFn).toHaveBeenCalledWith(model)
+    it('returns options from options function', () => {
+      const opts = { class: 'highlight', style: 'color: red' }
+      const column = {
+        options: vi.fn().mockReturnValue(opts)
+      } as unknown as Column
+      const model = { id: 1 }
+      expect(getCellOptions(column, model)).toEqual(opts)
+      expect(column.options).toHaveBeenCalledWith(model)
     })
 
-    it('should return empty object if options function returns null', () => {
-      const column: Column = { key: 'name', options: () => null }
-      const model = { name: 'John' }
-      expect(getCellOptions(column, model)).toEqual({})
+    it('returns empty object when options function returns null', () => {
+      const column = {
+        options: vi.fn().mockReturnValue(null)
+      } as unknown as Column
+      expect(getCellOptions(column, {})).toEqual({})
+    })
+
+    it('returns empty object when options function returns undefined', () => {
+      const column = {
+        options: vi.fn().mockReturnValue(undefined)
+      } as unknown as Column
+      expect(getCellOptions(column, {})).toEqual({})
     })
   })
 
   describe('getRowOptions', () => {
-    it('should return empty object if no function provided', () => {
-      const model = { name: 'John' }
-      expect(getRowOptions(undefined, model)).toEqual({})
+    it('returns empty object when rowOptionsFn is undefined', () => {
+      expect(getRowOptions(undefined, { id: 1 })).toEqual({})
     })
 
-    it('should return options from function', () => {
-      const optionsFn = vi.fn(() => ({ class: 'row-class' }))
-      const model = { name: 'John' }
-      const result = getRowOptions(optionsFn, model)
-      expect(result).toEqual({ class: 'row-class' })
-      expect(optionsFn).toHaveBeenCalledWith(model)
+    it('returns options from rowOptionsFn', () => {
+      const opts = { class: 'row-active', style: 'background: yellow' }
+      const rowOptionsFn = vi.fn().mockReturnValue(opts)
+      const model = { id: 1 }
+      expect(getRowOptions(rowOptionsFn, model)).toEqual(opts)
+      expect(rowOptionsFn).toHaveBeenCalledWith(model)
     })
 
-    it('should return empty object if function returns null', () => {
-      const optionsFn = vi.fn(() => null)
-      const model = { name: 'John' }
-      expect(getRowOptions(optionsFn, model)).toEqual({})
+    it('returns empty object when rowOptionsFn returns null', () => {
+      const rowOptionsFn = vi.fn().mockReturnValue(null)
+      expect(getRowOptions(rowOptionsFn, {})).toEqual({})
+    })
+
+    it('returns empty object when rowOptionsFn returns undefined', () => {
+      const rowOptionsFn = vi.fn().mockReturnValue(undefined)
+      expect(getRowOptions(rowOptionsFn, {})).toEqual({})
     })
   })
 
   describe('getFooterContent', () => {
-    it('should return empty string if no footer provided', () => {
-      const column: Column = { key: 'name' }
-      const models = [{ name: 'John' }]
-      expect(getFooterContent(column, models)).toBe('')
+    it('returns empty string when no footer function', () => {
+      const column = {} as Column
+      expect(getFooterContent(column, [])).toBe('')
     })
 
-    it('should return footer content from function', () => {
-      const footerFn = vi.fn((models: any[]) => `Total: ${models.length}`)
-      const column: Column = { key: 'name', footer: footerFn }
-      const models = [{ name: 'John' }, { name: 'Jane' }]
-      expect(getFooterContent(column, models)).toBe('Total: 2')
-      expect(footerFn).toHaveBeenCalledWith(models)
+    it('returns footer string from footer function', () => {
+      const column = {
+        footer: vi.fn().mockReturnValue('Total: 10')
+      } as unknown as Column
+      const models = [{ id: 1 }, { id: 2 }]
+      expect(getFooterContent(column, models)).toBe('Total: 10')
+      expect(column.footer).toHaveBeenCalledWith(models)
     })
 
-    it('should return empty string if footer function returns null', () => {
-      const column: Column = { key: 'name', footer: () => null }
-      const models = [{ name: 'John' }]
-      expect(getFooterContent(column, models)).toBe('')
+    it('returns empty string when footer function returns empty string', () => {
+      const column = {
+        footer: vi.fn().mockReturnValue('')
+      } as unknown as Column
+      expect(getFooterContent(column, [])).toBe('')
+    })
+
+    it('returns empty string when footer function returns null', () => {
+      const column = {
+        footer: vi.fn().mockReturnValue(null)
+      } as unknown as Column
+      expect(getFooterContent(column, [])).toBe('')
+    })
+
+    it('returns empty string when footer function returns undefined', () => {
+      const column = {
+        footer: vi.fn().mockReturnValue(undefined)
+      } as unknown as Column
+      expect(getFooterContent(column, [])).toBe('')
     })
   })
 
   describe('getFooterOptions', () => {
-    it('should return empty object if no footerOptions provided', () => {
-      const column: Column = { key: 'name' }
-      const models = [{ name: 'John' }]
-      expect(getFooterOptions(column, models)).toEqual({})
+    it('returns empty object when no footerOptions function', () => {
+      const column = {} as Column
+      expect(getFooterOptions(column, [])).toEqual({})
     })
 
-    it('should return footer options from function', () => {
-      const footerOptionsFn = vi.fn(() => ({ class: 'footer-class' }))
-      const column: Column = { key: 'name', footerOptions: footerOptionsFn }
-      const models = [{ name: 'John' }]
-      const result = getFooterOptions(column, models)
-      expect(result).toEqual({ class: 'footer-class' })
-      expect(footerOptionsFn).toHaveBeenCalledWith(models)
+    it('returns options from footerOptions function', () => {
+      const opts = { class: 'footer-bold' }
+      const column = {
+        footerOptions: vi.fn().mockReturnValue(opts)
+      } as unknown as Column
+      const models = [{ id: 1 }]
+      expect(getFooterOptions(column, models)).toEqual(opts)
+      expect(column.footerOptions).toHaveBeenCalledWith(models)
     })
 
-    it('should return empty object if footerOptions function returns null', () => {
-      const column: Column = { key: 'name', footerOptions: () => null }
-      const models = [{ name: 'John' }]
-      expect(getFooterOptions(column, models)).toEqual({})
+    it('returns empty object when footerOptions function returns null', () => {
+      const column = {
+        footerOptions: vi.fn().mockReturnValue(null)
+      } as unknown as Column
+      expect(getFooterOptions(column, [])).toEqual({})
+    })
+
+    it('returns empty object when footerOptions function returns undefined', () => {
+      const column = {
+        footerOptions: vi.fn().mockReturnValue(undefined)
+      } as unknown as Column
+      expect(getFooterOptions(column, [])).toEqual({})
     })
   })
 
   describe('mergeClasses', () => {
-    it('should merge string classes', () => {
-      expect(mergeClasses('class1', 'class2')).toBe('class1 class2')
-    })
-
-    it('should merge array classes', () => {
-      expect(mergeClasses(['class1', 'class2'], ['class3'])).toBe('class1 class2 class3')
-    })
-
-    it('should merge object classes', () => {
-      expect(mergeClasses({ class1: true, class2: false, class3: true })).toBe('class1 class3')
-    })
-
-    it('should merge mixed class types', () => {
-      expect(mergeClasses('class1', ['class2', 'class3'], { class4: true, class5: false })).toBe('class1 class2 class3 class4')
-    })
-
-    it('should ignore undefined values', () => {
-      expect(mergeClasses('class1', undefined, 'class2')).toBe('class1 class2')
-    })
-
-    it('should return empty string for no classes', () => {
+    it('returns empty string with no arguments', () => {
       expect(mergeClasses()).toBe('')
+    })
+
+    it('merges string classes', () => {
+      expect(mergeClasses('a', 'b', 'c')).toBe('a b c')
+    })
+
+    it('merges array classes', () => {
+      expect(mergeClasses(['a', 'b'], ['c'])).toBe('a b c')
+    })
+
+    it('merges object classes with truthy values', () => {
+      expect(mergeClasses({ active: true, disabled: false })).toBe('active')
+    })
+
+    it('skips undefined inputs', () => {
+      expect(mergeClasses('a', undefined, 'b')).toBe('a b')
+    })
+
+    it('skips null inputs', () => {
+      expect(mergeClasses('a', null as any, 'b')).toBe('a b')
+    })
+
+    it('merges mixed input types', () => {
+      expect(mergeClasses('a', ['b', 'c'], { d: true, e: false })).toBe('a b c d')
+    })
+
+    it('skips empty object entries', () => {
+      expect(mergeClasses({})).toBe('')
+    })
+
+    it('handles empty arrays', () => {
+      expect(mergeClasses([])).toBe('')
+    })
+
+    it('handles empty string', () => {
+      expect(mergeClasses('')).toBe('')
     })
   })
 
   describe('normalizeStyle', () => {
-    it('should return empty string for undefined', () => {
+    it('returns empty string for undefined', () => {
       expect(normalizeStyle(undefined)).toBe('')
     })
 
-    it('should return string as-is', () => {
-      expect(normalizeStyle('color: red; font-size: 14px')).toBe('color: red; font-size: 14px')
+    it('returns empty string for empty string input', () => {
+      expect(normalizeStyle('')).toBe('')
     })
 
-    it('should convert object to style string', () => {
-      const style = { color: 'red', 'font-size': '14px' }
-      expect(normalizeStyle(style)).toBe('color: red; font-size: 14px')
+    it('returns style string as-is', () => {
+      expect(normalizeStyle('color: red')).toBe('color: red')
     })
 
-    it('should handle empty object', () => {
+    it('converts style object to string', () => {
+      expect(normalizeStyle({ color: 'red', 'font-size': '12px' })).toBe('color: red; font-size: 12px')
+    })
+
+    it('handles single property object', () => {
+      expect(normalizeStyle({ display: 'flex' })).toBe('display: flex')
+    })
+
+    it('handles empty object', () => {
       expect(normalizeStyle({})).toBe('')
     })
   })
 
   describe('buildAttributes', () => {
-    it('should merge class attribute', () => {
-      const options = { class: ['class1', 'class2'] }
-      expect(buildAttributes(options)).toEqual({ class: 'class1 class2' })
-    })
-
-    it('should normalize style attribute', () => {
-      const options = { style: { color: 'red' } }
-      expect(buildAttributes(options)).toEqual({ style: 'color: red' })
-    })
-
-    it('should preserve other attributes', () => {
-      const options = { id: 'test', 'data-value': '123' }
-      expect(buildAttributes(options)).toEqual({ id: 'test', 'data-value': '123' })
-    })
-
-    it('should handle mixed attributes', () => {
-      const options = {
-        class: 'test-class',
-        style: { color: 'blue' },
-        id: 'test-id'
-      }
-      expect(buildAttributes(options)).toEqual({
-        class: 'test-class',
-        style: 'color: blue',
-        id: 'test-id'
+    it('passes through non-special keys', () => {
+      expect(buildAttributes({ id: 'test-row', colspan: 3 })).toEqual({
+        id: 'test-row',
+        colspan: 3
       })
     })
-  })
 
-  describe('getPageRange', () => {
-    it('should return all pages if pageCount <= maxVisible', () => {
-      expect(getPageRange(1, 3, 5)).toEqual([1, 2, 3])
+    it('normalizes class via mergeClasses', () => {
+      const result = buildAttributes({ class: ['a', 'b'] })
+      expect(result.class).toBe('a b')
     })
 
-    it('should return range centered on current page', () => {
-      expect(getPageRange(5, 10, 5)).toEqual([3, 4, 5, 6, 7])
+    it('normalizes class object', () => {
+      const result = buildAttributes({ class: { active: true, hidden: false } })
+      expect(result.class).toBe('active')
     })
 
-    it('should adjust range at start', () => {
-      expect(getPageRange(2, 10, 5)).toEqual([1, 2, 3, 4, 5])
+    it('normalizes style via normalizeStyle', () => {
+      const result = buildAttributes({ style: { color: 'red' } })
+      expect(result.style).toBe('color: red')
     })
 
-    it('should adjust range at end', () => {
-      expect(getPageRange(9, 10, 5)).toEqual([6, 7, 8, 9, 10])
+    it('passes through style string as-is', () => {
+      const result = buildAttributes({ style: 'color: blue' })
+      expect(result.style).toBe('color: blue')
     })
 
-    it('should use default maxVisible of 5', () => {
-      expect(getPageRange(3, 10)).toEqual([1, 2, 3, 4, 5])
+    it('handles mixed attributes with class and style', () => {
+      const result = buildAttributes({
+        class: 'my-class',
+        style: 'font-weight: bold',
+        'data-id': 42
+      })
+      expect(result).toEqual({
+        class: 'my-class',
+        style: 'font-weight: bold',
+        'data-id': 42
+      })
     })
 
-    it('should handle single page', () => {
-      expect(getPageRange(1, 1, 5)).toEqual([1])
-    })
-  })
-
-  describe('getPaginationSummary', () => {
-    it('should format pagination summary', () => {
-      expect(getPaginationSummary(1, 10, 50)).toBe('Showing 1-10 of 50 items')
-    })
-
-    it('should handle last page with fewer items', () => {
-      expect(getPaginationSummary(5, 10, 45)).toBe('Showing 41-45 of 45 items')
-    })
-
-    it('should handle first page', () => {
-      expect(getPaginationSummary(1, 20, 100)).toBe('Showing 1-20 of 100 items')
-    })
-
-    it('should handle single item page', () => {
-      expect(getPaginationSummary(1, 1, 1)).toBe('Showing 1-1 of 1 items')
+    it('returns empty object for empty input', () => {
+      expect(buildAttributes({})).toEqual({})
     })
   })
 })

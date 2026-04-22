@@ -7,7 +7,7 @@ export default mergeConfig(
   defineConfig({
     resolve: {
       alias: {
-        '@grid-vue/grid': path.resolve(__dirname, './src/index.ts')
+        '@einhasad-vue/datatable-vue': path.resolve(__dirname, './src/index.ts')
       }
     },
     test: {
@@ -19,6 +19,7 @@ export default mergeConfig(
         '**/dist/**',
         '**/e2e/**',
         '**/examples/**',
+        '**/.claude/**',
         '**/*.config.ts'
       ],
       coverage: {
@@ -29,14 +30,18 @@ export default mergeConfig(
           'dist/',
           'doc/',
           'examples/',
-          'mock-server/',
           '*.config.ts',
           '*.config.js',
-          'src/providers/DSTElasticDataProvider.ts', // Not exported
+          'src/mocks/**', // Mock data for testing
           '**/*.d.ts',
           '**/__tests__/**',
           '**/*.spec.ts',
-          '**/*.test.ts'
+          '**/*.test.ts',
+          'src/types.ts',
+          'src/state/StateProvider.ts',
+          'src/state/inject.ts',
+          'eslint.config.mjs',
+          'public/mockServiceWorker.js'
         ],
         thresholds: {
           lines: 50,

@@ -1,7 +1,8 @@
 /**
  * State Provider exports
  */
-export type { StateProvider } from './StateProvider'
+export type { StateProvider, ReactiveState } from './StateProvider'
+
 export { InMemoryStateProvider } from './InMemoryStateProvider'
 export { QueryParamsStateProvider } from './QueryParamsStateProvider'
 export type { QueryParamsStateProviderConfig } from './QueryParamsStateProvider'

@@ -36,25 +36,25 @@ Check out interactive examples demonstrating all features:
 Install via npm:
 
 ```bash
-npm install @grid-vue/grid
+npm install @einhasad-vue/datatable-vue
 ```
 
 Or with yarn:
 
 ```bash
-yarn add @grid-vue/grid
+yarn add @einhasad-vue/datatable-vue
 ```
 
 Or with pnpm:
 
 ```bash
-pnpm add @grid-vue/grid
+pnpm add @einhasad-vue/datatable-vue
 ```
 
 Then import the CSS in your main entry file (e.g., `main.ts` or `main.js`):
 
 ```ts
-import '@grid-vue/grid/style.css'
+import '@einhasad-vue/datatable-vue/grid-default-styles.css'
 ```
 
 ## Quick Start
@@ -81,7 +81,7 @@ import {
   PaginationRequest,
   QueryParamsStateProvider,
   type Column
-} from '@grid-vue/grid'
+} from '@einhasad-vue/datatable-vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -128,7 +128,7 @@ import {
   LoadModePagination,
   LocalStorageStateProvider,
   type Column
-} from '@grid-vue/grid'
+} from '@einhasad-vue/datatable-vue'
 
 const users = [
   { id: 1, name: 'John', email: 'john@example.com' },
@@ -169,7 +169,7 @@ const columns: Column[] = [
 </template>
 
 <script setup lang="ts">
-import { Grid, HttpDataProvider, ScrollPagination, PaginationRequest } from '@grid-vue/grid'
+import { Grid, HttpDataProvider, ScrollPagination, PaginationRequest } from '@einhasad-vue/datatable-vue'
 
 const provider = new HttpDataProvider({
   url: '/api/products',
@@ -289,7 +289,7 @@ State Providers manage grid state (filters, sorting, pagination) independently f
 Stores state in memory. State is lost on page refresh. Useful for temporary filtering/sorting or testing.
 
 ```ts
-import { InMemoryStateProvider } from '@grid-vue/grid'
+import { InMemoryStateProvider } from '@einhasad-vue/datatable-vue'
 
 const stateProvider = new InMemoryStateProvider()
 
@@ -312,7 +312,7 @@ const provider = new ArrayDataProvider({
 Stores state in URL query parameters with a prefix. State persists across page refreshes and can be shared via URL.
 
 ```ts
-import { QueryParamsStateProvider } from '@grid-vue/grid'
+import { QueryParamsStateProvider } from '@einhasad-vue/datatable-vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -336,7 +336,7 @@ const stateProvider = new QueryParamsStateProvider({
 Stores state in browser localStorage. State persists across page refreshes and browser sessions.
 
 ```ts
-import { LocalStorageStateProvider } from '@grid-vue/grid'
+import { LocalStorageStateProvider } from '@einhasad-vue/datatable-vue'
 
 const stateProvider = new LocalStorageStateProvider({
   storageKey: 'my-grid-state'  // default: 'grid-state'
@@ -354,7 +354,7 @@ const stateProvider = new LocalStorageStateProvider({
 Stores state in URL hash. State persists across page refreshes and can be shared via URL.
 
 ```ts
-import { HashStateProvider } from '@grid-vue/grid'
+import { HashStateProvider } from '@einhasad-vue/datatable-vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -970,13 +970,13 @@ import type {
   RowOptions,
   ComponentOptions,
   ResponseAdapter
-} from '@grid-vue/grid'
+} from '@einhasad-vue/datatable-vue'
 
 import {
   PaginationRequest,             // New: Pagination configuration class
   DefaultResponseAdapter,
   LegacyResponseAdapter
-} from '@grid-vue/grid'
+} from '@einhasad-vue/datatable-vue'
 ```
 
 **Type Usage Examples:**

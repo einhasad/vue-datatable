@@ -1,23 +1,58 @@
-# Source files (only ship built files)
+# Note: `files` in package.json is the authoritative whitelist.
+# This file is a safety net in case `files` is ever removed.
+
+# Source
+src/
 *.ts
 *.vue
 !*.d.ts
 
-# Config files
-tsconfig.json
-vite.config.ts
-vite.config.d.ts
-.gitignore
-dist/vite.config.d.ts*
-dist/node_modules/
-
-# Development
-node_modules/
-example/
-examples/
-doc/
+# Tests
+__tests__/
 *.spec.ts
+*.spec.js
 *.test.ts
+*.test.js
+
+# Examples and docs
+examples/
+example/
+doc/
+docs/
+
+# Config
+tsconfig*.json
+vite.config.*
+vitest.config.*
+eslint.config.*
+knip.json
+.editorconfig
+.prettierrc*
+.eslintrc*
+.npmrc
+
+# CI / repo tooling
+.github/
+.husky/
+.claude/
+CLAUDE.md
+
+# Build artifacts that shouldn't ship
+dist/node_modules/
+dist/vite.config.d.ts*
+dist/__VLS_types.d.ts
+
+# Dev output
+node_modules/
+.cache/
+.vite/
+coverage/
+.nyc_output
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
 
 # IDE
 .vscode/
@@ -31,11 +66,7 @@ doc/
 logs
 *.log
 
-# Testing
-coverage/
-.nyc_output
-
 # Misc
-.cache/
 *.tmp
 *.tgz
+*.log.*
