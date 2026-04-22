@@ -2,6 +2,8 @@
 
 A flexible, configurable grid component library for Vue 3 applications with support for both cursor and page-based pagination, custom data providers, and extensive customization options.
 
+**Size:** ~10 KB gzipped (ESM runtime + default styles). Zero new transitive dependencies on top of Vue 3.
+
 ## Features
 
 - ✅ **Flexible Pagination UI**: Choose between LoadMore, PageNumbers, or InfiniteScroll components
