@@ -234,7 +234,7 @@ describe('utils', () => {
       const model = { id: 1 }
       const result = getCellComponent(column, model, 5)
       expect(result).toEqual(componentOptions)
-      expect(column.component).toHaveBeenCalledWith(model, 5)
+      expect(column.component).toHaveBeenCalledWith(model, 5, undefined)
     })
 
     it('returns null when component function returns null', () => {
@@ -242,6 +242,29 @@ describe('utils', () => {
         component: vi.fn().mockReturnValue(null)
       } as unknown as Column
       expect(getCellComponent(column, {}, 0)).toBe(null)
+    })
+  })
+
+  describe('getCellComponent rowContext', () => {
+    it('forwards rowContext to column.component as the third argument', () => {
+      const ctxSeen: unknown[] = []
+      const column = {
+        component: (_m: { id: number }, _i: number, ctx?: unknown) => {
+          ctxSeen.push(ctx)
+          return { is: 'span' as const }
+        }
+      } as unknown as Column<{ id: number }>
+      const fakeCtx = { depth: 2, rowKey: 7, isExpanded: false, isExpandable: true, toggle: () => {}, rowState: {} as never }
+      getCellComponent(column, { id: 1 }, 0, fakeCtx)
+      expect(ctxSeen[0]).toBe(fakeCtx)
+    })
+
+    it('still works without rowContext (backward compatible)', () => {
+      const column = {
+        component: (m: { id: number }) => ({ is: 'span' as const, content: String(m.id) })
+      } as unknown as Column<{ id: number }>
+      const result = getCellComponent(column, { id: 5 }, 0)
+      expect(result).toEqual({ is: 'span', content: '5' })
     })
   })
 
