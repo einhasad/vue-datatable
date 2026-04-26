@@ -41,9 +41,6 @@ function loadMore() {
   const nextEnd = Math.min(loadedCount.value + pageSize, allProducts.length)
   loadedCount.value = nextEnd
   cursorProvider.setAllItems(allProducts.slice(0, nextEnd))
-  if (gridRef.value) {
-    gridRef.value.items = cursorProvider.getCurrentItems()
-  }
   hasMore.value = nextEnd < allProducts.length
   loading.value = false
 }

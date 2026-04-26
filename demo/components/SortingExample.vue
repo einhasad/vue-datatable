@@ -61,14 +61,8 @@ async function handleSortingSelect(e: Event) {
   const value = event.detail?.value ?? (event as any).value
   if (value === 'position-desc') {
     sortingProvider.setSort({ field: 'position', order: 'desc' })
-    if (sortingGridRef.value) {
-      sortingGridRef.value.items = sortingProvider.getCurrentItems()
-    }
   } else if (value === 'position-asc') {
     sortingProvider.setSort({ field: 'position', order: 'asc' })
-    if (sortingGridRef.value) {
-      sortingGridRef.value.items = sortingProvider.getCurrentItems()
-    }
   }
 }
 

@@ -88,9 +88,5 @@ const handleGlobalSearchInput = async (event: Event) => {
   ;['id', 'name', 'department', 'position', 'salary'].forEach(key => {
     searchSortStateProvider.clearFilter(key)
   })
-
-  if (searchSortGridRef.value) {
-    searchSortGridRef.value.items = searchSortProvider.getCurrentItems()
-  }
 }
 </script>

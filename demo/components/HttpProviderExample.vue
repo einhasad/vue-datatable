@@ -101,9 +101,6 @@ const rangeEnd = computed(() => {
 async function goToPage(page: number) {
   currentPage.value = page
   gridProvider.setOffsetPagination({ page, pageSize })
-  if (gridRef.value) {
-    gridRef.value.items = gridProvider.getCurrentItems()
-  }
 }
 
 async function handleSearch() {
@@ -112,9 +109,6 @@ async function handleSearch() {
   currentPage.value = 1
   gridProvider.setOffsetPagination({ page: 1, pageSize })
   totalCount.value = filtered.length
-  if (gridRef.value) {
-    gridRef.value.items = gridProvider.getCurrentItems()
-  }
 }
 
 const githubColumns: Column[] = [
