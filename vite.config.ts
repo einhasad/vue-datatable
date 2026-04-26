@@ -11,7 +11,12 @@ export default defineConfig({
       insertTypesEntry: true,
       copyDtsFiles: false,
       outDir: 'dist',
-      exclude: ['doc/**', 'vite.config.ts', 'node_modules/**']
+      exclude: [
+        'doc/**',
+        'vite.config.ts',
+        'node_modules/**',
+        'src/mocks/**',
+      ]
     }),
     {
       name: 'copy-styles',
@@ -33,6 +38,7 @@ export default defineConfig({
       }
     }
   ],
+  publicDir: false,
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),

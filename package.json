@@ -1,6 +1,6 @@
 {
   "name": "@einhasad-vue/datatable-vue",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A flexible, configurable grid component library for Vue 3 applications with support for both cursor and page-based pagination, custom data providers, and extensive customization options.",
   "author": "Dima Popov",
   "license": "MIT",
@@ -53,7 +53,7 @@
     "demo": "vite --config demo/vite.config.ts",
     "demo:build": "vite build --config demo/vite.config.ts",
     "build": "vite build && npm run postbuild",
-    "postbuild": "rm -rf dist/node_modules dist/vite.config.d.ts dist/vite.config.d.ts.map dist/__VLS_types.d.ts",
+    "postbuild": "rm -rf dist/node_modules dist/vite.config.d.ts dist/vite.config.d.ts.map dist/__VLS_types.d.ts dist/mocks dist/mockServiceWorker.js",
     "prepare": "npm run build",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
