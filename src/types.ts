@@ -155,13 +155,24 @@ export interface Column<T = any> {
   value?: (model: T, key: number) => string | number | boolean | null | undefined
   show?: (model: T) => boolean
   showColumn?: boolean | (() => boolean)
-  component?: (model: T, key: number) => ComponentOptions
+  /**
+   * Cell component renderer.
+   * The third arg `rowContext` is optional and only present when row-state features are active.
+   * Existing two-arg implementations continue to work unchanged.
+   */
+  component?: (model: T, key: number, rowContext?: RowContext) => ComponentOptions
   footer?: (models: T[]) => string
   footerOptions?: (models: T[]) => Record<string, unknown>
   action?: (model: T) => void
   sort?: string
   options?: (model: T) => Record<string, unknown>
   filter?: Filter
+  /**
+   * If true, the library prepends a chevron + depth-indent inside this column's cell
+   * for rows that are expandable. Click toggles the 'expanded' flag in RowStateProvider.
+   * Set on at most one column; behavior of multiple flagged columns is undefined.
+   */
+  expandToggle?: boolean
 }
 
 /**
