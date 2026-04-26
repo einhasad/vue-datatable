@@ -20,7 +20,7 @@
       <div class="mass-action-demo__spacer" />
       <button
         type="button"
-        class="mass-action-demo__btn mass-action-demo__btn--ghost"
+        class="ds-btn ds-btn--ghost ds-btn--sm"
         :disabled="selectedIds.length === 0"
         @click="onClearSelection"
       >
@@ -28,7 +28,7 @@
       </button>
       <button
         type="button"
-        class="mass-action-demo__btn mass-action-demo__btn--danger"
+        class="ds-btn ds-btn--danger ds-btn--sm"
         :disabled="selectedIds.length === 0"
         @click="onDeleteSelected"
       >
@@ -192,47 +192,6 @@ function onClearSelection() {
 .mass-action-demo__count.is-empty {
   background: #f1f5f9;
   color: #94a3b8;
-}
-
-.mass-action-demo__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out;
-}
-
-.mass-action-demo__btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.mass-action-demo__btn--ghost {
-  background: transparent;
-  border-color: #cbd5e1;
-  color: #475569;
-}
-
-.mass-action-demo__btn--ghost:hover:not(:disabled) {
-  background: #f1f5f9;
-  border-color: #94a3b8;
-  color: #1e293b;
-}
-
-.mass-action-demo__btn--danger {
-  background: #ef4444;
-  border-color: #ef4444;
-  color: #ffffff;
-}
-
-.mass-action-demo__btn--danger:hover:not(:disabled) {
-  background: #dc2626;
-  border-color: #dc2626;
 }
 
 .mass-action-demo :deep(.mass-action-demo__checkbox) {
