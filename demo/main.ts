@@ -30,7 +30,7 @@ async function prepare() {
   return Promise.resolve()
 }
 
-prepare().then(() => {
+void prepare().then(() => {
   const app = createApp(App)
   app.use(router)
   app.mount('#app')

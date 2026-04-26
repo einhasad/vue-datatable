@@ -19,7 +19,15 @@ import {
 } from '@einhasad-vue/datatable-vue'
 import StateInspector from './StateInspector.vue'
 
-const inMemoryUsers = [
+interface StateUser {
+  id: number
+  name: string
+  email: string
+  role: string
+  status: string
+}
+
+const inMemoryUsers: StateUser[] = [
   { id: 1, name: 'Alice Johnson', email: 'alice@example.com', role: 'Admin', status: 'Active' },
   { id: 2, name: 'Bob Smith', email: 'bob@example.com', role: 'User', status: 'Active' },
   { id: 3, name: 'Charlie Brown', email: 'charlie@example.com', role: 'User', status: 'Active' },
@@ -34,12 +42,12 @@ const inMemoryUsers = [
   { id: 12, name: 'Leo Turner', email: 'leo@example.com', role: 'User', status: 'Active' }
 ]
 
-const stateColumns: Column[] = [
-  { sort: 'id', label: 'ID', value: (m: any) => m.id.toString(), filter: { name: 'id', type: 'text', placeholder: 'Search ID...' } },
-  { sort: 'name', label: 'Name', value: (m: any) => m.name, filter: { name: 'name', type: 'text', placeholder: 'Search Name...' } },
-  { sort: 'email', label: 'Email', value: (m: any) => m.email, filter: { name: 'email', type: 'text', placeholder: 'Search Email...' } },
-  { sort: 'role', label: 'Role', value: (m: any) => m.role, filter: { name: 'role', type: 'text', placeholder: 'Search Role...' } },
-  { sort: 'status', label: 'Status', value: (m: any) => m.status, filter: { name: 'status', type: 'text', placeholder: 'Search Status...' } }
+const stateColumns: Column<StateUser>[] = [
+  { sort: 'id', label: 'ID', value: (m) => m.id.toString(), filter: { name: 'id', type: 'text', placeholder: 'Search ID...' } },
+  { sort: 'name', label: 'Name', value: (m) => m.name, filter: { name: 'name', type: 'text', placeholder: 'Search Name...' } },
+  { sort: 'email', label: 'Email', value: (m) => m.email, filter: { name: 'email', type: 'text', placeholder: 'Search Email...' } },
+  { sort: 'role', label: 'Role', value: (m) => m.role, filter: { name: 'role', type: 'text', placeholder: 'Search Role...' } },
+  { sort: 'status', label: 'Status', value: (m) => m.status, filter: { name: 'status', type: 'text', placeholder: 'Search Status...' } }
 ]
 
 const inMemoryStateProvider = new InMemoryStateProvider()

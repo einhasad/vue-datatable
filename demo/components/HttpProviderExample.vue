@@ -78,7 +78,17 @@ import { Grid, ArrayDataProvider, type Column } from '@einhasad-vue/datatable-vu
 import { generateMockRepositories } from '../../examples/src/mocks/data'
 import { processSearchRequest } from '../../examples/src/mocks/search'
 
-const allMockRepos = generateMockRepositories()
+interface GitHubRepo {
+  full_name: string
+  html_url: string
+  description: string | null
+  stargazers_count: number
+  forks_count: number
+  language: string | null
+  updated_at: string
+}
+
+const allMockRepos = generateMockRepositories() as GitHubRepo[]
 const pageSize = 20
 
 const searchQuery = ref('vue table')
@@ -134,11 +144,11 @@ async function handleSearch() {
   totalCount.value = filtered.length
 }
 
-const githubColumns: Column[] = [
+const githubColumns: Column<GitHubRepo>[] = [
   {
     key: 'full_name',
     label: 'Repository',
-    component: (row: any) => ({
+    component: (row) => ({
       is: 'a',
       props: {
         href: row.html_url,
@@ -155,30 +165,30 @@ const githubColumns: Column[] = [
   {
     key: 'description',
     label: 'Description',
-    value: (row: any) => {
-      const desc = row.description || 'No description'
+    value: (row) => {
+      const desc = row.description ?? 'No description'
       return desc.length > 100 ? desc.substring(0, 100) + '...' : desc
     }
   },
   {
     key: 'stargazers_count',
     label: 'Stars',
-    value: (row: any) => row.stargazers_count.toLocaleString()
+    value: (row) => row.stargazers_count.toLocaleString()
   },
   {
     key: 'forks_count',
     label: 'Forks',
-    value: (row: any) => row.forks_count.toLocaleString()
+    value: (row) => row.forks_count.toLocaleString()
   },
   {
     key: 'language',
     label: 'Language',
-    value: (row: any) => row.language || 'Unknown'
+    value: (row) => row.language ?? 'Unknown'
   },
   {
     key: 'updated_at',
     label: 'Updated',
-    value: (row: any) => new Date(row.updated_at).toLocaleDateString()
+    value: (row) => new Date(row.updated_at).toLocaleDateString()
   }
 ]
 </script>

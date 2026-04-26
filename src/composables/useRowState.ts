@@ -40,37 +40,37 @@ export function useRowState<T = unknown>(options: UseRowStateOptions<T> = {}): U
   const resolve = (item: T): RowKey | undefined => rowKey(item)
 
   return {
-    isExpanded(item) {
+    isExpanded(item: T): boolean {
       const k = resolve(item)
       if (k === undefined) return false
       return provider.get(k, 'expanded') === true
     },
-    toggleExpanded(item) {
+    toggleExpanded(item: T): void {
       const k = resolve(item)
       if (k === undefined) return
       provider.toggle(k, 'expanded')
     },
-    get(item, flag) {
+    get(item: T, flag: string): unknown {
       const k = resolve(item)
       if (k === undefined) return undefined
       return provider.get(k, flag)
     },
-    set(item, flag, value) {
+    set(item: T, flag: string, value: unknown): void {
       const k = resolve(item)
       if (k === undefined) return
       provider.set(k, flag, value)
     },
-    toggle(item, flag) {
+    toggle(item: T, flag: string): void {
       const k = resolve(item)
       if (k === undefined) return
       provider.toggle(k, flag)
     },
-    delete(item, flag) {
+    delete(item: T, flag: string): void {
       const k = resolve(item)
       if (k === undefined) return
       provider.delete(k, flag)
     },
-    entries(flag) { return provider.entries(flag) },
-    clear(flag) { provider.clear(flag) },
+    entries(flag: string): RowKey[] { return provider.entries(flag) },
+    clear(flag: string): void { provider.clear(flag) },
   }
 }
