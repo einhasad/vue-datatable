@@ -1,10 +1,18 @@
 <template>
   <div>
     <h3>Products grid — prefix <code>products</code></h3>
-    <Grid :data-provider="multiStateArrayProvider" :columns="multiStateArrayColumns" />
+    <Grid
+      :data-provider="multiStateArrayProvider"
+      :columns="multiStateArrayColumns"
+    />
 
-    <h3 style="margin-top: 24px;">Users grid — prefix <code>users</code></h3>
-    <Grid :data-provider="multiStateHttpProvider" :columns="multiStateHttpColumns" />
+    <h3 style="margin-top: 24px;">
+      Users grid — prefix <code>users</code>
+    </h3>
+    <Grid
+      :data-provider="multiStateHttpProvider"
+      :columns="multiStateHttpColumns"
+    />
   </div>
 </template>
 

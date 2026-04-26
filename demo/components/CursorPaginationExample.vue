@@ -1,6 +1,5 @@
 <template>
   <Grid
-    ref="gridRef"
     :data-provider="cursorProvider"
     :columns="cursorPaginationColumns"
   />
@@ -26,7 +25,6 @@ const allProducts = Array.from({ length: 35 }, (_, i) => ({
   category: ['Electronics', 'Clothing', 'Books', 'Home'][i % 4]
 }))
 
-const gridRef = ref<any>(null)
 const loadedCount = ref(pageSize)
 const loading = ref(false)
 const hasMore = ref(true)

@@ -1,5 +1,8 @@
 <template>
-  <div v-if="selectedUser" class="demo-selected-info">
+  <div
+    v-if="selectedUser"
+    class="demo-selected-info"
+  >
     <strong>Selected:</strong> {{ selectedUser.name }} — {{ selectedUser.email }}
   </div>
   <Grid

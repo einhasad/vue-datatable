@@ -54,7 +54,6 @@
         </div>
         <div class="scroll-container" @scroll="handleScroll" ref="containerRef">
           <Grid
-            ref="gridRef"
             :data-provider="dataProvider"
             :columns="columns"
           />
@@ -83,7 +82,6 @@ import { useScrollPagination } from '../composables/useScrollPagination'
 import CodeExample from './CodeExample.vue'
 
 const {
-  gridRef,
   containerRef,
   dataProvider,
   columns,

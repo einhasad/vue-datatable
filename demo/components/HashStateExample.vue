@@ -1,5 +1,13 @@
 <template>
-  <Grid :data-provider="hashProvider" :columns="stateColumns" />
+  <Grid
+    :data-provider="hashProvider"
+    :columns="stateColumns"
+  />
+  <StateInspector
+    :state-provider="hashStateProvider"
+    lifetime="Survives reload · shareable URL"
+    storage-hint="Storage: URL hash fragment (prefix=hash)"
+  />
 </template>
 
 <script setup lang="ts">
@@ -10,6 +18,7 @@ import {
   HashStateProvider,
   type Column
 } from '@einhasad-vue/datatable-vue'
+import StateInspector from './StateInspector.vue'
 
 const router = useRouter()
 

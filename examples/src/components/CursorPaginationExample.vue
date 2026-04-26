@@ -13,7 +13,6 @@
       <div class="example-section">
         <h3>Demo</h3>
         <Grid
-          ref="gridRef"
           :data-provider="cursorProvider"
           :columns="cursorPaginationColumns"
         />
@@ -48,7 +47,6 @@ const allProducts = Array.from({ length: 35 }, (_, i) => ({
   category: ['Electronics', 'Clothing', 'Books', 'Home'][i % 4]
 }))
 
-const gridRef = ref<any>(null)
 const loadedCount = ref(pageSize)
 const loading = ref(false)
 const hasMore = ref(true)
@@ -63,9 +61,6 @@ function loadMore() {
   const nextEnd = Math.min(loadedCount.value + pageSize, allProducts.length)
   loadedCount.value = nextEnd
   cursorProvider.setAllItems(allProducts.slice(0, nextEnd))
-  if (gridRef.value) {
-    gridRef.value.items = cursorProvider.getCurrentItems()
-  }
   hasMore.value = nextEnd < allProducts.length
   loading.value = false
 }

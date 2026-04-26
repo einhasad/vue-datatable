@@ -1,5 +1,13 @@
 <template>
-  <Grid :data-provider="inMemoryProvider" :columns="stateColumns" />
+  <Grid
+    :data-provider="inMemoryProvider"
+    :columns="stateColumns"
+  />
+  <StateInspector
+    :state-provider="inMemoryStateProvider"
+    lifetime="Lost on reload"
+    storage-hint="Storage: none — kept in JS memory only"
+  />
 </template>
 
 <script setup lang="ts">
@@ -9,6 +17,7 @@ import {
   InMemoryStateProvider,
   type Column
 } from '@einhasad-vue/datatable-vue'
+import StateInspector from './StateInspector.vue'
 
 const inMemoryUsers = [
   { id: 1, name: 'Alice Johnson', email: 'alice@example.com', role: 'Admin', status: 'Active' },

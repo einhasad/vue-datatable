@@ -26,7 +26,6 @@
           </select>
         </div>
         <Grid
-          ref="sortingGridRef"
           :data-provider="sortingProvider"
           :columns="sortingColumns"
         />
@@ -75,21 +74,14 @@ const sortingColumns: Column[] = [
 
 const sortingSelectValue = ref('')
 const sortingSelectWrapperRef = ref<HTMLElement | null>(null)
-const sortingGridRef = ref<any>(null)
 
 async function handleSortingSelect(e: Event) {
   const event = e as CustomEvent & { value?: string }
   const value = event.detail?.value ?? (event as any).value
   if (value === 'position-desc') {
     sortingProvider.setSort({ field: 'position', order: 'desc' })
-    if (sortingGridRef.value) {
-      sortingGridRef.value.items = sortingProvider.getCurrentItems()
-    }
   } else if (value === 'position-asc') {
     sortingProvider.setSort({ field: 'position', order: 'asc' })
-    if (sortingGridRef.value) {
-      sortingGridRef.value.items = sortingProvider.getCurrentItems()
-    }
   }
 }
 

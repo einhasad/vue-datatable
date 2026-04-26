@@ -1,5 +1,13 @@
 <template>
-  <Grid :data-provider="localStorageProvider" :columns="stateColumns" />
+  <Grid
+    :data-provider="localStorageProvider"
+    :columns="stateColumns"
+  />
+  <StateInspector
+    :state-provider="localStorageStateProvider"
+    lifetime="Survives reload"
+    storage-hint="Storage: localStorage['grid-demo-state']"
+  />
 </template>
 
 <script setup lang="ts">
@@ -9,6 +17,7 @@ import {
   LocalStorageStateProvider,
   type Column
 } from '@einhasad-vue/datatable-vue'
+import StateInspector from './StateInspector.vue'
 
 const stateUsers = [
   { id: 1, name: 'Eve Davis', email: 'eve@example.com', role: 'Manager', status: 'Inactive' },

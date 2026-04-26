@@ -1,5 +1,13 @@
 <template>
-  <Grid :data-provider="queryParamsProvider" :columns="stateColumns" />
+  <Grid
+    :data-provider="queryParamsProvider"
+    :columns="stateColumns"
+  />
+  <StateInspector
+    :state-provider="queryParamsStateProvider"
+    lifetime="Survives reload · shareable URL"
+    storage-hint="Storage: URL query params (prefix=qp)"
+  />
 </template>
 
 <script setup lang="ts">
@@ -10,6 +18,7 @@ import {
   QueryParamsStateProvider,
   type Column
 } from '@einhasad-vue/datatable-vue'
+import StateInspector from './StateInspector.vue'
 
 const router = useRouter()
 

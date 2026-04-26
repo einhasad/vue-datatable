@@ -9,13 +9,18 @@
       class="demo-select"
       @change="handleSortingSelect"
     >
-      <option value="">Default</option>
-      <option value="position-desc">Position Desc</option>
-      <option value="position-asc">Position Asc</option>
+      <option value="">
+        Default
+      </option>
+      <option value="position-desc">
+        Position Desc
+      </option>
+      <option value="position-asc">
+        Position Asc
+      </option>
     </select>
   </div>
   <Grid
-    ref="sortingGridRef"
     :data-provider="sortingProvider"
     :columns="sortingColumns"
   />
@@ -56,7 +61,6 @@ const sortingColumns: Column[] = [
 ]
 
 const sortingSelectValue = ref('')
-const sortingGridRef = ref<any>(null)
 
 function handleSortingSelect() {
   const value = sortingSelectValue.value

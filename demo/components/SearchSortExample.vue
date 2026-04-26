@@ -13,7 +13,6 @@
     </div>
   </div>
   <Grid
-    ref="searchSortGridRef"
     :data-provider="searchSortProvider"
     :columns="searchSortColumns"
   />
@@ -60,7 +59,6 @@ const searchSortProvider = new ArrayDataProvider({
   stateProvider: searchSortStateProvider
 })
 
-const searchSortGridRef = ref<any>(null)
 const globalSearchQuery = ref('')
 
 const searchSortColumns: Column[] = [

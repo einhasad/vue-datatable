@@ -42,7 +42,6 @@
       <div class="example-section">
         <h3>Results</h3>
         <Grid
-          ref="gridRef"
           :data-provider="gridProvider"
           :columns="githubColumns"
         />
@@ -90,7 +89,6 @@ const searchQuery = ref('vue table')
 const sortBy = ref('stars')
 const totalCount = ref(0)
 const currentPage = ref(1)
-const gridRef = ref<any>(null)
 
 function getFilteredItems() {
   const result = processSearchRequest(allMockRepos, {
@@ -131,9 +129,6 @@ const rangeEnd = computed(() => {
 async function goToPage(page: number) {
   currentPage.value = page
   gridProvider.setOffsetPagination({ page, pageSize })
-  if (gridRef.value) {
-    gridRef.value.items = gridProvider.getCurrentItems()
-  }
 }
 
 async function handleSearch() {
@@ -142,9 +137,6 @@ async function handleSearch() {
   currentPage.value = 1
   gridProvider.setOffsetPagination({ page: 1, pageSize })
   totalCount.value = filtered.length
-  if (gridRef.value) {
-    gridRef.value.items = gridProvider.getCurrentItems()
-  }
 }
 
 const githubColumns: Column[] = [

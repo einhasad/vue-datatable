@@ -1,6 +1,6 @@
 /* ============================================================
-   Demo-only overrides on top of ../desing-vue-datatable/styles.css
-   Anything shared with the design site lives there — keep this
+   Demo-only overrides on top of ./design-system.css
+   Shared design tokens and base styles live there — keep this
    file scoped to demo runtime (grid integration vars + demo
    section/control classes).
    ============================================================ */
@@ -36,6 +36,12 @@
   --grid-font-mono: var(--font-mono);
   --grid-radius: var(--radius-xs);
   --grid-focus-ring: var(--shadow-focus);
+}
+
+.grid .grid-search-input:focus-visible,
+.grid .grid-search-input:focus {
+  box-shadow: none;
+  border-color: transparent !important;
 }
 
 /* ============================================================
@@ -75,7 +81,6 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-width: 180px;
   flex: 1;
 }
 

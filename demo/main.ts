@@ -1,8 +1,8 @@
 import { createApp } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
-import '@einhasad-vue/datatable-vue/grid-default-styles.css'
-import '../desing-vue-datatable/styles.css'
+import '../src/grid-default-styles.css'
+import './design-system.css'
 import './style.css'
 
 const router = createRouter({

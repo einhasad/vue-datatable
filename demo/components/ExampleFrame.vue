@@ -1,7 +1,6 @@
 <template>
   <div class="ds-example-frame">
     <div class="ds-example-frame__chrome">
-      <div class="ds-example-frame__dots"><span></span><span></span><span></span></div>
       <span class="ds-example-frame__file">{{ file }}</span>
       <div class="ds-example-frame__tools">
         <button
@@ -11,7 +10,9 @@
           class="ds-example-frame__tab"
           :class="{ 'is-active': active === tab }"
           @click="active = tab"
-        >{{ tab }}</button>
+        >
+          {{ tab }}
+        </button>
       </div>
     </div>
 
@@ -86,7 +87,7 @@ watch(
 function extractBlock(source: string, tag: 'template' | 'script'): string {
   const openRe = new RegExp(`<${tag}\\b[^>]*>`, 'i')
   const openMatch = source.match(openRe)
-  if (!openMatch || openMatch.index === undefined) return ''
+  if (openMatch?.index === undefined) return ''
   const start = openMatch.index + openMatch[0].length
 
   const tokenRe = new RegExp(`<\\/?${tag}\\b[^>]*>`, 'gi')

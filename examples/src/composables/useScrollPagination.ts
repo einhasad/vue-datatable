@@ -100,7 +100,6 @@ export function useScrollPagination(options: UseScrollPaginationOptions = {}) {
     stateProvider
   })
 
-  const gridRef = ref<any>(null)
   const containerRef = ref<HTMLElement | null>(null)
   const searchQuery = ref('')
   const sortBy = ref('')
@@ -168,7 +167,7 @@ export function useScrollPagination(options: UseScrollPaginationOptions = {}) {
         stateProvider.clearFilter('q')
       }
 
-      if (gridRef.value) await gridRef.value.refresh()
+      await dataProvider.refresh()
     }, 300)
   }
 
@@ -181,7 +180,7 @@ export function useScrollPagination(options: UseScrollPaginationOptions = {}) {
       stateProvider.clearSort()
     }
 
-    if (gridRef.value) await gridRef.value.refresh()
+    await dataProvider.refresh()
   }
 
   // Driven by the top sentinel in <ScrollPagination position="top">.
@@ -209,7 +208,7 @@ export function useScrollPagination(options: UseScrollPaginationOptions = {}) {
       windowStart.value -= shiftAmount
       windowEnd.value = windowStart.value + Math.min(bufferSize, loadedItems.value.length - windowStart.value)
       updateWindow()
-      if (gridRef.value) await gridRef.value.refresh()
+      await dataProvider.refresh()
       await nextTick()
 
       if (container && rowHeight > 0) {
@@ -253,7 +252,7 @@ export function useScrollPagination(options: UseScrollPaginationOptions = {}) {
       }
 
       updateWindow()
-      if (gridRef.value) await gridRef.value.refresh()
+      await dataProvider.refresh()
     } finally {
       loading.value = false
     }
@@ -285,7 +284,6 @@ export function useScrollPagination(options: UseScrollPaginationOptions = {}) {
   onMounted(initialize)
 
   return {
-    gridRef,
     containerRef,
     dataProvider,
     columns: scrollPaginationColumns,
