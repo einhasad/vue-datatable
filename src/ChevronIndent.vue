@@ -9,7 +9,20 @@
     data-qa="grid-chevron"
     @click.stop="emit('toggle')"
   >
-    <span class="grid-chevron__icon" aria-hidden="true">▶</span>
+    <svg
+      class="grid-chevron__icon"
+      width="10"
+      height="10"
+      viewBox="0 0 10 10"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.6"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="3.5,2 7,5 3.5,8" />
+    </svg>
   </button>
 </template>
 
