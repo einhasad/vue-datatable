@@ -1,8 +1,20 @@
-# Grid - Framework-Agnostic Vue 3 Grid Library
+# @einhasad-vue/datatable-vue
 
-A flexible, configurable grid component library for Vue 3 applications with support for both cursor and page-based pagination, custom data providers, and extensive customization options.
+[![npm version](https://img.shields.io/npm/v/@einhasad-vue/datatable-vue.svg?style=flat-square)](https://www.npmjs.com/package/@einhasad-vue/datatable-vue)
+[![CI](https://img.shields.io/github/actions/workflow/status/einhasad/vue-datatable/ci.yml?branch=main&style=flat-square&label=CI)](https://github.com/einhasad/vue-datatable/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Vue 3](https://img.shields.io/badge/vue-3.3+-42b883.svg?style=flat-square)](https://vuejs.org/)
+[![TypeScript](https://img.shields.io/badge/typescript-strict-3178c6.svg?style=flat-square)](https://www.typescriptlang.org/)
 
-**Size:** ~10 KB gzipped (ESM runtime + default styles). Zero new transitive dependencies on top of Vue 3.
+A flexible, framework-agnostic data table for Vue 3. Pluggable data providers (Array, HTTP, custom), pluggable state persistence (URL, localStorage, hash, in-memory), dual pagination modes (cursor or page), and a slot-driven rendering layer you can replace piece by piece.
+
+📚 **[Documentation & live demos →](https://einhasad.github.io/vue-datatable/)**
+
+**Size:** ~10 KB gzipped (ESM runtime + default styles). Zero transitive dependencies on top of Vue 3.
+
+```bash
+npm install @einhasad-vue/datatable-vue
+```
 
 ## Features
 

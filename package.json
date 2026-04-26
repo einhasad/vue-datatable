@@ -51,6 +51,7 @@
   "scripts": {
     "dev": "vite",
     "demo": "vite --config demo/vite.config.ts",
+    "demo:build": "vite build --config demo/vite.config.ts",
     "build": "vite build && npm run postbuild",
     "postbuild": "rm -rf dist/node_modules dist/vite.config.d.ts dist/vite.config.d.ts.map dist/__VLS_types.d.ts",
     "prepare": "npm run build",
