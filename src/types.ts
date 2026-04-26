@@ -184,3 +184,48 @@ export interface PaginationInfo {
   totalItems: number
   pageSize: number
 }
+
+/**
+ * Stable identifier for a row. Used by RowStateProvider to key per-row flags
+ * (expansion, selection, etc.) so they survive pagination, sort, and filter changes.
+ */
+export type RowKey = string | number
+
+/**
+ * RowStateProvider — generic per-row reactive flag store.
+ * Flag-agnostic: the provider does not know about 'expanded' or 'selected';
+ * those are string keys agreed on between the library and consumers.
+ */
+export interface RowStateProvider {
+  get(rowKey: RowKey, flag: string): unknown
+  set(rowKey: RowKey, flag: string, value: unknown): void
+  toggle(rowKey: RowKey, flag: string): void
+  delete(rowKey: RowKey, flag: string): void
+  entries(flag: string): RowKey[]
+  clear(flag: string): void
+  readonly state: Readonly<Record<RowKey, Record<string, unknown>>>
+}
+
+/**
+ * Item-bound subset of RowStateProvider. Passed via RowContext so custom
+ * column.component implementations can drive any flag without re-resolving rowKey.
+ */
+export interface RowStateScoped {
+  get(flag: string): unknown
+  set(flag: string, value: unknown): void
+  toggle(flag: string): void
+  delete(flag: string): void
+}
+
+/**
+ * Per-row context exposed to column.component(model, index, rowContext).
+ * Backward-compatible: existing two-arg components ignore the third parameter.
+ */
+export interface RowContext {
+  depth: number
+  rowKey: RowKey
+  isExpanded: boolean
+  isExpandable: boolean
+  toggle: () => void
+  rowState: RowStateScoped
+}
