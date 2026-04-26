@@ -44,6 +44,9 @@ export type {
   HashStateProviderConfig
 } from './state'
 
+// Row State (per-row flags: expansion, selection, etc.)
+export { InMemoryRowStateProvider, rowStateInjectionKey } from './rowState'
+
 // Composables
 export { useFilterField } from './composables/useFilterField'
 export type { UseFilterFieldOptions } from './composables/useFilterField'
@@ -65,7 +68,11 @@ export type {
   RowOptions,
   PaginationInfo,
   KeysetPaginationState,
-  OffsetPaginationState
+  OffsetPaginationState,
+  RowKey,
+  RowStateProvider,
+  RowStateScoped,
+  RowContext,
 } from './types'
 
 // Utilities
