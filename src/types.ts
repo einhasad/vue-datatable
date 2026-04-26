@@ -134,6 +134,14 @@ export interface DataProvider<T = unknown> {
   setOffsetPagination(state: OffsetPaginationState): void
   /** Get current offset pagination state. Returns null if not active. */
   getOffsetPagination(): OffsetPaginationState | null
+
+  /**
+   * Replace the current items reactively without going through load().
+   * Use this when the consumer mutates items (e.g., attaches children
+   * after fetching them in response to an `expand` event from <Grid>).
+   * Does not touch sort, filter, pagination, or loading state.
+   */
+  updateRows(newRows: T[]): void
 }
 
 /**

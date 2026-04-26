@@ -197,4 +197,36 @@ describe('CallbackDataProvider', () => {
 
     expect(provider.getStateProvider('any-key')).toBeNull()
   })
+
+  describe('updateRows', () => {
+    it('replaces current items reactively without invoking loadFn', async () => {
+      const loadFn = vi.fn().mockResolvedValue({ items: [{ id: 1, name: 'a' }] })
+      const provider = new CallbackDataProvider<{ id: number; name: string; children?: unknown[] }>({ loadFn })
+      await provider.load()
+      loadFn.mockClear()
+      provider.updateRows([{ id: 1, name: 'a', children: [{ id: 11 }] }, { id: 2, name: 'b' }])
+      expect(provider.getCurrentItems()).toEqual([
+        { id: 1, name: 'a', children: [{ id: 11 }] },
+        { id: 2, name: 'b' },
+      ])
+      expect(loadFn).not.toHaveBeenCalled()
+    })
+
+    it('does not change isLoading()', () => {
+      const provider = new CallbackDataProvider<{ id: number }>({ loadFn: () => Promise.resolve({ items: [] }) })
+      expect(provider.isLoading()).toBe(false)
+      provider.updateRows([{ id: 1 }])
+      expect(provider.isLoading()).toBe(false)
+    })
+
+    it('does not touch sort state', () => {
+      const provider = new CallbackDataProvider<{ id: number }>({
+        loadFn: () => Promise.resolve({ items: [] }),
+      })
+      provider.setSort({ field: 'name', order: 'asc' })
+      const sortBefore = provider.getSort()
+      provider.updateRows([{ id: 1 }])
+      expect(provider.getSort()).toEqual(sortBefore)
+    })
+  })
 })
