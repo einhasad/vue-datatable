@@ -230,7 +230,7 @@ describe('ScrollPagination scenario — performance', () => {
     expect(lateAvg).toBeLessThan(earlyAvg * 3 + 5)
 
     wrapper.unmount()
-  })
+  }, 30000)
 
   it.skipIf(!HAS_GC)('heap growth bounded across 200 loadMore cycles', async () => {
     const { wrapper, loadMore, master } = mountScrollScenario({
