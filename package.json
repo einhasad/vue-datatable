@@ -1,6 +1,6 @@
 {
   "name": "@einhasad-vue/datatable-vue",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A flexible, configurable grid component library for Vue 3 applications with support for both cursor and page-based pagination, custom data providers, and extensive customization options.",
   "author": "Dima Popov",
   "license": "MIT",
