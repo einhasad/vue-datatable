@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <!-- Paper background -->
+  <rect width="1280" height="640" fill="#FBFAF7"/>
+
+  <!-- Top accent bar -->
+  <rect x="0" y="0" width="1280" height="6" fill="#FFC833"/>
+
+  <!-- Brand mark: rounded yellow tile + black row bars (matches site favicon) -->
+  <g transform="translate(96 224)">
+    <rect width="192" height="192" rx="36" fill="#FFC833"/>
+    <rect x="44" y="62" width="104" height="14" rx="7" fill="#1A1505"/>
+    <rect x="44" y="92" width="104" height="14" rx="7" fill="#1A1505"/>
+    <rect x="44" y="122" width="64" height="14" rx="7" fill="#1A1505"/>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="336" y="276" font-size="58" font-weight="700" letter-spacing="-1.8" fill="#111111">
+    <tspan fill="#6E6A63">@einhasad-vue/</tspan><tspan>datatable-vue</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="336" y="332" font-size="30" font-weight="400" fill="#3A3A3A">
+    A flexible, framework-agnostic data table for Vue 3
+  </text>
+
+  <!-- Feature line (single text element, separator dots inline) -->
+  <text x="336" y="402" font-size="22" font-weight="500" fill="#3A3A3A">
+    Pluggable providers <tspan fill="#D3CEC1">·</tspan> Dual pagination <tspan fill="#D3CEC1">·</tspan> Slot-driven rendering
+  </text>
+  <text x="336" y="438" font-size="22" font-weight="500" fill="#3A3A3A">
+    URL / localStorage state <tspan fill="#D3CEC1">·</tspan> TypeScript-first <tspan fill="#D3CEC1">·</tspan> ~10 KB gzipped
+  </text>
+
+  <!-- Bottom badges -->
+  <g transform="translate(336 510)">
+    <!-- v0.3.0 -->
+    <rect width="120" height="44" rx="22" fill="#111111"/>
+    <text x="60" y="29" font-size="16" font-weight="600" fill="#FBFAF7" text-anchor="middle" font-family="ui-monospace, 'SF Mono', monospace">v0.3.0</text>
+
+    <!-- Vue 3.3+ -->
+    <g transform="translate(140 0)">
+      <rect width="140" height="44" rx="22" fill="none" stroke="#42b883" stroke-width="2"/>
+      <text x="70" y="29" font-size="16" font-weight="600" fill="#42b883" text-anchor="middle">Vue 3.3+</text>
+    </g>
+
+    <!-- TypeScript -->
+    <g transform="translate(300 0)">
+      <rect width="160" height="44" rx="22" fill="none" stroke="#3178c6" stroke-width="2"/>
+      <text x="80" y="29" font-size="16" font-weight="600" fill="#3178c6" text-anchor="middle">TypeScript</text>
+    </g>
+
+    <!-- MIT -->
+    <g transform="translate(480 0)">
+      <rect width="100" height="44" rx="22" fill="none" stroke="#6E6A63" stroke-width="2"/>
+      <text x="50" y="29" font-size="16" font-weight="600" fill="#6E6A63" text-anchor="middle">MIT</text>
+    </g>
+  </g>
+</svg>
