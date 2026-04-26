@@ -124,7 +124,7 @@ const stateProvider = computed<StateProvider | undefined>(() => {
   return props.dataProvider.getStateProvider?.('default') ?? undefined
 })
 
-const { items, loading, sortState, paginationState, handleSort, handleSetPage } = useGridState<T>({
+const { items, loading, sortState, paginationState, handleSort, handleSetPage, refresh } = useGridState<T>({
   dataProvider: props.dataProvider,
   stateProvider,
   autoLoad: props.autoLoad,
@@ -134,5 +134,6 @@ const { items, loading, sortState, paginationState, handleSort, handleSetPage } 
 defineExpose({
   items,
   loading,
+  refresh,
 })
 </script>

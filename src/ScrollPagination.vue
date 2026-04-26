@@ -24,6 +24,13 @@
   </div>
 </template>
 
+<style scoped>
+.grid-scroll-sentinel {
+  height: 1px;
+  width: 100%;
+}
+</style>
+
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
@@ -55,7 +62,7 @@ function handleIntersection(entries: IntersectionObserverEntry[]): void {
 
 onMounted(() => {
   if (sentinelRef.value) {
-    observer = new IntersectionObserver(handleIntersection)
+    observer = new IntersectionObserver(handleIntersection, { rootMargin: '100px' })
     observer.observe(sentinelRef.value)
   }
 })

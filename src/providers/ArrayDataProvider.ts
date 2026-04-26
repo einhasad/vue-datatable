@@ -84,6 +84,20 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
     })
   }
 
+  private applyState(): T[] {
+    const filtered = this.filterItems([...this.allItems])
+    const sorted = this.sortItems(filtered)
+
+    if (this.offsetPaginationState && this.offsetPaginationState.page >= 1 && this.offsetPaginationState.pageSize > 0) {
+      const { page, pageSize } = this.offsetPaginationState
+      this.displayedItems.value = sorted.slice((page - 1) * pageSize, page * pageSize)
+    } else {
+      this.displayedItems.value = sorted
+    }
+
+    return this.displayedItems.value as T[]
+  }
+
   // eslint-disable-next-line @typescript-eslint/require-await
   async load(options: LoadOptions = { sortOrder: null }): Promise<LoadResult<T>> {
     this.loading.value = true
@@ -93,19 +107,8 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
         this.sortState = { field: options.sortField, order: options.sortOrder }
       }
 
-      const filtered = this.filterItems([...this.allItems])
-      const sorted = this.sortItems(filtered)
-
-      // Apply offset pagination if configured
-      if (this.offsetPaginationState && this.offsetPaginationState.page >= 1 && this.offsetPaginationState.pageSize > 0) {
-        const { page, pageSize } = this.offsetPaginationState
-        this.displayedItems.value = sorted.slice((page - 1) * pageSize, page * pageSize)
-      } else {
-        this.displayedItems.value = sorted
-      }
-
       return {
-        items: this.displayedItems.value as T[]
+        items: this.applyState()
       }
     } finally {
       this.loading.value = false
@@ -138,7 +141,7 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
    */
   setSort(sort: SortState): void {
     this.sortState = sort
-    this.displayedItems.value = this.sortItems([...this.allItems])
+    this.applyState()
   }
 
   /**
@@ -146,7 +149,7 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
    */
   setAllItems(items: T[]): void {
     this.allItems = [...items]
-    this.displayedItems.value = this.sortItems([...this.allItems])
+    this.applyState()
   }
 
   /**
@@ -184,12 +187,7 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
 
   setOffsetPagination(state: OffsetPaginationState): void {
     this.offsetPaginationState = state
-    if (state.page >= 1 && state.pageSize > 0) {
-      const sorted = this.sortItems([...this.allItems])
-      const start = (state.page - 1) * state.pageSize
-      const end = start + state.pageSize
-      this.displayedItems.value = sorted.slice(start, end)
-    }
+    this.applyState()
   }
 
   getOffsetPagination(): OffsetPaginationState | null {
