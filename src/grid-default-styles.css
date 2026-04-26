@@ -209,6 +209,16 @@ a.grid-sort-link.desc .grid-sort-link__icon-up {
   border-right: none;
 }
 
+/* Custom expanded-row content (via #expandedRow slot) */
+.grid-expanded-row {
+  background-color: var(--grid-expanded-bg, var(--grid-body-bg));
+}
+
+.grid-expanded-cell {
+  padding: var(--grid-expanded-padding, 12px var(--grid-cell-padding, 8px 12px));
+  border-bottom: 1px solid var(--grid-border-color);
+}
+
 /* Loading */
 .grid-loading-row,
 .grid-empty-row {
@@ -302,4 +312,46 @@ a.grid-pagination-active {
   margin-left: auto;
   color: var(--grid-pagination-summary-color);
   font-size: var(--grid-font-size);
+}
+
+/* Expandable rows — chevron + indent */
+.grid-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  margin-right: 0.4rem;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+  vertical-align: middle;
+  color: var(--grid-chevron-color, currentColor);
+  opacity: 0.65;
+  transition: opacity 120ms ease-out, background-color 120ms ease-out;
+}
+
+.grid-chevron:hover {
+  opacity: 1;
+  background-color: var(--grid-chevron-hover-bg, rgba(0, 0, 0, 0.06));
+}
+
+.grid-chevron:focus-visible {
+  outline: 2px solid var(--grid-chevron-focus-color, #3b82f6);
+  outline-offset: 1px;
+}
+
+.grid-chevron__icon {
+  display: inline-block;
+  transition: transform 160ms ease-out;
+}
+
+.grid-chevron--expanded {
+  opacity: 1;
+}
+
+.grid-chevron--expanded .grid-chevron__icon {
+  transform: rotate(90deg);
 }

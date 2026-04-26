@@ -46,7 +46,7 @@
         <span class="ds-header__wordmark">
           <span class="ds-header__wordmark-scope">@einhasad-vue/</span>datatable-vue
         </span>
-        <span class="ds-header__version">v0.2.0</span>
+        <span class="ds-header__version">v0.4.0</span>
       </a>
       <nav class="ds-header__nav">
         <a
@@ -250,6 +250,35 @@
           </li>
         </ul>
       </div>
+      <div class="ds-sidebar__group">
+        <span class="ds-caps ds-sidebar__label">Row state</span>
+        <ul>
+          <li>
+            <a
+              href="#expandable-rows"
+              class="ds-sidebar__link"
+              :class="{ 'is-active': activeSection === 'expandable-rows' }"
+              @click.prevent="scrollTo('expandable-rows')"
+            >Expandable Rows</a>
+          </li>
+          <li>
+            <a
+              href="#mass-action"
+              class="ds-sidebar__link"
+              :class="{ 'is-active': activeSection === 'mass-action' }"
+              @click.prevent="scrollTo('mass-action')"
+            >Mass Action / Selection</a>
+          </li>
+          <li>
+            <a
+              href="#expanded-row-slot"
+              class="ds-sidebar__link"
+              :class="{ 'is-active': activeSection === 'expanded-row-slot' }"
+              @click.prevent="scrollTo('expanded-row-slot')"
+            >Custom expanded content</a>
+          </li>
+        </ul>
+      </div>
     </aside>
 
     <main class="ds-main ds-prose">
@@ -257,7 +286,7 @@
         <div class="ds-hero__grid-bg" />
         <div class="ds-hero__content">
           <div class="ds-hero__eyebrow">
-            <span class="ds-hero__eyebrow-tag">v0.2</span>
+            <span class="ds-hero__eyebrow-tag">v0.4</span>
             <span>Pluggable providers · Vue 3.4+</span>
           </div>
           <h1 class="ds-hero__title">
@@ -892,6 +921,65 @@ await dataProvider.refresh()</code></pre>
         </ExampleFrame>
       </section>
 
+      <section
+        id="expandable-rows"
+        class="demo-section"
+      >
+        <h2>Expandable Rows (lazy tree)</h2>
+        <p>
+          Mark a column with <code>expandToggle: true</code> to render a chevron + indent.
+          The grid emits <code>@expand</code> with the clicked item; the consumer fetches children
+          and reattaches them via <code>provider.setRows()</code>. Expansion state lives in an
+          <code>InMemoryRowStateProvider</code> keyed by <code>:row-key</code>, so it survives
+          pagination, sort, and filter changes within the session.
+        </p>
+        <ExampleFrame
+          file="ExpandableRowsExample.vue"
+          :source="expandableRowsSource"
+        >
+          <ExpandableRowsExample />
+        </ExampleFrame>
+      </section>
+
+      <section
+        id="mass-action"
+        class="demo-section"
+      >
+        <h2>Mass Action / Selection</h2>
+        <p>
+          The same <code>RowStateProvider</code> primitive that drives expansion handles arbitrary
+          per-row flags. Here a checkbox column uses <code>RowContext.rowState.toggle('selected')</code>;
+          the toolbar reads <code>rowState.entries('selected')</code> for bulk actions. Selection
+          persists across pagination — keyed by row id, not position.
+        </p>
+        <ExampleFrame
+          file="MassActionExample.vue"
+          :source="massActionSource"
+        >
+          <MassActionExample />
+        </ExampleFrame>
+      </section>
+
+      <section
+        id="expanded-row-slot"
+        class="demo-section"
+      >
+        <h2>Custom expanded content (#expandedRow)</h2>
+        <p>
+          When children don't share the parent's schema — e.g. an order expanding into a line-items
+          table — render arbitrary content with the <code>#expandedRow</code> slot. The slot
+          receives <code>{ item, depth, rowKey, toggle }</code>. Use the homogeneous tree
+          (<code>:children-field</code>) for same-shape children, the slot for everything else.
+          The two are independent and can be combined.
+        </p>
+        <ExampleFrame
+          file="ExpandedRowSlotExample.vue"
+          :source="expandedRowSlotSource"
+        >
+          <ExpandedRowSlotExample />
+        </ExampleFrame>
+      </section>
+
       <div style="margin-top:56px;padding:20px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:13px;color:var(--ink-3);">
         <span>Last updated <time>April 22, 2026</time></span>
         <a
@@ -1022,6 +1110,9 @@ import SearchSortExample from './components/SearchSortExample.vue'
 import CustomColumnsExample from './components/CustomColumnsExample.vue'
 import RowActionsExample from './components/RowActionsExample.vue'
 import CustomizingExample from './components/CustomizingExample.vue'
+import ExpandableRowsExample from './components/ExpandableRowsExample.vue'
+import ExpandedRowSlotExample from './components/ExpandedRowSlotExample.vue'
+import MassActionExample from './components/MassActionExample.vue'
 
 import basicSource from './components/BasicExample.vue?raw'
 import arrayProviderSource from './components/ArrayProviderExample.vue?raw'
@@ -1039,6 +1130,9 @@ import searchSortSource from './components/SearchSortExample.vue?raw'
 import customColumnsSource from './components/CustomColumnsExample.vue?raw'
 import rowActionsSource from './components/RowActionsExample.vue?raw'
 import customizingSource from './components/CustomizingExample.vue?raw'
+import expandableRowsSource from './components/ExpandableRowsExample.vue?raw'
+import expandedRowSlotSource from './components/ExpandedRowSlotExample.vue?raw'
+import massActionSource from './components/MassActionExample.vue?raw'
 
 const activeSection = ref('introduction')
 
@@ -1089,7 +1183,10 @@ const sections = [
   'search-sort',
   'custom-columns',
   'row-actions',
-  'customizing'
+  'customizing',
+  'expandable-rows',
+  'mass-action',
+  'expanded-row-slot'
 ]
 
 function scrollTo(id: string) {

@@ -130,4 +130,12 @@ export class CallbackDataProvider<T = unknown> implements DataProvider<T> {
     }
     return this.offsetState
   }
+
+  /**
+   * Replace current items reactively without invoking the load callback.
+   * Does not change sort, pagination, or loading state.
+   */
+  setRows(newRows: T[]): void {
+    this.items.value = newRows
+  }
 }

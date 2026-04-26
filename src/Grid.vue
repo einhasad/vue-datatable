@@ -33,6 +33,11 @@
         :row-key-field="rowKeyField"
         :sort-state="sortState"
         :on-sort="handleSort"
+        :resolve-row-key="resolveRowKey"
+        :resolve-children="resolveChildren"
+        :row-state-provider="rowStateProvider"
+        @expand="(item, ctx) => emit('expand', item, ctx)"
+        @collapse="(item, ctx) => emit('collapse', item, ctx)"
       >
         <template
           v-if="$slots.searchRow"
@@ -67,6 +72,16 @@
         >
           <slot name="loader" />
         </template>
+
+        <template
+          v-if="$slots.expandedRow"
+          #expandedRow="slotProps"
+        >
+          <slot
+            name="expandedRow"
+            v-bind="slotProps"
+          />
+        </template>
       </GridTable>
     </slot>
 
@@ -80,11 +95,13 @@
 </template>
 
 <script setup lang="ts" generic="T">
-import { computed } from 'vue'
-import type { Column, RowOptions, SortState, SortOrder, PaginationInfo, DataProvider } from './types'
+import { computed, provide } from 'vue'
+import type { Column, RowOptions, SortState, SortOrder, PaginationInfo, DataProvider, RowKey, RowStateProvider } from './types'
 import type { StateProvider } from './state'
 import GridTable from './GridTable.vue'
 import { useGridState } from './composables/useGridState'
+import { rowStateInjectionKey } from './rowState/injection'
+import { InMemoryRowStateProvider } from './rowState/InMemoryRowStateProvider'
 
 const props = withDefaults(defineProps<{
   dataProvider: DataProvider<T>
@@ -96,18 +113,54 @@ const props = withDefaults(defineProps<{
   emptyText?: string
   autoLoad?: boolean
   rowKeyField?: string
+  /** Row identity resolver used by RowStateProvider. Falls back to item[rowKeyField]. */
+  rowKey?: (item: T) => RowKey | undefined
+  /** Where to find a row's nested children (string field name or accessor). Default 'children'. */
+  childrenField?: string | ((item: T) => T[] | undefined)
+  /** RowStateProvider instance. Defaults to a fresh InMemoryRowStateProvider per Grid. */
+  rowStateProvider?: RowStateProvider
 }>(), {
   showLoader: true,
   showFooter: true,
   emptyText: 'No results found',
   autoLoad: true,
-  rowKeyField: 'id'
+  rowKeyField: 'id',
+  childrenField: 'children',
 })
 
 const emit = defineEmits<{
   loaded: []
   error: [error: Error]
+  expand: [item: T, ctx: { depth: number; rowKey: RowKey }]
+  collapse: [item: T, ctx: { depth: number; rowKey: RowKey }]
 }>()
+
+const rowStateProvider = props.rowStateProvider ?? new InMemoryRowStateProvider()
+provide(rowStateInjectionKey, rowStateProvider)
+
+const resolveRowKey = computed<(item: T) => RowKey | undefined>(() => {
+  if (props.rowKey) return props.rowKey
+  const field = props.rowKeyField ?? 'id'
+  return (item: T) => {
+    if (item != null && typeof item === 'object') {
+      const v = (item as Record<string, unknown>)[field]
+      if (typeof v === 'string' || typeof v === 'number') return v
+    }
+    return undefined
+  }
+})
+
+const resolveChildren = computed<(item: T) => T[] | undefined>(() => {
+  const cf = props.childrenField
+  if (typeof cf === 'function') return cf
+  return (item: T) => {
+    if (item != null && typeof item === 'object') {
+      const v = (item as Record<string, unknown>)[cf]
+      if (Array.isArray(v)) return v as T[]
+    }
+    return undefined
+  }
+})
 
 defineSlots<{
   toolbar?: (props: { loading: boolean }) => void
@@ -117,6 +170,7 @@ defineSlots<{
   row?: (props: { items: T[] }) => void
   empty?: () => void
   loader?: () => void
+  expandedRow?: (props: { item: T, depth: number, rowKey: RowKey, toggle: () => void }) => void
   pagination?: (props: { pagination: PaginationInfo, setPage: (page: number) => Promise<void> }) => void
 }>()
 

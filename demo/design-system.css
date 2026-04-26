@@ -353,7 +353,13 @@ html, body { margin: 0; padding: 0; }
 .ds-btn--outline:hover { border-color: var(--ink); }
 .ds-btn--accent { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .ds-btn--accent:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.ds-btn--danger { background: #ef4444; color: #fff; border-color: #ef4444; }
+.ds-btn--danger:hover { background: #dc2626; border-color: #dc2626; }
 .ds-btn--sm { padding: 6px 11px; font-size: 13px; }
+.ds-btn:disabled,
+.ds-btn[disabled] { cursor: not-allowed; opacity: 0.5; }
+.ds-btn:disabled:hover,
+.ds-btn[disabled]:hover { background: inherit; border-color: inherit; }
 
 /* ============================================================
    Concept grid (3-up on docs landing)

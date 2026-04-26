@@ -153,6 +153,16 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
   }
 
   /**
+   * Replace current items reactively without going through load().
+   * Used by consumers to attach children after handling <Grid>'s `expand` event.
+   * Does not change sort, pagination, or loading state.
+   */
+  setRows(newRows: T[]): void {
+    this.allItems = [...newRows]
+    this.displayedItems.value = [...newRows]
+  }
+
+  /**
    * Get all items
    */
   getAllItems(): T[] {

@@ -104,7 +104,7 @@ export default defineConfigWithVueTs(
   // Ignore patterns
   {
     ignores: [
-      'dist/**',
+      '**/dist/**',
       'node_modules/**',
       'coverage/**',
       '**/*.spec.ts',
@@ -114,8 +114,9 @@ export default defineConfigWithVueTs(
       'vite.config.ts',
       'vitest.config.ts',
       'eslint.config.mjs',
-      'public/mockServiceWorker.js',
+      '**/public/mockServiceWorker.js',
       'src/mocks/**',
+      'src/__test_diag__.vue',
     ],
   }
 )

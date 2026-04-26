@@ -215,4 +215,30 @@ describe('ArrayDataProvider', () => {
     expect(result.items[0].active).toBe(false)
     expect(result.items[1].active).toBe(true)
   })
+
+  describe('setRows', () => {
+    it('replaces current items reactively without re-running load()', () => {
+      const provider = new ArrayDataProvider<{ id: number; children?: unknown[] }>({ items: [{ id: 1 }, { id: 2 }] })
+      provider.setRows([{ id: 1, children: [{ id: 11 }] }, { id: 2 }])
+      expect(provider.getCurrentItems()).toEqual([
+        { id: 1, children: [{ id: 11 }] },
+        { id: 2 },
+      ])
+    })
+
+    it('does not touch sort state', () => {
+      const provider = new ArrayDataProvider<{ id: number; name: string }>({ items: [{ id: 1, name: 'b' }, { id: 2, name: 'a' }] })
+      provider.setSort({ field: 'name', order: 'asc' })
+      const sortBefore = provider.getSort()
+      provider.setRows([{ id: 3, name: 'c' }])
+      expect(provider.getSort()).toEqual(sortBefore)
+    })
+
+    it('does not change isLoading()', () => {
+      const provider = new ArrayDataProvider<{ id: number }>({ items: [{ id: 1 }] })
+      expect(provider.isLoading()).toBe(false)
+      provider.setRows([{ id: 2 }])
+      expect(provider.isLoading()).toBe(false)
+    })
+  })
 })

@@ -134,6 +134,14 @@ export interface DataProvider<T = unknown> {
   setOffsetPagination(state: OffsetPaginationState): void
   /** Get current offset pagination state. Returns null if not active. */
   getOffsetPagination(): OffsetPaginationState | null
+
+  /**
+   * Replace the current items reactively without going through load().
+   * Use this when the consumer mutates items (e.g., attaches children
+   * after fetching them in response to an `expand` event from <Grid>).
+   * Does not touch sort, filter, pagination, or loading state.
+   */
+  setRows(newRows: T[]): void
 }
 
 /**
@@ -147,13 +155,24 @@ export interface Column<T = any> {
   value?: (model: T, key: number) => string | number | boolean | null | undefined
   show?: (model: T) => boolean
   showColumn?: boolean | (() => boolean)
-  component?: (model: T, key: number) => ComponentOptions
+  /**
+   * Cell component renderer.
+   * The third arg `rowContext` is optional and only present when row-state features are active.
+   * Existing two-arg implementations continue to work unchanged.
+   */
+  component?: (model: T, key: number, rowContext?: RowContext) => ComponentOptions
   footer?: (models: T[]) => string
   footerOptions?: (models: T[]) => Record<string, unknown>
   action?: (model: T) => void
   sort?: string
   options?: (model: T) => Record<string, unknown>
   filter?: Filter
+  /**
+   * If true, the library prepends a chevron + depth-indent inside this column's cell
+   * for rows that are expandable. Click toggles the 'expanded' flag in RowStateProvider.
+   * Set on at most one column; behavior of multiple flagged columns is undefined.
+   */
+  expandToggle?: boolean
 }
 
 /**
@@ -183,4 +202,49 @@ export interface PaginationInfo {
   totalPages: number
   totalItems: number
   pageSize: number
+}
+
+/**
+ * Stable identifier for a row. Used by RowStateProvider to key per-row flags
+ * (expansion, selection, etc.) so they survive pagination, sort, and filter changes.
+ */
+export type RowKey = string | number
+
+/**
+ * RowStateProvider — generic per-row reactive flag store.
+ * Flag-agnostic: the provider does not know about 'expanded' or 'selected';
+ * those are string keys agreed on between the library and consumers.
+ */
+export interface RowStateProvider {
+  get(rowKey: RowKey, flag: string): unknown
+  set(rowKey: RowKey, flag: string, value: unknown): void
+  toggle(rowKey: RowKey, flag: string): void
+  delete(rowKey: RowKey, flag: string): void
+  entries(flag: string): RowKey[]
+  clear(flag: string): void
+  readonly state: Readonly<Record<RowKey, Record<string, unknown>>>
+}
+
+/**
+ * Item-bound subset of RowStateProvider. Passed via RowContext so custom
+ * column.component implementations can drive any flag without re-resolving rowKey.
+ */
+export interface RowStateScoped {
+  get(flag: string): unknown
+  set(flag: string, value: unknown): void
+  toggle(flag: string): void
+  delete(flag: string): void
+}
+
+/**
+ * Per-row context exposed to column.component(model, index, rowContext).
+ * Backward-compatible: existing two-arg components ignore the third parameter.
+ */
+export interface RowContext {
+  depth: number
+  rowKey: RowKey
+  isExpanded: boolean
+  isExpandable: boolean
+  toggle: () => void
+  rowState: RowStateScoped
 }

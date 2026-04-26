@@ -44,9 +44,14 @@ export type {
   HashStateProviderConfig
 } from './state'
 
+// Row State (per-row flags: expansion, selection, etc.)
+export { InMemoryRowStateProvider, rowStateInjectionKey } from './rowState'
+
 // Composables
 export { useFilterField } from './composables/useFilterField'
 export type { UseFilterFieldOptions } from './composables/useFilterField'
+export { useRowState } from './composables/useRowState'
+export type { UseRowStateOptions, UseRowStateReturn } from './composables/useRowState'
 
 // Dependency Injection
 export { provideGridState, useGridState } from './gridState'
@@ -65,7 +70,11 @@ export type {
   RowOptions,
   PaginationInfo,
   KeysetPaginationState,
-  OffsetPaginationState
+  OffsetPaginationState,
+  RowKey,
+  RowStateProvider,
+  RowStateScoped,
+  RowContext,
 } from './types'
 
 // Utilities

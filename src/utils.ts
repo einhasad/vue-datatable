@@ -1,4 +1,4 @@
-import type { Column, ComponentOptions, RowOptions } from './types'
+import type { Column, ComponentOptions, RowContext, RowOptions } from './types'
 
 /**
  * Extract cell value from a column definition
@@ -71,11 +71,18 @@ export function shouldShowCell<T = unknown>(column: Column<T>, model: T): boolea
 }
 
 /**
- * Get cell component options
+ * Get cell component options.
+ * Optional `rowContext` is forwarded as the third argument to `column.component`
+ * so consumers can drive expansion / selection from custom cell components.
  */
-export function getCellComponent<T = unknown>(column: Column<T>, model: T, index: number): ComponentOptions | null {
+export function getCellComponent<T = unknown>(
+  column: Column<T>,
+  model: T,
+  index: number,
+  rowContext?: RowContext,
+): ComponentOptions | null {
   if (column.component) {
-    return column.component(model, index)
+    return column.component(model, index, rowContext)
   }
 
   return null

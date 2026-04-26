@@ -17,7 +17,14 @@
 import { ref } from 'vue'
 import { Grid, ArrayDataProvider, type Column, type RowOptions } from '@einhasad-vue/datatable-vue'
 
-const rowActionsUsers = [
+interface RowUser {
+  id: number
+  name: string
+  email: string
+  active: boolean
+}
+
+const rowActionsUsers: RowUser[] = [
   { id: 1, name: 'John Doe', email: 'john@example.com', active: true },
   { id: 2, name: 'Jane Smith', email: 'jane@example.com', active: true },
   { id: 3, name: 'Bob Johnson', email: 'bob@example.com', active: false },
@@ -26,17 +33,17 @@ const rowActionsUsers = [
   { id: 6, name: 'Diana Prince', email: 'diana@example.com', active: false }
 ]
 
-const rowActionsProvider = new ArrayDataProvider({
+const rowActionsProvider = new ArrayDataProvider<RowUser>({
   items: rowActionsUsers
 })
 
-const selectedUser = ref<any>(null)
+const selectedUser = ref<RowUser | null>(null)
 
-function handleRowClick(user: any) {
+function handleRowClick(user: RowUser): void {
   selectedUser.value = user
 }
 
-function getRowOptions(user: any): RowOptions {
+function getRowOptions(user: RowUser): RowOptions {
   return {
     class: {
       'row-clickable': true,
@@ -49,7 +56,7 @@ function getRowOptions(user: any): RowOptions {
   }
 }
 
-const rowActionsColumns: Column[] = [
+const rowActionsColumns: Column<RowUser>[] = [
   { key: 'id', label: 'ID' },
   { key: 'name', label: 'Name' },
   { key: 'email', label: 'Email' },

@@ -22,7 +22,15 @@ import StateInspector from './StateInspector.vue'
 
 const router = useRouter()
 
-const stateUsers = [
+interface StateUser {
+  id: number
+  name: string
+  email: string
+  role: string
+  status: string
+}
+
+const stateUsers: StateUser[] = [
   { id: 1, name: 'Eve Davis', email: 'eve@example.com', role: 'Manager', status: 'Inactive' },
   { id: 2, name: 'Steve Eve', email: 'steve@example.com', role: 'Manager', status: 'Inactive' },
   { id: 3, name: 'Diana Prince', email: 'diana@example.com', role: 'Manager', status: 'Inactive' },
@@ -37,12 +45,12 @@ const stateUsers = [
   { id: 12, name: 'Kate Morgan', email: 'kate@example.com', role: 'User', status: 'Active' }
 ]
 
-const stateColumns: Column[] = [
-  { sort: 'id', label: 'ID', value: (m: any) => m.id.toString(), filter: { name: 'id', type: 'text' } },
-  { sort: 'name', label: 'Name', value: (m: any) => m.name, filter: { name: 'name', type: 'text' } },
-  { sort: 'email', label: 'Email', value: (m: any) => m.email, filter: { name: 'email', type: 'text' } },
-  { sort: 'role', label: 'Role', value: (m: any) => m.role, filter: { name: 'role', type: 'text' } },
-  { sort: 'status', label: 'Status', value: (m: any) => m.status, filter: { name: 'status', type: 'text' } }
+const stateColumns: Column<StateUser>[] = [
+  { sort: 'id', label: 'ID', value: (m) => m.id.toString(), filter: { name: 'id', type: 'text' } },
+  { sort: 'name', label: 'Name', value: (m) => m.name, filter: { name: 'name', type: 'text' } },
+  { sort: 'email', label: 'Email', value: (m) => m.email, filter: { name: 'email', type: 'text' } },
+  { sort: 'role', label: 'Role', value: (m) => m.role, filter: { name: 'role', type: 'text' } },
+  { sort: 'status', label: 'Status', value: (m) => m.status, filter: { name: 'status', type: 'text' } }
 ]
 
 const queryParamsStateProvider = new QueryParamsStateProvider({ router, prefix: 'qp' })

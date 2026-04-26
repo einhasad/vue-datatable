@@ -711,4 +711,21 @@ describe('ElasticsearchDataProvider', () => {
       expect(provider.getSort()).toBeNull()
     })
   })
+
+  describe('setRows', () => {
+    it('replaces current items reactively without invoking the http client', async () => {
+      const httpClient = vi.fn().mockResolvedValue({
+        hits: { total: { value: 1, relation: 'eq' }, hits: [{ _id: '1', _source: { id: 1 } }] }
+      })
+      const provider = new ElasticSearchDataProvider<{ id: number; children?: unknown[] }>({
+        url: '/x',
+        httpClient,
+      })
+      await provider.load()
+      httpClient.mockClear()
+      provider.setRows([{ id: 1, children: [{ id: 11 }] }])
+      expect(provider.getCurrentItems()).toEqual([{ id: 1, children: [{ id: 11 }] }])
+      expect(httpClient).not.toHaveBeenCalled()
+    })
+  })
 })
