@@ -59,7 +59,7 @@ const employees = [
 const sortingProvider = new ArrayDataProvider({
   items: employees
 })
-sortingProvider.setSort('id', 'asc')
+sortingProvider.setSort({ field: 'id', order: 'asc' })
 
 const sortingColumns: Column[] = [
   { key: 'id', label: 'ID', sort: 'id' },
@@ -81,12 +81,12 @@ async function handleSortingSelect(e: Event) {
   const event = e as CustomEvent & { value?: string }
   const value = event.detail?.value ?? (event as any).value
   if (value === 'position-desc') {
-    sortingProvider.setSort('position', 'desc')
+    sortingProvider.setSort({ field: 'position', order: 'desc' })
     if (sortingGridRef.value) {
       sortingGridRef.value.items = sortingProvider.getCurrentItems()
     }
   } else if (value === 'position-asc') {
-    sortingProvider.setSort('position', 'asc')
+    sortingProvider.setSort({ field: 'position', order: 'asc' })
     if (sortingGridRef.value) {
       sortingGridRef.value.items = sortingProvider.getCurrentItems()
     }
