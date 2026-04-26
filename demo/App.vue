@@ -46,7 +46,7 @@
         <span class="ds-header__wordmark">
           <span class="ds-header__wordmark-scope">@einhasad-vue/</span>datatable-vue
         </span>
-        <span class="ds-header__version">v0.2.0</span>
+        <span class="ds-header__version">v0.4.0</span>
       </a>
       <nav class="ds-header__nav">
         <a
@@ -278,7 +278,7 @@
         <div class="ds-hero__grid-bg" />
         <div class="ds-hero__content">
           <div class="ds-hero__eyebrow">
-            <span class="ds-hero__eyebrow-tag">v0.2</span>
+            <span class="ds-hero__eyebrow-tag">v0.4</span>
             <span>Pluggable providers · Vue 3.4+</span>
           </div>
           <h1 class="ds-hero__title">
