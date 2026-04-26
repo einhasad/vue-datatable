@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+  <!-- Yellow rounded square -->
+  <rect width="1000" height="1000" rx="220" fill="#FFC833"/>
+
+  <!-- Bold lowercase 'e' rendered via text -->
+  <text x="500" y="730"
+        font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+        font-weight="900"
+        font-size="780"
+        fill="#1A1505"
+        text-anchor="middle"
+        letter-spacing="-30">e</text>
+</svg>
