@@ -23,7 +23,11 @@ describe('ScrollPaginationExample', () => {
       wrapper.findAll('tbody tr.grid-row').map((row) => parseInt(row.find('td').text(), 10))
 
     const fireSentinel = () => {
-      const sentinel = wrapper.find('.grid-scroll-sentinel')
+      // Scope to the bottom sentinel — there are now two ScrollPagination
+      // instances (top + bottom), so the bare `.grid-scroll-sentinel` query
+      // would resolve to whichever is in the DOM first (the top one once it
+      // appears) and trigger loadEarlier instead of loadMore.
+      const sentinel = wrapper.find('.grid-scroll-pagination--bottom .grid-scroll-sentinel')
       if (sentinel.exists()) triggerIntersection(sentinel.element, true)
     }
 
@@ -67,47 +71,48 @@ describe('ScrollPaginationExample', () => {
     expect(rows.length).toBeLessThanOrEqual(100)
   })
 
-  it('shifts window backward when scrolling near the top', async () => {
+  it('shifts window backward when the top sentinel intersects', async () => {
     const { wrapper } = mountExample(ScrollPaginationExample)
     await flushPromises()
 
     const getRowIds = () =>
       wrapper.findAll('tbody tr.grid-row').map((row) => parseInt(row.find('td').text(), 10))
 
-    const fireSentinel = () => {
-      const sentinel = wrapper.find('.grid-scroll-sentinel')
+    const fireBottomSentinel = () => {
+      const sentinel = wrapper.find('.grid-scroll-pagination--bottom .grid-scroll-sentinel')
+      if (sentinel.exists()) triggerIntersection(sentinel.element, true)
+    }
+
+    const fireTopSentinel = () => {
+      const sentinel = wrapper.find('.grid-scroll-pagination--top .grid-scroll-sentinel')
       if (sentinel.exists()) triggerIntersection(sentinel.element, true)
     }
 
     expect(wrapper.findAll('tbody tr.grid-row').length).toBe(50)
 
+    // Slide forward enough cycles to push windowStart well past 0.
     for (let i = 0; i < 9; i++) {
-      fireSentinel()
+      fireBottomSentinel()
       await flushPromises()
     }
 
-    let ids = getRowIds()
-    expect(ids[0]).toBeGreaterThanOrEqual(390)
-    expect(ids[ids.length - 1]).toBeGreaterThanOrEqual(490)
+    const idsBefore = getRowIds()
+    expect(idsBefore[0]).toBeGreaterThanOrEqual(390)
+    expect(idsBefore[idsBefore.length - 1]).toBeGreaterThanOrEqual(490)
 
-    const scrollContainer = wrapper.find('.scroll-container')
-    const scrollEl = scrollContainer.element as HTMLElement
+    // Top sentinel only renders once windowStart > 0 (hasEarlier === true).
+    expect(wrapper.find('.grid-scroll-pagination--top .grid-scroll-sentinel').exists()).toBe(true)
 
-    Object.defineProperty(scrollEl, 'scrollTop', { value: 500, writable: true })
-    Object.defineProperty(scrollEl, 'scrollHeight', { value: 3000, writable: true })
-    Object.defineProperty(scrollEl, 'clientHeight', { value: 500, writable: true })
-    await scrollContainer.trigger('scroll')
+    // Drive the new sentinel-based load-earlier path. This replaces the old
+    // scrollTop heuristic which left users "stuck at the top" — once
+    // scrollTop hit 0 the trigger could never re-fire.
+    fireTopSentinel()
     await flushPromises()
+    await new Promise((resolve) => setTimeout(resolve, 50))
 
-    Object.defineProperty(scrollEl, 'scrollTop', { value: 50, writable: true })
-    Object.defineProperty(scrollEl, 'scrollHeight', { value: 3000, writable: true })
-    Object.defineProperty(scrollEl, 'clientHeight', { value: 500, writable: true })
-    await scrollContainer.trigger('scroll')
-    await flushPromises()
-
-    ids = getRowIds()
-    expect(ids[0]).toBeLessThan(400)
-    expect(ids[0]).toBeGreaterThan(1)
-    expect(ids).not.toContain(1)
+    const idsAfter = getRowIds()
+    expect(idsAfter[0]).toBeLessThan(idsBefore[0])
+    expect(idsAfter[0]).toBeGreaterThan(1)
+    expect(idsAfter).not.toContain(1)
   }, 10000)
 })

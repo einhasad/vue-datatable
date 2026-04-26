@@ -27,7 +27,15 @@
       <span style="font-size: 13px; color: var(--ink-3);">Total: {{ totalCount.toLocaleString() }} products</span>
     </div>
   </div>
-  <div class="scroll-container demo-scroll-container" @scroll="handleScroll" ref="containerRef">
+  <div class="scroll-container demo-scroll-container" ref="containerRef">
+    <ScrollPagination
+      position="top"
+      :pagination="paginationInfo"
+      :loading="loading"
+      @load-earlier="handleLoadEarlier"
+    >
+      <template #loading-text>Loading earlier products...</template>
+    </ScrollPagination>
     <Grid
       ref="gridRef"
       :data-provider="dataProvider"
@@ -60,7 +68,7 @@ const {
   paginationInfo,
   handleSearchInput,
   handleSortChange,
-  handleScroll,
+  handleLoadEarlier,
   handleLoadMore
 } = useScrollPagination()
 </script>

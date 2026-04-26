@@ -1,12 +1,13 @@
 <template>
   <div
-    ref="sortingSelectWrapperRef"
     data-qa="select-search"
     style="margin-bottom: 12px;"
   >
     <select
       v-model="sortingSelectValue"
+      data-qa="sort-select"
       class="demo-select"
+      @change="handleSortingSelect"
     >
       <option value="">Default</option>
       <option value="position-desc">Position Desc</option>
@@ -21,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref } from 'vue'
 import { Grid, ArrayDataProvider, type Column } from '@einhasad-vue/datatable-vue'
 
 const employees = [
@@ -35,10 +36,12 @@ const employees = [
   { id: 8, name: 'Hannah Montana', department: 'Sales', salary: 85000, position: 2 }
 ]
 
+const DEFAULT_SORT = { field: 'id', order: 'asc' as const }
+
 const sortingProvider = new ArrayDataProvider({
   items: employees
 })
-sortingProvider.setSort({ field: 'id', order: 'asc' })
+sortingProvider.setSort(DEFAULT_SORT)
 
 const sortingColumns: Column[] = [
   { key: 'id', label: 'ID', sort: 'id' },
@@ -53,28 +56,16 @@ const sortingColumns: Column[] = [
 ]
 
 const sortingSelectValue = ref('')
-const sortingSelectWrapperRef = ref<HTMLElement | null>(null)
 const sortingGridRef = ref<any>(null)
 
-async function handleSortingSelect(e: Event) {
-  const event = e as CustomEvent & { value?: string }
-  const value = event.detail?.value ?? (event as any).value
+function handleSortingSelect() {
+  const value = sortingSelectValue.value
   if (value === 'position-desc') {
     sortingProvider.setSort({ field: 'position', order: 'desc' })
   } else if (value === 'position-asc') {
     sortingProvider.setSort({ field: 'position', order: 'asc' })
+  } else {
+    sortingProvider.setSort(DEFAULT_SORT)
   }
 }
-
-onMounted(() => {
-  if (sortingSelectWrapperRef.value) {
-    sortingSelectWrapperRef.value.addEventListener('select', handleSortingSelect)
-  }
-})
-
-onUnmounted(() => {
-  if (sortingSelectWrapperRef.value) {
-    sortingSelectWrapperRef.value.removeEventListener('select', handleSortingSelect)
-  }
-})
 </script>

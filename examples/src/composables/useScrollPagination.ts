@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, type Ref } from 'vue'
+import { ref, computed, nextTick, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   ArrayDataProvider,
@@ -114,10 +114,10 @@ export function useScrollPagination(options: UseScrollPaginationOptions = {}) {
   const hasMoreData = ref(true)
 
   let searchTimeout: ReturnType<typeof setTimeout> | null = null
-  let lastScrollTop = 0
 
   const paginationInfo = computed(() => ({
-    hasMore: () => hasMoreData.value
+    hasMore: () => hasMoreData.value,
+    hasEarlier: () => windowStart.value > 0
   }))
 
   const updateWindow = () => {
@@ -184,27 +184,50 @@ export function useScrollPagination(options: UseScrollPaginationOptions = {}) {
     if (gridRef.value) await gridRef.value.refresh()
   }
 
-  const handleScroll = async (event: Event) => {
-    const container = event.target as HTMLElement
-    if (!container) return
+  // Driven by the top sentinel in <ScrollPagination position="top">.
+  // The container's scrollTop is bumped by the height of the prepended rows
+  // so the user's visual position stays put after the window slides back —
+  // otherwise prepending N rows shifts the viewport's content N rows downward
+  // and the user appears to teleport mid-list.
+  const handleLoadEarlier = async () => {
+    if (loading.value || windowStart.value <= 0) return
 
-    const scrollTop = container.scrollTop
-    const scrollDelta = lastScrollTop - scrollTop
-    const nearTopThreshold = 50
-    const isNearTop = scrollTop <= nearTopThreshold
-    const isScrollingUp = scrollTop < lastScrollTop
+    loading.value = true
+    try {
+      const container = containerRef.value
+      const scrollTopBefore = container?.scrollTop ?? 0
+      const heightBefore = container?.scrollHeight ?? 0
 
-    if (isScrollingUp && isNearTop && scrollDelta > 1 && windowStart.value > 0) {
+      // Sample a row's height BEFORE the window mutation. The window slides
+      // (same row count in, same out), so scrollHeight delta is zero — that
+      // means the simple `scrollTop += heightAfter - heightBefore` trick
+      // cannot work here. We need row-height × shifted-rows instead.
+      const sampleRow = container?.querySelector('.grid-row') as HTMLElement | null
+      const rowHeight = sampleRow?.getBoundingClientRect().height ?? 0
+
       const shiftAmount = Math.min(pageSize, windowStart.value)
       windowStart.value -= shiftAmount
       windowEnd.value = windowStart.value + Math.min(bufferSize, loadedItems.value.length - windowStart.value)
-      lastScrollTop = scrollTop
       updateWindow()
       if (gridRef.value) await gridRef.value.refresh()
-      return
-    }
+      await nextTick()
 
-    lastScrollTop = scrollTop
+      if (container && rowHeight > 0) {
+        // After sliding back, the row the user was looking at is now
+        // `shiftAmount` rows lower in the rendered content. Bump scrollTop
+        // by that visual offset so the user stays put — and so the top
+        // sentinel scrolls off-screen above the prepended rows, preventing
+        // a runaway cascade back to the first element.
+        container.scrollTop = scrollTopBefore + shiftAmount * rowHeight
+      } else if (container) {
+        // Fallback: if the window happened to grow (no eviction), use the
+        // scrollHeight delta. Keeps behaviour reasonable when row metrics
+        // aren't available yet.
+        container.scrollTop = scrollTopBefore + (container.scrollHeight - heightBefore)
+      }
+    } finally {
+      loading.value = false
+    }
   }
 
   const handleLoadMore = async () => {
@@ -273,7 +296,7 @@ export function useScrollPagination(options: UseScrollPaginationOptions = {}) {
     paginationInfo,
     handleSearchInput,
     handleSortChange,
-    handleScroll,
+    handleLoadEarlier,
     handleLoadMore
   }
 }
