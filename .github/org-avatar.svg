@@ -2,12 +2,57 @@
   <!-- Yellow rounded square -->
   <rect width="1000" height="1000" rx="220" fill="#FFC833"/>
 
-  <!-- Bold lowercase 'e' rendered via text -->
-  <text x="500" y="730"
-        font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif"
-        font-weight="900"
-        font-size="780"
-        fill="#1A1505"
-        text-anchor="middle"
-        letter-spacing="-30">e</text>
+  <g fill="none" stroke="#1A1505" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- ========== CENTRAL SPEAR ========== -->
+
+    <!-- Top tip: tall pointed leaf -->
+    <path d="M 500 130
+             L 530 280
+             L 500 320
+             L 470 280 Z"
+          fill="#1A1505" stroke-width="0"/>
+
+    <!-- Cross-pommel where wings meet (small bead) -->
+    <circle cx="500" cy="450" r="14" fill="#1A1505" stroke-width="0"/>
+
+    <!-- Main shaft from below tip down to bottom point -->
+    <line x1="500" y1="320" x2="500" y2="440" stroke-width="14"/>
+    <line x1="500" y1="460" x2="500" y2="880" stroke-width="14"/>
+
+    <!-- Bottom point -->
+    <path d="M 478 870 L 500 920 L 522 870 Z" fill="#1A1500" stroke-width="0"/>
+
+    <!-- ========== LEFT WING ========== -->
+
+    <!-- Outer flourish: goes up-and-out, then arcs down and curls inward -->
+    <path d="M 500 460
+             C 410 410 290 410 240 510
+             C 200 590 220 700 320 740
+             C 380 760 420 720 410 660
+             C 400 620 360 605 330 630
+             C 310 645 318 675 345 680" stroke-width="36"/>
+
+    <!-- Small leaf bud on top of left wing -->
+    <path d="M 380 420
+             Q 360 410 370 390
+             Q 390 400 380 420 Z"
+          fill="#1A1505" stroke-width="0"/>
+
+    <!-- ========== RIGHT WING (mirror) ========== -->
+
+    <path d="M 500 460
+             C 590 410 710 410 760 510
+             C 800 590 780 700 680 740
+             C 620 760 580 720 590 660
+             C 600 620 640 605 670 630
+             C 690 645 682 675 655 680" stroke-width="36"/>
+
+    <!-- Small leaf bud on top of right wing -->
+    <path d="M 620 420
+             Q 640 410 630 390
+             Q 610 400 620 420 Z"
+          fill="#1A1505" stroke-width="0"/>
+
+  </g>
 </svg>
