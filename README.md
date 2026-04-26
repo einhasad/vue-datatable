@@ -143,6 +143,7 @@ All UI pieces are slots. Replace any of them:
 | `#table` | `{ items, columns, sortState, onSort, … }` | Replace the entire table renderer |
 | `#searchRow` | `{ columns, stateProvider }` | Per-column filter row |
 | `#row` | `{ items }` | Replace the row-rendering loop |
+| `#expandedRow` | `{ item, depth, rowKey, toggle }` | Custom panel rendered below an expanded row |
 | `#empty` | — | Empty-state UI |
 | `#loader` | — | Loading-state UI |
 | `#pagination` | `{ pagination, setPage }` | Pagination renderer |
@@ -192,6 +193,40 @@ Cells can render **dynamic Vue components** via `component`:
   })
 }
 ```
+
+## Expandable rows
+
+Two complementary modes:
+
+**Homogeneous tree** — children share the parent's schema. Mark a column with `expandToggle: true` to render a chevron + indent. The grid emits `@expand` with the clicked item; the consumer fetches children and reattaches them via `provider.setRows()` (or by mutating the source ref). Expansion state lives in an `InMemoryRowStateProvider` keyed by `:row-key`, so it persists across pagination and filters.
+
+```vue
+<Grid
+  :data-provider="provider"
+  :columns="columns"
+  :row-key="(item) => item.id"
+  children-field="children"
+  @expand="handleExpand"
+/>
+```
+
+**Custom expanded content (`#expandedRow` slot)** — when the expanded panel doesn't share the parent's schema (e.g. an order expanding into a line-items table), render arbitrary content instead. The slot receives `{ item, depth, rowKey, toggle }`.
+
+```vue
+<Grid
+  :data-provider="provider"
+  :columns="columns"
+  :row-key="(item) => item.id"
+  @expand="handleExpand"
+>
+  <template #expandedRow="{ item, toggle }">
+    <OrderLines :order-id="item.id" />
+    <button @click="toggle">Close</button>
+  </template>
+</Grid>
+```
+
+The two modes are independent and can be combined. Use the homogeneous tree when child rows look like parent rows; use the slot when they don't.
 
 ## Theming
 

@@ -209,6 +209,16 @@ a.grid-sort-link.desc .grid-sort-link__icon-up {
   border-right: none;
 }
 
+/* Custom expanded-row content (via #expandedRow slot) */
+.grid-expanded-row {
+  background-color: var(--grid-expanded-bg, var(--grid-body-bg));
+}
+
+.grid-expanded-cell {
+  padding: var(--grid-expanded-padding, 12px var(--grid-cell-padding, 8px 12px));
+  border-bottom: 1px solid var(--grid-border-color);
+}
+
 /* Loading */
 .grid-loading-row,
 .grid-empty-row {

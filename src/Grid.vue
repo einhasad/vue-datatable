@@ -72,6 +72,16 @@
         >
           <slot name="loader" />
         </template>
+
+        <template
+          v-if="$slots.expandedRow"
+          #expandedRow="slotProps"
+        >
+          <slot
+            name="expandedRow"
+            v-bind="slotProps"
+          />
+        </template>
       </GridTable>
     </slot>
 
@@ -160,6 +170,7 @@ defineSlots<{
   row?: (props: { items: T[] }) => void
   empty?: () => void
   loader?: () => void
+  expandedRow?: (props: { item: T, depth: number, rowKey: RowKey, toggle: () => void }) => void
   pagination?: (props: { pagination: PaginationInfo, setPage: (page: number) => Promise<void> }) => void
 }>()
 

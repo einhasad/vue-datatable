@@ -60,41 +60,64 @@
             name="row"
             :items="items"
           >
-            <tr
+            <template
               v-for="row in flatRows"
               :key="row.key"
-              :data-qa="'row-' + row.flatIndex"
-              :data-row-key="row.key"
-              :data-depth="row.depth"
-              class="grid-row"
-              v-bind="buildAttributes(getRowOptions(rowOptions, row.item))"
-              @click="handleRowClick(row.item)"
             >
-              <td
-                v-for="(column, colIndex) in visibleColumns"
-                :key="column.sort || colIndex"
-                class="grid-cell"
-                v-bind="buildAttributes(getCellOptions(column, row.item))"
-                @click="column.action && column.action(row.item)"
+              <tr
+                :data-qa="'row-' + row.flatIndex"
+                :data-row-key="row.key"
+                :data-depth="row.depth"
+                class="grid-row"
+                v-bind="buildAttributes(getRowOptions(rowOptions, row.item))"
+                @click="handleRowClick(row.item)"
               >
-                <template v-if="shouldShowCell(column, row.item)">
-                  <ChevronIndent
-                    v-if="column.expandToggle && isExpandableItem(row.item)"
+                <td
+                  v-for="(column, colIndex) in visibleColumns"
+                  :key="column.sort || colIndex"
+                  class="grid-cell"
+                  v-bind="buildAttributes(getCellOptions(column, row.item))"
+                  @click="column.action && column.action(row.item)"
+                >
+                  <template v-if="shouldShowCell(column, row.item)">
+                    <ChevronIndent
+                      v-if="column.expandToggle && isExpandableItem(row.item)"
+                      :depth="row.depth"
+                      :expanded="isExpandedItem(row.item)"
+                      @toggle="onToggle(row.item, row.depth)"
+                    />
+                    <DynamicComponent
+                      v-if="getCellComponent(column, row.item, 0, buildRowContext(row.item, row.depth))"
+                      :options="getCellComponent(column, row.item, 0, buildRowContext(row.item, row.depth))!"
+                    />
+                    <span
+                      v-else
+                      v-html="getCellValue(column, row.item, 0)"
+                    />
+                  </template>
+                </td>
+              </tr>
+              <tr
+                v-if="$slots.expandedRow && isExpandedItem(row.item) && resolveRowKeyFn(row.item) !== undefined"
+                :key="row.key + ':expanded'"
+                :data-row-key="row.key"
+                :data-depth="row.depth"
+                class="grid-expanded-row"
+              >
+                <td
+                  :colspan="visibleColumns.length"
+                  class="grid-expanded-cell"
+                >
+                  <slot
+                    name="expandedRow"
+                    :item="row.item"
                     :depth="row.depth"
-                    :expanded="isExpandedItem(row.item)"
-                    @toggle="onToggle(row.item, row.depth)"
+                    :row-key="resolveRowKeyFn(row.item)!"
+                    :toggle="() => onToggle(row.item, row.depth)"
                   />
-                  <DynamicComponent
-                    v-if="getCellComponent(column, row.item, 0, buildRowContext(row.item, row.depth))"
-                    :options="getCellComponent(column, row.item, 0, buildRowContext(row.item, row.depth))!"
-                  />
-                  <span
-                    v-else
-                    v-html="getCellValue(column, row.item, 0)"
-                  />
-                </template>
-              </td>
-            </tr>
+                </td>
+              </tr>
+            </template>
           </slot>
 
           <tr

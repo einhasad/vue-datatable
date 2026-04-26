@@ -269,6 +269,14 @@
               @click.prevent="scrollTo('mass-action')"
             >Mass Action / Selection</a>
           </li>
+          <li>
+            <a
+              href="#expanded-row-slot"
+              class="ds-sidebar__link"
+              :class="{ 'is-active': activeSection === 'expanded-row-slot' }"
+              @click.prevent="scrollTo('expanded-row-slot')"
+            >Custom expanded content</a>
+          </li>
         </ul>
       </div>
     </aside>
@@ -952,6 +960,26 @@ await dataProvider.refresh()</code></pre>
         </ExampleFrame>
       </section>
 
+      <section
+        id="expanded-row-slot"
+        class="demo-section"
+      >
+        <h2>Custom expanded content (#expandedRow)</h2>
+        <p>
+          When children don't share the parent's schema — e.g. an order expanding into a line-items
+          table — render arbitrary content with the <code>#expandedRow</code> slot. The slot
+          receives <code>{ item, depth, rowKey, toggle }</code>. Use the homogeneous tree
+          (<code>:children-field</code>) for same-shape children, the slot for everything else.
+          The two are independent and can be combined.
+        </p>
+        <ExampleFrame
+          file="ExpandedRowSlotExample.vue"
+          :source="expandedRowSlotSource"
+        >
+          <ExpandedRowSlotExample />
+        </ExampleFrame>
+      </section>
+
       <div style="margin-top:56px;padding:20px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:13px;color:var(--ink-3);">
         <span>Last updated <time>April 22, 2026</time></span>
         <a
@@ -1083,6 +1111,7 @@ import CustomColumnsExample from './components/CustomColumnsExample.vue'
 import RowActionsExample from './components/RowActionsExample.vue'
 import CustomizingExample from './components/CustomizingExample.vue'
 import ExpandableRowsExample from './components/ExpandableRowsExample.vue'
+import ExpandedRowSlotExample from './components/ExpandedRowSlotExample.vue'
 import MassActionExample from './components/MassActionExample.vue'
 
 import basicSource from './components/BasicExample.vue?raw'
@@ -1102,6 +1131,7 @@ import customColumnsSource from './components/CustomColumnsExample.vue?raw'
 import rowActionsSource from './components/RowActionsExample.vue?raw'
 import customizingSource from './components/CustomizingExample.vue?raw'
 import expandableRowsSource from './components/ExpandableRowsExample.vue?raw'
+import expandedRowSlotSource from './components/ExpandedRowSlotExample.vue?raw'
 import massActionSource from './components/MassActionExample.vue?raw'
 
 const activeSection = ref('introduction')
@@ -1155,7 +1185,8 @@ const sections = [
   'row-actions',
   'customizing',
   'expandable-rows',
-  'mass-action'
+  'mass-action',
+  'expanded-row-slot'
 ]
 
 function scrollTo(id: string) {

@@ -157,6 +157,53 @@ describe('Grid expandable rows', () => {
     expect(wrapper.emitted('expand')!.length).toBe(beforeCount)
   })
 
+  it('renders #expandedRow slot only for expanded rows and exposes slot props', async () => {
+    const wrapper = mount(Grid<Node>, {
+      props: {
+        dataProvider: makeProvider([
+          { id: 'a', name: 'A' },
+          { id: 'b', name: 'B' },
+        ]),
+        columns: baseColumns,
+        rowStateProvider: rowState,
+        rowKey: (it) => it.id,
+      },
+      slots: {
+        expandedRow: `<template #expandedRow="{ item, rowKey, depth }">
+          <div class="panel" :data-id="rowKey" :data-depth="depth">{{ item.name }} panel</div>
+        </template>`,
+      },
+    })
+    await flushPromises()
+
+    expect(wrapper.findAll('.grid-expanded-row').length).toBe(0)
+
+    await wrapper.findAll('[data-qa="grid-chevron"]')[0].trigger('click')
+    await flushPromises()
+
+    const expandedRows = wrapper.findAll('.grid-expanded-row')
+    expect(expandedRows.length).toBe(1)
+    const panel = wrapper.find('.panel')
+    expect(panel.exists()).toBe(true)
+    expect(panel.text()).toBe('A panel')
+    expect(panel.attributes('data-id')).toBe('a')
+    expect(panel.attributes('data-depth')).toBe('0')
+  })
+
+  it('does not render an expanded-row tr when no #expandedRow slot is provided', async () => {
+    rowState.set('a', 'expanded', true)
+    const wrapper = mount(Grid<Node>, {
+      props: {
+        dataProvider: makeProvider([{ id: 'a', name: 'A' }]),
+        columns: baseColumns,
+        rowStateProvider: rowState,
+        rowKey: (it) => it.id,
+      }
+    })
+    await flushPromises()
+    expect(wrapper.findAll('.grid-expanded-row').length).toBe(0)
+  })
+
   it('warns once when rowKey resolves to undefined for an item', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     type Bad = { name: string }
