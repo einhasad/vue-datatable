@@ -1,4 +1,4 @@
-import { ref, computed, watch, onMounted, type ComputedRef } from 'vue'
+import { ref, computed, watch, onMounted, type ComputedRef, type Ref } from 'vue'
 import type {
   DataProvider,
   LoadResult,
@@ -19,6 +19,16 @@ interface UseGridStateOptions<T> {
   }
 }
 
+interface UseGridStateReturn<T> {
+  items: ComputedRef<T[]>
+  loading: ComputedRef<boolean>
+  sortState: Ref<SortState | null>
+  paginationState: ComputedRef<PaginationInfo | null>
+  handleSort: (field: string, order: SortOrder) => void
+  handleSetPage: (page: number) => Promise<void>
+  refresh: () => Promise<LoadResult<T>>
+}
+
 function toPaginationInfo(offset: OffsetPaginationState): PaginationInfo {
   return {
     currentPage: offset.page,
@@ -32,7 +42,7 @@ function safeGetOffsetPagination<T>(dp: DataProvider<T>): OffsetPaginationState 
   try { return dp.getOffsetPagination() } catch { return null }
 }
 
-export function useGridState<T>(options: UseGridStateOptions<T>) {
+export function useGridState<T>(options: UseGridStateOptions<T>): UseGridStateReturn<T> {
   const { dataProvider, stateProvider, emit } = options
 
   // Reactive from provider — auto-updates on ANY dataProvider.refresh() call
@@ -102,7 +112,7 @@ export function useGridState<T>(options: UseGridStateOptions<T>) {
 
   watch(
     () => {
-      const filters = stateProvider.value?.state?.filters
+      const filters = stateProvider.value?.state.filters
       if (!filters) return undefined
       const { page: _, ...rest } = filters
       return JSON.stringify(rest)

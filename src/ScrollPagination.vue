@@ -1,5 +1,8 @@
 <template>
-  <div class="grid-scroll-pagination" :class="`grid-scroll-pagination--${position}`">
+  <div
+    class="grid-scroll-pagination"
+    :class="`grid-scroll-pagination--${position}`"
+  >
     <div
       v-if="canLoad"
       ref="sentinelRef"
@@ -23,13 +26,6 @@
     </div>
   </div>
 </template>
-
-<style scoped>
-.grid-scroll-sentinel {
-  height: 1px;
-  width: 100%;
-}
-</style>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue'
@@ -64,18 +60,24 @@ const canLoad = computed(() => {
 })
 
 function handleIntersection(entries: IntersectionObserverEntry[]): void {
-  if (entries.some(entry => entry.isIntersecting) && canLoad.value && !props.loading) {
-    emit(props.position === 'top' ? 'loadEarlier' : 'loadMore')
+  if (!entries.some(entry => entry.isIntersecting) || !canLoad.value || props.loading) return
+  // Branch the emit instead of `emit(cond ? 'a' : 'b')`: defineEmits produces
+  // discriminated overloads ((evt: 'loadMore') | (evt: 'loadEarlier')), so a
+  // unioned argument matches neither overload.
+  if (props.position === 'top') {
+    emit('loadEarlier')
+  } else {
+    emit('loadMore')
   }
 }
 
-function attach() {
+function attach(): void {
   if (!sentinelRef.value || observer) return
   observer = new IntersectionObserver(handleIntersection, { rootMargin: '100px' })
   observer.observe(sentinelRef.value)
 }
 
-function detach() {
+function detach(): void {
   if (!observer) return
   observer.disconnect()
   observer = null
@@ -92,3 +94,10 @@ watch(sentinelRef, (el) => {
 })
 onBeforeUnmount(detach)
 </script>
+
+<style scoped>
+.grid-scroll-sentinel {
+  height: 1px;
+  width: 100%;
+}
+</style>

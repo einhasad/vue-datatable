@@ -46,11 +46,11 @@
 
         <template
           v-if="$slots.row"
-          #row="{ items }"
+          #row="{ items: rowItems }"
         >
           <slot
             name="row"
-            :items="items"
+            :items="rowItems"
           />
         </template>
 
@@ -121,19 +121,13 @@ defineSlots<{
 }>()
 
 const stateProvider = computed<StateProvider | undefined>(() => {
-  return props.dataProvider.getStateProvider?.('default') ?? undefined
+  return props.dataProvider.getStateProvider('default') ?? undefined
 })
 
-const { items, loading, sortState, paginationState, handleSort, handleSetPage, refresh } = useGridState<T>({
+const { items, loading, sortState, paginationState, handleSort, handleSetPage } = useGridState<T>({
   dataProvider: props.dataProvider,
   stateProvider,
   autoLoad: props.autoLoad,
   emit,
-})
-
-defineExpose({
-  items,
-  loading,
-  refresh,
 })
 </script>

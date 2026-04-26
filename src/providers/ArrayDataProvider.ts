@@ -72,7 +72,7 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
     if (!this.stateProvider) return items
 
     const filters = this.stateProvider.getAllFilters()
-    const activeFilters = Object.entries(filters).filter(([, v]) => v !== '' && v != null)
+    const activeFilters = Object.entries(filters).filter(([, v]) => v !== '')
     if (activeFilters.length === 0) return items
 
     return items.filter(item => {

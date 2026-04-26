@@ -50,6 +50,7 @@ export class QueryParamsStateProvider implements StateProvider {
 
   private getUrlParam(key: string): string | null {
     const v = this.router.currentRoute.value.query[this.paramName(key)]
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     return Array.isArray(v) ? (v[0] ?? null) : (v ?? null)
   }
 
