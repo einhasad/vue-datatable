@@ -131,11 +131,11 @@ describe('Grid expandable rows', () => {
     expect(wrapper.emitted('expand')).toBeTruthy()
     const initial = wrapper.emitted('expand')!.length
 
-    provider.updateRows([{ id: 'a', name: 'A (refreshed)' }])
+    provider.setRows([{ id: 'a', name: 'A (refreshed)' }])
     await flushPromises()
     expect(wrapper.emitted('expand')!.length).toBe(initial + 1)
 
-    provider.updateRows([{ id: 'a', name: 'A (refreshed)', children: [{ id: 'a-1', name: 'A1' }] }])
+    provider.setRows([{ id: 'a', name: 'A (refreshed)', children: [{ id: 'a-1', name: 'A1' }] }])
     await flushPromises()
     expect(wrapper.emitted('expand')!.length).toBe(initial + 1)
   })

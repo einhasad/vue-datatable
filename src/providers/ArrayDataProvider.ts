@@ -157,7 +157,7 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
    * Used by consumers to attach children after handling <Grid>'s `expand` event.
    * Does not change sort, pagination, or loading state.
    */
-  updateRows(newRows: T[]): void {
+  setRows(newRows: T[]): void {
     this.allItems = [...newRows]
     this.displayedItems.value = [...newRows]
   }

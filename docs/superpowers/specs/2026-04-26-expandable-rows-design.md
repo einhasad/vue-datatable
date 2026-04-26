@@ -8,7 +8,7 @@
 
 Add support for expandable rows that form a homogeneous tree of unbounded depth: every level renders with the same columns, children are loaded lazily on expand, and the open/closed state is tracked in memory so it survives pagination, sort, and filter changes within a session.
 
-The feature is built on a generalized **row-state primitive** that other features (mass-action selection, pinning, dirty-edited markers) can reuse. The library does not own child fetching; it emits an event, and the consumer fetches and mutates items via a new `DataProvider.updateRows()` method.
+The feature is built on a generalized **row-state primitive** that other features (mass-action selection, pinning, dirty-edited markers) can reuse. The library does not own child fetching; it emits an event, and the consumer fetches and mutates items via a new `DataProvider.setRows()` method.
 
 ## 2. Non-Goals (Explicitly Deferred)
 
@@ -38,7 +38,7 @@ Consumer handler:
    const children = await api.getChildren(item.id)
    const updated  = currentItems.map(it =>
                       it === item ? { ...it, children } : it)
-   provider.updateRows(updated)
+   provider.setRows(updated)
         |
         v
 Grid re-renders; rows recurse on item.children with depth + 1
@@ -48,14 +48,14 @@ The library is intentionally dumb about the data layer. It exposes:
 
 - A toggle UI affordance (chevron + indentation) tied to a column flag.
 - A reactive in-memory per-row state store, keyed by a stable row id.
-- A new `DataProvider` mutation point (`updateRows`) for content swaps that bypass `load()`.
+- A new `DataProvider` mutation point (`setRows`) for content swaps that bypass `load()`.
 - Recursive depth-aware rendering when an item has children attached and is marked expanded in row state.
 
 ## 4. File Layout
 
 ```
 src/
-  types.ts                          # + RowStateProvider, + Column.expandToggle, + DataProvider.updateRows, + RowContext
+  types.ts                          # + RowStateProvider, + Column.expandToggle, + DataProvider.setRows, + RowContext
   rowState/
     RowStateProvider.ts             # interface
     InMemoryRowStateProvider.ts     # default implementation (reactive Map)
@@ -125,11 +125,11 @@ export interface Column<T> {
 
 export interface DataProvider<T> {
   // ...existing methods...
-  updateRows(newRows: T[]): void
+  setRows(newRows: T[]): void
 }
 ```
 
-`updateRows` is a content swap. It does not touch pagination state, sort state, filter state, or the loading flag. It replaces the items array reactively so the grid re-renders. Existing provider methods are unchanged.
+`setRows` is a content swap. It does not touch pagination state, sort state, filter state, or the loading flag. It replaces the items array reactively so the grid re-renders. Existing provider methods are unchanged.
 
 ## 6. `RowStateProvider` Interface
 
@@ -218,7 +218,7 @@ The two modes coexist. A grid can have an `expandToggle: true` column AND additi
 1. User clicks chevron on a row whose state is not "expanded" and which has no `children` attached.
 2. Library: `rowStateProvider.toggle(rowKey, 'expanded')` → state is now `expanded: true`.
 3. Library: emits `expand(item, ctx)` because the row is now expanded but has no children.
-4. Consumer: fetches children, mutates the item to attach them, calls `provider.updateRows(updated)`.
+4. Consumer: fetches children, mutates the item to attach them, calls `provider.setRows(updated)`.
 5. Grid re-renders. Row is open, children render at depth + 1.
 
 ### Expand (warm — children already attached)
@@ -235,7 +235,7 @@ This case effectively does not occur during normal use because of the next case 
 1. User clicks chevron on an open row.
 2. Library: `rowStateProvider.toggle(rowKey, 'expanded')` → state is now `expanded: false`.
 3. Library: emits `collapse(item, ctx)`.
-4. Convention: consumer's collapse handler discards the children on the item via `provider.updateRows(...)`. The library does not enforce this. The user has chosen "refetch every expand" semantics (no caching), so consumers should drop children on collapse to keep memory bounded.
+4. Convention: consumer's collapse handler discards the children on the item via `provider.setRows(...)`. The library does not enforce this. The user has chosen "refetch every expand" semantics (no caching), so consumers should drop children on collapse to keep memory bounded.
 5. Grid re-renders. Children rows disappear.
 
 ### Refresh / pagination / sort / filter
@@ -248,7 +248,7 @@ This case effectively does not occur during normal use because of the next case 
 
 ### Auto re-emit guarantees
 
-Auto re-emit is triggered by a watcher on the items array reference (not deep). When the items array reference changes (new page, refresh, sort, filter), the library walks the new top-level items once and emits `expand` for any that satisfy: `rowState.get(rowKey(item), 'expanded') === true` AND `childrenField(item)` is empty/undefined. Reactive re-renders that do not change the items reference do NOT re-trigger auto re-emit. Once the consumer attaches children via `updateRows`, the items reference changes, the walk re-runs, and the guard fails (children present), so no further emits fire for that item.
+Auto re-emit is triggered by a watcher on the items array reference (not deep). When the items array reference changes (new page, refresh, sort, filter), the library walks the new top-level items once and emits `expand` for any that satisfy: `rowState.get(rowKey(item), 'expanded') === true` AND `childrenField(item)` is empty/undefined. Reactive re-renders that do not change the items reference do NOT re-trigger auto re-emit. Once the consumer attaches children via `setRows`, the items reference changes, the walk re-runs, and the guard fails (children present), so no further emits fire for that item.
 
 ## 11. Rendering (`GridTable.vue`)
 

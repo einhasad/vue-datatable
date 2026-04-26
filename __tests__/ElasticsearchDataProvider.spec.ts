@@ -712,7 +712,7 @@ describe('ElasticsearchDataProvider', () => {
     })
   })
 
-  describe('updateRows', () => {
+  describe('setRows', () => {
     it('replaces current items reactively without invoking the http client', async () => {
       const httpClient = vi.fn().mockResolvedValue({
         hits: { total: { value: 1, relation: 'eq' }, hits: [{ _id: '1', _source: { id: 1 } }] }
@@ -723,7 +723,7 @@ describe('ElasticsearchDataProvider', () => {
       })
       await provider.load()
       httpClient.mockClear()
-      provider.updateRows([{ id: 1, children: [{ id: 11 }] }])
+      provider.setRows([{ id: 1, children: [{ id: 11 }] }])
       expect(provider.getCurrentItems()).toEqual([{ id: 1, children: [{ id: 11 }] }])
       expect(httpClient).not.toHaveBeenCalled()
     })

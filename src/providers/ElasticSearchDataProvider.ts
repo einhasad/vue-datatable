@@ -296,7 +296,7 @@ export class ElasticSearchDataProvider<T = unknown> implements DataProvider<T> {
    * Replace current items reactively without invoking the http client.
    * Does not touch sort, pagination, or aggregations.
    */
-  updateRows(newRows: T[]): void {
+  setRows(newRows: T[]): void {
     this.items.value = newRows
   }
 

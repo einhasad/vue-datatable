@@ -144,7 +144,7 @@ function rowOptionsFor(item: Row): RowOptions {
 function onDeleteSelected() {
   const ids = new Set(selectedIds.value)
   const remaining = provider.getCurrentItems().filter(r => !ids.has(r.id))
-  provider.updateRows(remaining)
+  provider.setRows(remaining)
   rowState.clear('selected')
   selectionTick.value++
 }

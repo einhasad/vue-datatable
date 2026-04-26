@@ -86,13 +86,13 @@ async function handleExpand(item: Node) {
   const children = await fetchChildren(item)
   const current = provider.getCurrentItems()
   const updated = updateNode(current, item.id, n => ({ ...n, children }))
-  provider.updateRows(updated)
+  provider.setRows(updated)
 }
 
 function handleCollapse(item: Node) {
   const current = provider.getCurrentItems()
   const updated = updateNode(current, item.id, n => ({ ...n, children: undefined }))
-  provider.updateRows(updated)
+  provider.setRows(updated)
 }
 
 function updateNode(items: Node[], id: string, mapFn: (n: Node) => Node): Node[] {

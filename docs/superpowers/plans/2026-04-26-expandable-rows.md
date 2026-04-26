@@ -4,7 +4,7 @@
 
 **Goal:** Implement homogeneous, multi-layer expandable rows in `@grid-vue/grid` v1, built on top of a generic `RowStateProvider` primitive that is also reusable for selection / mass-action / per-row flags.
 
-**Architecture:** Mirror the existing `StateProvider` pattern in a new `src/rowState/` module. Add `updateRows(newRows)` to the `DataProvider` interface so consumers can attach children to items reactively. `GridTable` renders rows recursively when `rowState.get(rowKey, 'expanded') === true` and `childrenField(item)` is non-empty. Toggle UX is "B + C" (default chevron in `expandToggle: true` columns plus full custom-button escape hatch via `RowContext`).
+**Architecture:** Mirror the existing `StateProvider` pattern in a new `src/rowState/` module. Add `setRows(newRows)` to the `DataProvider` interface so consumers can attach children to items reactively. `GridTable` renders rows recursively when `rowState.get(rowKey, 'expanded') === true` and `childrenField(item)` is non-empty. Toggle UX is "B + C" (default chevron in `expandToggle: true` columns plus full custom-button escape hatch via `RowContext`).
 
 **Tech Stack:** Vue 3 (`<script setup>`, generic components), TypeScript, Vitest, Vue Test Utils.
 
@@ -598,18 +598,18 @@ git commit -m "feat(rowState): useRowState composable"
 
 ---
 
-# Phase 2 — `DataProvider.updateRows`
+# Phase 2 — `DataProvider.setRows`
 
 This phase adds the content-swap mutation method to the `DataProvider` interface and implements it across all three built-in providers. Independent of Phase 1.
 
 ---
 
-## Task 6: Add `updateRows(newRows)` to `DataProvider` interface
+## Task 6: Add `setRows(newRows)` to `DataProvider` interface
 
 **Files:**
 - Modify: `src/types.ts` (the `DataProvider` interface, lines 117-137)
 
-- [ ] **Step 1: Append `updateRows` to the interface**
+- [ ] **Step 1: Append `setRows` to the interface**
 
 In `src/types.ts`, the `DataProvider` interface ends at line 137. Locate the closing brace and add the new method just before it. The complete interface should now read:
 
@@ -637,14 +637,14 @@ export interface DataProvider<T = unknown> {
    * after fetching them in response to an `expand` event from <Grid>).
    * Does not touch sort, filter, pagination, or loading state.
    */
-  updateRows(newRows: T[]): void
+  setRows(newRows: T[]): void
 }
 ```
 
 - [ ] **Step 2: Verify type compilation now FAILS for providers missing the method**
 
 Run: `npx tsc --noEmit -p .`
-Expected: FAIL — `ArrayDataProvider`, `CallbackDataProvider`, `ElasticSearchDataProvider` all error with "Property 'updateRows' is missing".
+Expected: FAIL — `ArrayDataProvider`, `CallbackDataProvider`, `ElasticSearchDataProvider` all error with "Property 'setRows' is missing".
 
 This failure confirms the interface change reaches every implementation. We fix them in Tasks 7-9.
 
@@ -654,7 +654,7 @@ Tasks 7, 8, 9 close the type errors. Commit only after all three providers imple
 
 ---
 
-## Task 7: Implement `ArrayDataProvider.updateRows` (TDD)
+## Task 7: Implement `ArrayDataProvider.setRows` (TDD)
 
 **Files:**
 - Modify: `src/providers/ArrayDataProvider.ts`
@@ -665,10 +665,10 @@ Tasks 7, 8, 9 close the type errors. Commit only after all three providers imple
 Append to `__tests__/ArrayDataProvider.spec.ts` inside the existing top-level `describe('ArrayDataProvider', ...)`:
 
 ```ts
-  describe('updateRows', () => {
+  describe('setRows', () => {
     it('replaces current items reactively without re-running load()', () => {
       const provider = new ArrayDataProvider({ items: [{ id: 1 }, { id: 2 }] })
-      provider.updateRows([{ id: 1, children: [{ id: 11 }] }, { id: 2 }])
+      provider.setRows([{ id: 1, children: [{ id: 11 }] }, { id: 2 }])
       expect(provider.getCurrentItems()).toEqual([
         { id: 1, children: [{ id: 11 }] },
         { id: 2 },
@@ -679,14 +679,14 @@ Append to `__tests__/ArrayDataProvider.spec.ts` inside the existing top-level `d
       const provider = new ArrayDataProvider({ items: [{ id: 1, name: 'b' }, { id: 2, name: 'a' }] })
       provider.setSort({ field: 'name', order: 'asc' })
       const sortBefore = provider.getSort()
-      provider.updateRows([{ id: 3, name: 'c' }])
+      provider.setRows([{ id: 3, name: 'c' }])
       expect(provider.getSort()).toEqual(sortBefore)
     })
 
     it('does not change isLoading()', () => {
       const provider = new ArrayDataProvider({ items: [{ id: 1 }] })
       expect(provider.isLoading()).toBe(false)
-      provider.updateRows([{ id: 2 }])
+      provider.setRows([{ id: 2 }])
       expect(provider.isLoading()).toBe(false)
     })
   })
@@ -694,10 +694,10 @@ Append to `__tests__/ArrayDataProvider.spec.ts` inside the existing top-level `d
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run __tests__/ArrayDataProvider.spec.ts -t "updateRows"`
-Expected: FAIL — `provider.updateRows is not a function`.
+Run: `npx vitest run __tests__/ArrayDataProvider.spec.ts -t "setRows"`
+Expected: FAIL — `provider.setRows is not a function`.
 
-- [ ] **Step 3: Implement `updateRows`**
+- [ ] **Step 3: Implement `setRows`**
 
 In `src/providers/ArrayDataProvider.ts`, add this method after `setAllItems` (around line 153):
 
@@ -707,7 +707,7 @@ In `src/providers/ArrayDataProvider.ts`, add this method after `setAllItems` (ar
    * Used by consumers to attach children after handling <Grid>'s `expand` event.
    * Does not change sort, pagination, or loading state.
    */
-  updateRows(newRows: T[]): void {
+  setRows(newRows: T[]): void {
     this.allItems = [...newRows]
     this.displayedItems.value = [...newRows]
   }
@@ -717,7 +717,7 @@ Note: this provider is client-side and `displayedItems` is what `getCurrentItems
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npx vitest run __tests__/ArrayDataProvider.spec.ts -t "updateRows"`
+Run: `npx vitest run __tests__/ArrayDataProvider.spec.ts -t "setRows"`
 Expected: PASS — 3 tests passing.
 
 - [ ] **Step 5: Run the full ArrayDataProvider suite**
@@ -727,7 +727,7 @@ Expected: PASS — all existing tests still green.
 
 ---
 
-## Task 8: Implement `CallbackDataProvider.updateRows` (TDD)
+## Task 8: Implement `CallbackDataProvider.setRows` (TDD)
 
 **Files:**
 - Modify: `src/providers/CallbackDataProvider.ts`
@@ -738,13 +738,13 @@ Expected: PASS — all existing tests still green.
 Append to `__tests__/CallbackDataProvider.spec.ts` inside the existing top-level `describe('CallbackDataProvider', ...)`:
 
 ```ts
-  describe('updateRows', () => {
+  describe('setRows', () => {
     it('replaces current items reactively without invoking loadFn', async () => {
       const loadFn = vi.fn().mockResolvedValue({ items: [{ id: 1 }] })
       const provider = new CallbackDataProvider({ loadFn })
       await provider.load()
       loadFn.mockClear()
-      provider.updateRows([{ id: 1, children: [{ id: 11 }] }, { id: 2 }])
+      provider.setRows([{ id: 1, children: [{ id: 11 }] }, { id: 2 }])
       expect(provider.getCurrentItems()).toEqual([
         { id: 1, children: [{ id: 11 }] },
         { id: 2 },
@@ -755,7 +755,7 @@ Append to `__tests__/CallbackDataProvider.spec.ts` inside the existing top-level
     it('does not change isLoading()', () => {
       const provider = new CallbackDataProvider({ loadFn: () => Promise.resolve({ items: [] }) })
       expect(provider.isLoading()).toBe(false)
-      provider.updateRows([{ id: 1 }])
+      provider.setRows([{ id: 1 }])
       expect(provider.isLoading()).toBe(false)
     })
 
@@ -765,7 +765,7 @@ Append to `__tests__/CallbackDataProvider.spec.ts` inside the existing top-level
       })
       provider.setSort({ field: 'name', order: 'asc' })
       const sortBefore = provider.getSort()
-      provider.updateRows([{ id: 1 }])
+      provider.setRows([{ id: 1 }])
       expect(provider.getSort()).toEqual(sortBefore)
     })
   })
@@ -775,10 +775,10 @@ Append to `__tests__/CallbackDataProvider.spec.ts` inside the existing top-level
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run __tests__/CallbackDataProvider.spec.ts -t "updateRows"`
-Expected: FAIL — `provider.updateRows is not a function`.
+Run: `npx vitest run __tests__/CallbackDataProvider.spec.ts -t "setRows"`
+Expected: FAIL — `provider.setRows is not a function`.
 
-- [ ] **Step 3: Implement `updateRows`**
+- [ ] **Step 3: Implement `setRows`**
 
 In `src/providers/CallbackDataProvider.ts`, add this method just before the closing `}` of the class (after `getOffsetPagination`):
 
@@ -787,14 +787,14 @@ In `src/providers/CallbackDataProvider.ts`, add this method just before the clos
    * Replace current items reactively without invoking the load callback.
    * Does not change sort, pagination, or loading state.
    */
-  updateRows(newRows: T[]): void {
+  setRows(newRows: T[]): void {
     this.items.value = newRows
   }
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npx vitest run __tests__/CallbackDataProvider.spec.ts -t "updateRows"`
+Run: `npx vitest run __tests__/CallbackDataProvider.spec.ts -t "setRows"`
 Expected: PASS — 3 tests passing.
 
 - [ ] **Step 5: Run the full CallbackDataProvider suite**
@@ -804,7 +804,7 @@ Expected: PASS — all tests green.
 
 ---
 
-## Task 9: Implement `ElasticSearchDataProvider.updateRows` (TDD)
+## Task 9: Implement `ElasticSearchDataProvider.setRows` (TDD)
 
 **Files:**
 - Modify: `src/providers/ElasticSearchDataProvider.ts`
@@ -815,7 +815,7 @@ Expected: PASS — all tests green.
 Append to `__tests__/ElasticsearchDataProvider.spec.ts` inside the existing top-level `describe`:
 
 ```ts
-  describe('updateRows', () => {
+  describe('setRows', () => {
     it('replaces current items reactively without invoking the http client', async () => {
       const httpClient = vi.fn().mockResolvedValue({
         hits: { total: { value: 1, relation: 'eq' }, hits: [{ _id: '1', _source: { id: 1 } }] }
@@ -826,7 +826,7 @@ Append to `__tests__/ElasticsearchDataProvider.spec.ts` inside the existing top-
       })
       await provider.load()
       httpClient.mockClear()
-      provider.updateRows([{ id: 1, children: [{ id: 11 }] }])
+      provider.setRows([{ id: 1, children: [{ id: 11 }] }])
       expect(provider.getCurrentItems()).toEqual([{ id: 1, children: [{ id: 11 }] }])
       expect(httpClient).not.toHaveBeenCalled()
     })
@@ -837,10 +837,10 @@ Append to `__tests__/ElasticsearchDataProvider.spec.ts` inside the existing top-
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `npx vitest run __tests__/ElasticsearchDataProvider.spec.ts -t "updateRows"`
-Expected: FAIL — `provider.updateRows is not a function`.
+Run: `npx vitest run __tests__/ElasticsearchDataProvider.spec.ts -t "setRows"`
+Expected: FAIL — `provider.setRows is not a function`.
 
-- [ ] **Step 3: Implement `updateRows`**
+- [ ] **Step 3: Implement `setRows`**
 
 In `src/providers/ElasticSearchDataProvider.ts`, add this method just before the class closing `}` (after `getCurrentItems`):
 
@@ -849,25 +849,25 @@ In `src/providers/ElasticSearchDataProvider.ts`, add this method just before the
    * Replace current items reactively without invoking the http client.
    * Does not touch sort, pagination, or aggregations.
    */
-  updateRows(newRows: T[]): void {
+  setRows(newRows: T[]): void {
     this.items.value = newRows
   }
 ```
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `npx vitest run __tests__/ElasticsearchDataProvider.spec.ts -t "updateRows"`
+Run: `npx vitest run __tests__/ElasticsearchDataProvider.spec.ts -t "setRows"`
 Expected: PASS — 1 test passing.
 
 - [ ] **Step 5: Run full type check**
 
 Run: `npx tsc --noEmit -p .`
-Expected: Exits with code 0. All `updateRows`-missing errors resolved.
+Expected: Exits with code 0. All `setRows`-missing errors resolved.
 
 - [ ] **Step 6: Run full test suite**
 
 Run: `npm test -- --run`
-Expected: All previously-passing tests still pass; new `updateRows` tests pass. Total = 365 + 7 = ~372.
+Expected: All previously-passing tests still pass; new `setRows` tests pass. Total = 365 + 7 = ~372.
 
 - [ ] **Step 7: Commit Phase 2 (Tasks 6-9)**
 
@@ -879,7 +879,7 @@ git add src/types.ts \
         __tests__/ArrayDataProvider.spec.ts \
         __tests__/CallbackDataProvider.spec.ts \
         __tests__/ElasticsearchDataProvider.spec.ts
-git commit -m "feat(provider): add updateRows() to DataProvider interface and impls"
+git commit -m "feat(provider): add setRows() to DataProvider interface and impls"
 ```
 
 ---
@@ -1663,12 +1663,12 @@ Append inside the `describe('Grid expandable rows', ...)` block in `__tests__/Gr
     expect(wrapper.emitted('expand')!.length).toBe(1)
 
     // Simulate refresh: same item, still no children
-    provider.updateRows([{ id: 'a', name: 'A (refreshed)' }])
+    provider.setRows([{ id: 'a', name: 'A (refreshed)' }])
     await flushPromises()
     expect(wrapper.emitted('expand')!.length).toBe(2)
 
     // Now consumer attaches children — should NOT re-emit
-    provider.updateRows([{ id: 'a', name: 'A (refreshed)', children: [{ id: 'a-1', name: 'A1' }] }])
+    provider.setRows([{ id: 'a', name: 'A (refreshed)', children: [{ id: 'a-1', name: 'A1' }] }])
     await flushPromises()
     expect(wrapper.emitted('expand')!.length).toBe(2)
   })
@@ -1971,13 +1971,13 @@ async function handleExpand(item: Node) {
   const children = await fetchChildren(item)
   const current = provider.getCurrentItems()
   const updated = updateNode(current, item.id, (n) => ({ ...n, children }))
-  provider.updateRows(updated)
+  provider.setRows(updated)
 }
 
 function handleCollapse(item: Node) {
   const current = provider.getCurrentItems()
   const updated = updateNode(current, item.id, (n) => ({ ...n, children: undefined }))
-  provider.updateRows(updated)
+  provider.setRows(updated)
 }
 
 function updateNode(items: Node[], id: string, mapFn: (n: Node) => Node): Node[] {
@@ -2085,7 +2085,7 @@ const columns: Column<Row>[] = [
 function onDeleteSelected() {
   const ids = new Set(selectedIds.value)
   const remaining = provider.getCurrentItems().filter(r => !ids.has(r.id))
-  provider.updateRows(remaining)
+  provider.setRows(remaining)
   rowState.clear('selected')
   selectionTick.value++
 }
@@ -2158,11 +2158,11 @@ Cross-reference each requirement in the spec to the task that implements it.
 
 | Spec § | Requirement | Implemented in |
 |---|---|---|
-| §3 | Toggle → emit → consumer fetch → updateRows → re-render | Tasks 14, 15, 16 |
+| §3 | Toggle → emit → consumer fetch → setRows → re-render | Tasks 14, 15, 16 |
 | §4 | File layout: `src/rowState/`, composables, demos | Tasks 2-5, 19, 20 |
 | §5 | `RowKey`, `RowStateProvider`, `RowContext`, `RowStateScoped` types | Task 1 |
 | §5 | `Column.expandToggle`, `column.component(model, index, rowContext?)` | Task 10 |
-| §5 | `DataProvider.updateRows(newRows)` interface + 3 impls | Tasks 6-9 |
+| §5 | `DataProvider.setRows(newRows)` interface + 3 impls | Tasks 6-9 |
 | §6 | Flag-agnostic `RowStateProvider` API | Task 1 (interface), Task 2 (impl) |
 | §7 | `useRowState` composable: isExpanded, toggleExpanded, generic flag passthrough | Task 5 |
 | §8 | New Grid props: `rowKey`, `childrenField`, `rowStateProvider` | Tasks 13, 14 |
@@ -2181,7 +2181,7 @@ Cross-reference each requirement in the spec to the task that implements it.
 # Self-Review Notes
 
 - **No placeholders:** every step contains the exact code or command to run.
-- **No "similar to" references:** the same `updateRows` body is repeated across Tasks 7, 8, 9 (different implementations on different providers); the same warning prerequisites are stated explicitly in Task 17.
+- **No "similar to" references:** the same `setRows` body is repeated across Tasks 7, 8, 9 (different implementations on different providers); the same warning prerequisites are stated explicitly in Task 17.
 - **Type consistency:** `RowKey` (string | number), `RowStateProvider`, `RowStateScoped`, `RowContext` are introduced in Task 1 and used identically in Tasks 5, 11, 13, 14, 15, 18.
 - **One open question, deferred to implementation:** the cell-call `index` argument inside the recursive renderer (Task 15 step 3 note) is currently `0` rather than the original row index. This is a minor regression from the existing API; if any test/example breaks, thread the flat index through `FlatRow.index` and pass it instead. No spec requirement is violated by either choice.
 - **Test count target:** ~385 tests (existing 365 + ~20 new). If `GridTable.spec.ts` has assertions about `data-qa="row-N"` (numeric), update them to match `data-qa="row-<key>"` per Task 15 Step 5.

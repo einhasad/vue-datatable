@@ -921,7 +921,7 @@ await dataProvider.refresh()</code></pre>
         <p>
           Mark a column with <code>expandToggle: true</code> to render a chevron + indent.
           The grid emits <code>@expand</code> with the clicked item; the consumer fetches children
-          and reattaches them via <code>provider.updateRows()</code>. Expansion state lives in an
+          and reattaches them via <code>provider.setRows()</code>. Expansion state lives in an
           <code>InMemoryRowStateProvider</code> keyed by <code>:row-key</code>, so it survives
           pagination, sort, and filter changes within the session.
         </p>

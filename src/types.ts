@@ -141,7 +141,7 @@ export interface DataProvider<T = unknown> {
    * after fetching them in response to an `expand` event from <Grid>).
    * Does not touch sort, filter, pagination, or loading state.
    */
-  updateRows(newRows: T[]): void
+  setRows(newRows: T[]): void
 }
 
 /**

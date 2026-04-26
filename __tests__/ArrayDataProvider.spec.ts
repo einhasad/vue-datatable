@@ -216,10 +216,10 @@ describe('ArrayDataProvider', () => {
     expect(result.items[1].active).toBe(true)
   })
 
-  describe('updateRows', () => {
+  describe('setRows', () => {
     it('replaces current items reactively without re-running load()', () => {
       const provider = new ArrayDataProvider<{ id: number; children?: unknown[] }>({ items: [{ id: 1 }, { id: 2 }] })
-      provider.updateRows([{ id: 1, children: [{ id: 11 }] }, { id: 2 }])
+      provider.setRows([{ id: 1, children: [{ id: 11 }] }, { id: 2 }])
       expect(provider.getCurrentItems()).toEqual([
         { id: 1, children: [{ id: 11 }] },
         { id: 2 },
@@ -230,14 +230,14 @@ describe('ArrayDataProvider', () => {
       const provider = new ArrayDataProvider<{ id: number; name: string }>({ items: [{ id: 1, name: 'b' }, { id: 2, name: 'a' }] })
       provider.setSort({ field: 'name', order: 'asc' })
       const sortBefore = provider.getSort()
-      provider.updateRows([{ id: 3, name: 'c' }])
+      provider.setRows([{ id: 3, name: 'c' }])
       expect(provider.getSort()).toEqual(sortBefore)
     })
 
     it('does not change isLoading()', () => {
       const provider = new ArrayDataProvider<{ id: number }>({ items: [{ id: 1 }] })
       expect(provider.isLoading()).toBe(false)
-      provider.updateRows([{ id: 2 }])
+      provider.setRows([{ id: 2 }])
       expect(provider.isLoading()).toBe(false)
     })
   })
