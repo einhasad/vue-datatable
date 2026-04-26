@@ -8,7 +8,8 @@ export default mergeConfig(
     resolve: {
       alias: {
         '@einhasad-vue/datatable-vue': path.resolve(__dirname, './src/index.ts')
-      }
+      },
+      dedupe: ['vue', 'vue-router']
     },
     test: {
       globals: true,

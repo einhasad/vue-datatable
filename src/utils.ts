@@ -10,7 +10,7 @@ export function getCellValue<T = unknown>(column: Column<T>, model: T, index: nu
     return String(val)
   }
 
-  const field = column.key || column.sort
+  const field = column.key ?? column.sort
   if (field && typeof model === 'object' && model !== null) {
     const value = (model as Record<string, unknown>)[field]
     if (value !== undefined && value !== null) {
@@ -41,7 +41,7 @@ export function getColumnLabel<T = unknown>(column: Column<T>, models: T[]): str
     return column.label(models)
   }
 
-  return column.label || column.sort || ''
+  return column.label ?? column.sort ?? ''
 }
 
 /**
@@ -86,7 +86,8 @@ export function getCellComponent<T = unknown>(column: Column<T>, model: T, index
  */
 export function getCellOptions<T = unknown>(column: Column<T>, model: T): Record<string, unknown> {
   if (column.options) {
-    return (column.options(model) || {}) as Record<string, unknown>
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    return column.options(model) ?? {}
   }
 
   return {}
@@ -97,7 +98,8 @@ export function getCellOptions<T = unknown>(column: Column<T>, model: T): Record
  */
 export function getRowOptions<T = unknown>(rowOptionsFn: ((model: T) => RowOptions) | undefined, model: T): RowOptions {
   if (rowOptionsFn) {
-    return rowOptionsFn(model) || {}
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    return rowOptionsFn(model) ?? {}
   }
 
   return {}
@@ -119,7 +121,8 @@ export function getFooterContent<T = unknown>(column: Column<T>, models: T[]): s
  */
 export function getFooterOptions<T = unknown>(column: Column<T>, models: T[]): Record<string, unknown> {
   if (column.footerOptions) {
-    return (column.footerOptions(models) || {}) as Record<string, unknown>
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    return column.footerOptions(models) ?? {}
   }
 
   return {}

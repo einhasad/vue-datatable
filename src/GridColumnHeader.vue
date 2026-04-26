@@ -10,6 +10,31 @@
       @click.prevent="handleSortClick"
     >
       <b>{{ label }}</b>
+      <svg
+        class="grid-sort-link__icon"
+        width="12"
+        height="12"
+        viewBox="0 0 12 12"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          class="grid-sort-link__icon-up"
+          d="M3.5 5L6 2.5L8.5 5"
+          stroke="currentColor"
+          stroke-width="1.25"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          class="grid-sort-link__icon-down"
+          d="M3.5 7L6 9.5L8.5 7"
+          stroke="currentColor"
+          stroke-width="1.25"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
     </a>
   </template>
   <DynamicComponent

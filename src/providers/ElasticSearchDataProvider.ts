@@ -167,7 +167,7 @@ export class ElasticSearchDataProvider<T = unknown> implements DataProvider<T> {
 
   private buildQuery(options: LoadOptions = { sortOrder: null }): ElasticQuery {
     const query: ElasticQuery = {
-      query: this.currentQuery != null ? this.currentQuery : { match_all: {} },
+      query: this.currentQuery ?? { match_all: {} },
       size: this.pageSize,
       from: this.from
     }

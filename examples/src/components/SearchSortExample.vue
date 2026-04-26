@@ -31,7 +31,6 @@
       <div class="example-section">
         <h3>Demo</h3>
         <Grid
-          ref="searchSortGridRef"
           :data-provider="searchSortProvider"
           :columns="searchSortColumns"
         />
@@ -87,7 +86,6 @@ const searchSortProvider = new ArrayDataProvider({
   stateProvider: searchSortStateProvider
 })
 
-const searchSortGridRef = ref<any>(null)
 const globalSearchQuery = ref('')
 
 const searchSortColumns: Column[] = [
@@ -116,10 +114,6 @@ const handleGlobalSearchInput = async (event: Event) => {
   ;['id', 'name', 'department', 'position', 'salary'].forEach(key => {
     searchSortStateProvider.clearFilter(key)
   })
-
-  if (searchSortGridRef.value) {
-    searchSortGridRef.value.items = searchSortProvider.getCurrentItems()
-  }
 }
 </script>
 

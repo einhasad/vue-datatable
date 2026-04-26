@@ -1,7 +1,6 @@
 <template>
   <div
     class="grid"
-    :style="colorSchemeStyle"
     data-qa="grid"
     :aria-busy="loading"
   >
@@ -47,11 +46,11 @@
 
         <template
           v-if="$slots.row"
-          #row="{ items }"
+          #row="{ items: rowItems }"
         >
           <slot
             name="row"
-            :items="items"
+            :items="rowItems"
           />
         </template>
 
@@ -97,26 +96,18 @@ const props = withDefaults(defineProps<{
   emptyText?: string
   autoLoad?: boolean
   rowKeyField?: string
-  theme: 'light' | 'dark' | 'auto'
 }>(), {
   showLoader: true,
   showFooter: true,
   emptyText: 'No results found',
   autoLoad: true,
-  rowKeyField: 'id',
-  theme: 'auto'
+  rowKeyField: 'id'
 })
 
 const emit = defineEmits<{
   loaded: []
   error: [error: Error]
 }>()
-
-const colorSchemeStyle = computed(() => ({
-  colorScheme: props.theme === 'dark' ? 'dark'
-    : props.theme === 'light' ? 'light'
-    : 'light dark'
-}))
 
 defineSlots<{
   toolbar?: (props: { loading: boolean }) => void
@@ -130,7 +121,7 @@ defineSlots<{
 }>()
 
 const stateProvider = computed<StateProvider | undefined>(() => {
-  return props.dataProvider.getStateProvider?.('default') ?? undefined
+  return props.dataProvider.getStateProvider('default') ?? undefined
 })
 
 const { items, loading, sortState, paginationState, handleSort, handleSetPage } = useGridState<T>({
@@ -138,10 +129,5 @@ const { items, loading, sortState, paginationState, handleSort, handleSetPage } 
   stateProvider,
   autoLoad: props.autoLoad,
   emit,
-})
-
-defineExpose({
-  items,
-  loading,
 })
 </script>

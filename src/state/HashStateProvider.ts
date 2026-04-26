@@ -29,15 +29,18 @@ export class HashStateProvider implements StateProvider {
     if (!hash || hash === '#') return {}
     const result: Record<string, string> = {}
     for (const pair of hash.replace(/^#/, '').split('&')) {
-      const [k, v] = pair.split('=')
-      if (k && v !== undefined) result[decodeURIComponent(k)] = decodeURIComponent(v)
+      const idx = pair.indexOf('=')
+      if (idx <= 0) continue
+      const k = pair.slice(0, idx)
+      const v = pair.slice(idx + 1)
+      result[decodeURIComponent(k)] = decodeURIComponent(v)
     }
     return result
   }
 
   private buildHash(params: Record<string, string>): string {
     const pairs = Object.entries(params)
-      .filter(([, v]) => v !== '' && v != null)
+      .filter(([, v]) => v !== '')
       .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
     return pairs.length ? `#${pairs.join('&')}` : ''
   }
