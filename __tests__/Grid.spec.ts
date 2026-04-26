@@ -173,24 +173,6 @@ describe('Grid', () => {
     expect((wrapper.emitted('error')![0][0] as Error).message).toBe('Network failure')
   })
 
-  it('applies light color-scheme by default and dark when theme is dark', async () => {
-    const provider = createProvider(items)
-    const wrapper = mountGrid(provider)
-
-    await flushPromises()
-
-    const gridEl = wrapper.find('[data-qa="grid"]')
-    expect(gridEl.attributes('style')).toContain('color-scheme: light')
-
-    const provider2 = createProvider(items)
-    const wrapper2 = mountGrid(provider2, { theme: 'dark' })
-
-    await flushPromises()
-
-    const gridEl2 = wrapper2.find('[data-qa="grid"]')
-    expect(gridEl2.attributes('style')).toContain('color-scheme: dark')
-  })
-
   it('does not load data when autoLoad is false', async () => {
     const loadFn = vi.fn(async (): Promise<LoadResult<TestItem>> => ({ items }))
     const provider = new CallbackDataProvider<TestItem>({ loadFn, offsetPaginationFn: () => {} })
@@ -274,16 +256,6 @@ describe('Grid', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-qa="pagination-slot"]').exists()).toBe(false)
-  })
-
-  it('applies light dark color-scheme when theme is auto', async () => {
-    const provider = createProvider(items)
-    const wrapper = mountGrid(provider, { theme: 'auto' })
-
-    await flushPromises()
-
-    const gridEl = wrapper.find('[data-qa="grid"]')
-    expect(gridEl.attributes('style')).toContain('color-scheme: light dark')
   })
 
   it('renders searchRow slot when provided', async () => {

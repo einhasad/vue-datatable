@@ -43,7 +43,6 @@
         <h3>Results</h3>
         <Grid
           ref="gridRef"
-          theme="auto"
           :data-provider="gridProvider"
           :columns="githubColumns"
         />

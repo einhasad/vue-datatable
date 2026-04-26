@@ -1,7 +1,6 @@
 <template>
   <div
     class="grid"
-    :style="colorSchemeStyle"
     data-qa="grid"
     :aria-busy="loading"
   >
@@ -97,26 +96,18 @@ const props = withDefaults(defineProps<{
   emptyText?: string
   autoLoad?: boolean
   rowKeyField?: string
-  theme: 'light' | 'dark' | 'auto'
 }>(), {
   showLoader: true,
   showFooter: true,
   emptyText: 'No results found',
   autoLoad: true,
-  rowKeyField: 'id',
-  theme: 'auto'
+  rowKeyField: 'id'
 })
 
 const emit = defineEmits<{
   loaded: []
   error: [error: Error]
 }>()
-
-const colorSchemeStyle = computed(() => ({
-  colorScheme: props.theme === 'dark' ? 'dark'
-    : props.theme === 'light' ? 'light'
-    : 'light dark'
-}))
 
 defineSlots<{
   toolbar?: (props: { loading: boolean }) => void
