@@ -23,9 +23,6 @@
             </slot>
           </th>
         </tr>
-      </thead>
-
-      <tbody>
         <slot
           name="searchRow"
           :columns="visibleColumns"
@@ -38,6 +35,8 @@
             @filter-change="emit('filterChange')"
           />
         </slot>
+      </thead>
+      <tbody>
         <template v-if="loading && showLoader">
           <tr
             class="grid-loading-row"
