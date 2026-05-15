@@ -29,11 +29,6 @@ export function useFilterField(options: UseFilterFieldOptions): {
     stateProvider.setFilter(filterName, defaultValue)
   }
 
-  // Watch for external changes (e.g. URL changed by browser back/forward).
-  // Note: defaultValue is an INITIAL value (applied above on first run), not a fallback
-  // that should reassert itself every time the filter is cleared. Reapplying it here
-  // would snap the displayed value back to the default after the user explicitly clears
-  // the filter (clear (×) in a-select), even though the underlying state is empty.
   watch(
     () => stateProvider.getFilter(filterName),
     (newVal) => {

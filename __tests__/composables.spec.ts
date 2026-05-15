@@ -150,24 +150,18 @@ describe('useFilterField', () => {
   })
 
   it('does NOT re-apply defaultValue when the filter is cleared after initialization', async () => {
-    // Regression: clicking the clear (×) on an a-select would emit a clear into the state
-    // provider, but the watcher was reasserting defaultValue, snapping the display back to
-    // the initial default even though the underlying filter state was empty.
     const sp = new InMemoryStateProvider()
 
     const wrapper = mountComposable(() =>
       useFilterField({ stateProvider: sp, filterName: 'q', defaultValue: 'alice' })
     )
 
-    // initial default is applied
     expect(wrapper.vm.currentValue).toBe('alice')
     expect(sp.getFilter('q')).toBe('alice')
 
-    // user clears the filter (mimics ant a-select's × → setFilter('') / clearFilter)
     wrapper.vm.clearFilter()
     await flushPromises()
 
-    // currentValue must STAY empty, not snap back to 'alice'
     expect(wrapper.vm.currentValue).toBe('')
     expect(sp.getFilter('q')).toBeNull()
   })
