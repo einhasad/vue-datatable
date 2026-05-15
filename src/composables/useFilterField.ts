@@ -29,11 +29,10 @@ export function useFilterField(options: UseFilterFieldOptions): {
     stateProvider.setFilter(filterName, defaultValue)
   }
 
-  // Watch for external changes (e.g. URL changed by browser back/forward)
   watch(
     () => stateProvider.getFilter(filterName),
     (newVal) => {
-      currentValue.value = newVal ?? defaultValue ?? ''
+      currentValue.value = newVal ?? ''
     }
   )
 

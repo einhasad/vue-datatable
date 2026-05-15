@@ -148,6 +148,23 @@ describe('useFilterField', () => {
 
     expect(wrapper.vm.currentValue).toBe('external-change')
   })
+
+  it('does NOT re-apply defaultValue when the filter is cleared after initialization', async () => {
+    const sp = new InMemoryStateProvider()
+
+    const wrapper = mountComposable(() =>
+      useFilterField({ stateProvider: sp, filterName: 'q', defaultValue: 'alice' })
+    )
+
+    expect(wrapper.vm.currentValue).toBe('alice')
+    expect(sp.getFilter('q')).toBe('alice')
+
+    wrapper.vm.clearFilter()
+    await flushPromises()
+
+    expect(wrapper.vm.currentValue).toBe('')
+    expect(sp.getFilter('q')).toBeNull()
+  })
 })
 
 // ============================================================

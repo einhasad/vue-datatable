@@ -50,6 +50,19 @@
         </template>
 
         <template
+          v-if="$slots.headerCell"
+          #headerCell="{ column, colIndex, sortState: hcSortState, onSort: hcOnSort }"
+        >
+          <slot
+            name="headerCell"
+            :column="column"
+            :col-index="colIndex"
+            :sort-state="hcSortState ?? null"
+            :on-sort="hcOnSort ?? handleSort"
+          />
+        </template>
+
+        <template
           v-if="$slots.row"
           #row="{ items: rowItems }"
         >
@@ -167,6 +180,7 @@ defineSlots<{
   search?: (props: { provider: DataProvider<T>, loading: boolean }) => void
   table?: (props: { items: T[], loading: boolean, columns: Column<T>[], rowOptions: ((model: T) => RowOptions) | undefined, onRowClick: ((model: T) => void) | undefined, onSort: (field: string, order: SortOrder) => void, sortState: SortState | null }) => void
   searchRow?: (props: { columns: Column<T>[], stateProvider: StateProvider | undefined }) => void
+  headerCell?: (props: { column: Column<T>, colIndex: number, sortState: SortState | null, onSort: (field: string, order: SortOrder) => void }) => void
   row?: (props: { items: T[] }) => void
   empty?: () => void
   loader?: () => void
