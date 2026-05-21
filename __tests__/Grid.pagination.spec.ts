@@ -97,6 +97,63 @@ describe('Grid pagination', () => {
     expect(wrapper.find('[data-qa="current-page"]').text()).toBe('2')
   })
 
+  it('reflects pagination changes that happen inside loadFn during external dataProvider.refresh()', async () => {
+    // Scenario: external caller invokes dataProvider.refresh() (e.g. parent component
+    // changes a filter / tab and calls refresh on the provider directly).
+    // The loadFn returns a different totalItems on each invocation and updates the
+    // provider's offset pagination state from within itself. The pagination slot
+    // must re-render to reflect the new totalItems / totalPages.
+    const pageSize = 20
+    const responses: Array<{ items: TestItem[]; totalItems: number; totalPages: number }> = [
+      { items: generateItems(6), totalItems: 6, totalPages: 1 },
+      { items: generateItems(20), totalItems: 30, totalPages: 2 },
+    ]
+    let callIndex = 0
+
+    let providerRef: CallbackDataProvider<TestItem>
+    const loadFn = vi.fn(async (): Promise<LoadResult<TestItem>> => {
+      const r = responses[callIndex++]
+      const current = providerRef.getOffsetPagination()!
+      providerRef.setOffsetPagination({
+        ...current,
+        totalItems: r.totalItems,
+        totalPages: r.totalPages,
+      })
+      return { items: r.items }
+    })
+
+    providerRef = new CallbackDataProvider<TestItem>({
+      loadFn,
+      offsetPaginationFn: () => {},
+    })
+    providerRef.setOffsetPagination({ page: 1, pageSize })
+
+    const wrapper = mount(Grid as any, {
+      props: { dataProvider: providerRef, columns },
+      slots: {
+        pagination: `
+          <template #pagination="{ pagination }">
+            <span data-qa="total-items">{{ pagination.totalItems }}</span>
+            <span data-qa="total-pages">{{ pagination.totalPages }}</span>
+          </template>
+        `,
+      },
+    })
+
+    await flushPromises()
+
+    expect(wrapper.find('[data-qa="total-items"]').text()).toBe('6')
+    expect(wrapper.find('[data-qa="total-pages"]').text()).toBe('1')
+
+    // External refresh — equivalent to consumer calling dataProvider.refresh()
+    await providerRef.refresh()
+    await flushPromises()
+
+    // After refresh, pagination must reflect the new totals
+    expect(wrapper.find('[data-qa="total-items"]').text()).toBe('30')
+    expect(wrapper.find('[data-qa="total-pages"]').text()).toBe('2')
+  })
+
   it('renders PagePagination component in pagination slot', async () => {
     const manyItems = generateItems(25)
     const { provider } = createPaginatedProvider(manyItems, 10)

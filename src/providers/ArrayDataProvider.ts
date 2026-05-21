@@ -1,4 +1,4 @@
-import {ref} from 'vue'
+import { ref, type Ref } from 'vue'
 import type {
   DataProvider,
   DataProviderConfig,
@@ -29,7 +29,8 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
   private displayedItems = ref<T[]>([])
   private sortState: SortState | null = null
   private keysetPaginationState: KeysetPaginationState | null = null
-  private offsetPaginationState: OffsetPaginationState | null = null
+  // Reactive so consumers (e.g. useGridState) can observe pagination changes.
+  private offsetPaginationState: Ref<OffsetPaginationState | null> = ref(null)
   private readonly stateProvider: StateProvider | null
 
   constructor(config: ArrayDataProviderConfig<T>) {
@@ -88,8 +89,9 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
     const filtered = this.filterItems([...this.allItems])
     const sorted = this.sortItems(filtered)
 
-    if (this.offsetPaginationState && this.offsetPaginationState.page >= 1 && this.offsetPaginationState.pageSize > 0) {
-      const { page, pageSize } = this.offsetPaginationState
+    const offset = this.offsetPaginationState.value
+    if (offset && offset.page >= 1 && offset.pageSize > 0) {
+      const { page, pageSize } = offset
       this.displayedItems.value = sorted.slice((page - 1) * pageSize, page * pageSize)
     } else {
       this.displayedItems.value = sorted
@@ -196,16 +198,17 @@ export class ArrayDataProvider<T = unknown> implements DataProvider<T> {
   // --- Offset pagination (supported by default) ---
 
   setOffsetPagination(state: OffsetPaginationState): void {
-    this.offsetPaginationState = state
+    this.offsetPaginationState.value = state
     this.applyState()
   }
 
   getOffsetPagination(): OffsetPaginationState | null {
-    if (!this.offsetPaginationState) return null
+    const offset = this.offsetPaginationState.value
+    if (!offset) return null
     return {
-      ...this.offsetPaginationState,
+      ...offset,
       totalItems: this.allItems.length,
-      totalPages: Math.ceil(this.allItems.length / this.offsetPaginationState.pageSize)
+      totalPages: Math.ceil(this.allItems.length / offset.pageSize)
     }
   }
 }

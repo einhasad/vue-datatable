@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import type {
   DataProvider,
   DataProviderConfig,
@@ -51,7 +51,9 @@ export class CallbackDataProvider<T = unknown> implements DataProvider<T> {
   private items = ref<T[]>([])
   private sortState: SortState | null = null
   private keysetState: KeysetPaginationState | null = null
-  private offsetState: OffsetPaginationState | null = null
+  // Reactive so consumers (e.g. useGridState) can observe state changes that
+  // happen inside loadFn / external setOffsetPagination calls without manual sync.
+  private offsetState: Ref<OffsetPaginationState | null> = ref(null)
 
   constructor(config: CallbackDataProviderConfig<T>) {
     this.config = config
@@ -63,7 +65,7 @@ export class CallbackDataProvider<T = unknown> implements DataProvider<T> {
       const result = await this.config.loadFn(
         options ?? { sortOrder: null },
         this.keysetState,
-        this.offsetState
+        this.offsetState.value
       )
       this.items.value = result.items
       return result
@@ -117,7 +119,7 @@ export class CallbackDataProvider<T = unknown> implements DataProvider<T> {
         'Provide `offsetPaginationFn` in config to enable it.'
       )
     }
-    this.offsetState = state
+    this.offsetState.value = state
     this.config.offsetPaginationFn(state)
   }
 
@@ -128,7 +130,7 @@ export class CallbackDataProvider<T = unknown> implements DataProvider<T> {
         'Provide `offsetPaginationFn` in config to enable it.'
       )
     }
-    return this.offsetState
+    return this.offsetState.value
   }
 
   /**

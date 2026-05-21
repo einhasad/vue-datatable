@@ -621,7 +621,7 @@ describe('ElasticsearchDataProvider', () => {
       expect(provider.getOffsetPagination()).not.toBeNull()
 
       // To truly hit the null branch, use the private property hack
-      ;(provider as any).offsetPaginationState = null
+      ;(provider as any).offsetPaginationState.value = null
       expect(provider.getOffsetPagination()).toBeNull()
     })
   })

@@ -108,7 +108,8 @@ export class ElasticSearchDataProvider<T = unknown> implements DataProvider<T> {
   private totalHits = 0
   private lastAggregations: Record<string, unknown> | undefined
   private keysetPaginationState: KeysetPaginationState | null = null
-  private offsetPaginationState: OffsetPaginationState | null = null
+  // Reactive so consumers (e.g. useGridState) observe pagination updates.
+  private offsetPaginationState: Ref<OffsetPaginationState | null> = ref(null)
   private searchAfter: unknown[] | null = null
 
   constructor(config: ElasticsearchDataProviderConfig) {
@@ -141,7 +142,7 @@ export class ElasticSearchDataProvider<T = unknown> implements DataProvider<T> {
     this.currentQuery = config.defaultQuery ?? null
 
     // Auto-initialize offset pagination so the grid can render pagination controls
-    this.offsetPaginationState = { page: 1, pageSize: this.pageSize }
+    this.offsetPaginationState.value = { page: 1, pageSize: this.pageSize }
 
     if (config.defaultSort && config.defaultSort.length > 0) {
       const firstSort = config.defaultSort[0] as Record<string, unknown>
@@ -373,16 +374,17 @@ export class ElasticSearchDataProvider<T = unknown> implements DataProvider<T> {
   // --- Offset pagination (supported by default) ---
 
   setOffsetPagination(state: OffsetPaginationState): void {
-    this.offsetPaginationState = state
+    this.offsetPaginationState.value = state
     this.from = (state.page - 1) * state.pageSize
   }
 
   getOffsetPagination(): OffsetPaginationState | null {
-    if (!this.offsetPaginationState) return null
+    const offset = this.offsetPaginationState.value
+    if (!offset) return null
     return {
-      ...this.offsetPaginationState,
+      ...offset,
       totalItems: this.totalHits,
-      totalPages: Math.ceil(this.totalHits / this.offsetPaginationState.pageSize)
+      totalPages: Math.ceil(this.totalHits / offset.pageSize)
     }
   }
 

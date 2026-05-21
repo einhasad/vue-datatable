@@ -51,22 +51,24 @@ export function useGridState<T>(options: UseGridStateOptions<T>): UseGridStateRe
 
   // Initialized from provider so first render sees the configured state
   const sortState = ref<SortState | null>(dataProvider.getSort())
-  const rawPagination = ref<OffsetPaginationState | null>(safeGetOffsetPagination(dataProvider))
+  // Reactive read-through of the provider's offset pagination. Providers
+  // (e.g. CallbackDataProvider) keep their offsetState in a Ref, so this
+  // computed re-evaluates whenever the provider mutates pagination — including
+  // mutations performed inside loadFn during an external dataProvider.refresh().
+  const rawPagination = computed<OffsetPaginationState | null>(() => safeGetOffsetPagination(dataProvider))
 
   const paginationState = computed<PaginationInfo | null>(() => {
     const offset = rawPagination.value
     return offset ? toPaginationInfo(offset) : null
   })
 
-  function syncFromProvider(): void {
-    sortState.value = dataProvider.getSort()
-    rawPagination.value = safeGetOffsetPagination(dataProvider)
-  }
-
   async function refresh(): Promise<LoadResult<T>> {
     try {
       const result = await dataProvider.refresh()
-      syncFromProvider()
+      // sortState is held locally; sync after refresh in case the provider's
+      // sort state changed under us. paginationState is a computed and updates
+      // automatically.
+      sortState.value = dataProvider.getSort()
       emit('loaded')
       return result
     } catch (error) {
@@ -88,7 +90,6 @@ export function useGridState<T>(options: UseGridStateOptions<T>): UseGridStateRe
     const current = safeGetOffsetPagination(dataProvider)
     if (current && current.page !== 1) {
       dataProvider.setOffsetPagination({ ...current, page: 1 })
-      rawPagination.value = safeGetOffsetPagination(dataProvider)
       stateProvider.value?.setValue('page', '1')
     }
     refresh().catch(() => {})
@@ -98,7 +99,6 @@ export function useGridState<T>(options: UseGridStateOptions<T>): UseGridStateRe
     const current = safeGetOffsetPagination(dataProvider)
     if (current) {
       dataProvider.setOffsetPagination({ ...current, page })
-      rawPagination.value = safeGetOffsetPagination(dataProvider)
     }
     stateProvider.value?.setValue('page', String(page))
     await refresh()
@@ -118,6 +118,14 @@ export function useGridState<T>(options: UseGridStateOptions<T>): UseGridStateRe
       return JSON.stringify(rest)
     },
     () => {
+      // When a filter changes, snap back to page 1 — landing on page N of a freshly
+      // filtered (often smaller) result set is confusing UX. Also clear the page
+      // entry from the state provider so it doesn't linger in the URL.
+      const current = safeGetOffsetPagination(dataProvider)
+      if (current && current.page !== 1) {
+        dataProvider.setOffsetPagination({ ...current, page: 1 })
+        stateProvider.value?.setValue('page', '1')
+      }
       refresh().catch(() => {})
     }
   )
