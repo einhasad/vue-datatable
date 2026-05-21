@@ -116,8 +116,10 @@ function generateRepository(template: { owner: string; name: string; stars?: num
   // Generate description based on repo type (first 23 are vue table repos)
   let description: string | null
   if (index < 23) {
-    // Vue table repos - description contains "vue table"
-    description = randomPick(DESCRIPTIONS.filter(d => d && d.includes('vue table')))
+    // Vue table repos - description contains "vue table" but NOT "react" — otherwise a
+    // repo whose name also contains "datatable" (e.g. vue-datatable) would match the
+    // "react datatable" search and make HttpProviderExample tests flaky.
+    description = randomPick(DESCRIPTIONS.filter(d => d && d.includes('vue table') && !d.toLowerCase().includes('react')))
   } else if (index < 27) {
     // React datatable repos - description contains "react" and "datatable"
     description = `A powerful ${template.name} library for React applications`
