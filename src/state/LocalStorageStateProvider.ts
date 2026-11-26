@@ -11,6 +11,41 @@ interface StoredState {
   sort?: SortState
 }
 
+const SORT_ORDERS: readonly unknown[] = ['asc', 'desc', null]
+
+function withStorage<T>(action: (storage: Storage) => T): T | null {
+  try {
+    return typeof localStorage === 'undefined' ? null : action(localStorage)
+  } catch {
+    return null
+  }
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function toFilters(value: unknown): Record<string, string> | undefined {
+  if (!isPlainObject(value)) return undefined
+  const filters: Record<string, string> = {}
+  for (const [key, filter] of Object.entries(value)) {
+    if (typeof filter === 'string' && filter !== '') filters[key] = filter
+  }
+  return filters
+}
+
+function toSort(value: unknown): SortState | undefined {
+  if (!isPlainObject(value) || typeof value.field !== 'string' || !SORT_ORDERS.includes(value.order)) {
+    return undefined
+  }
+  return { field: value.field, order: value.order as SortState['order'] }
+}
+
+function toStoredState(value: unknown): StoredState {
+  if (!isPlainObject(value)) return {}
+  return { filters: toFilters(value.filters), sort: toSort(value.sort) }
+}
+
 export class LocalStorageStateProvider implements StateProvider {
   private readonly core = createStateCore()
   private readonly storageKey: string
@@ -24,15 +59,21 @@ export class LocalStorageStateProvider implements StateProvider {
   }
 
   private readStorage(): StoredState {
-    const stored = localStorage.getItem(this.storageKey)
-    return stored ? JSON.parse(stored) : {}
+    const raw = withStorage(storage => storage.getItem(this.storageKey))
+    if (!raw) return {}
+    try {
+      return toStoredState(JSON.parse(raw))
+    } catch {
+      return {}
+    }
   }
 
   private persist(): void {
-    localStorage.setItem(this.storageKey, JSON.stringify({
+    const serialized = JSON.stringify({
       filters: { ...this.core.state.filters },
       sort: this.core.state.sort ?? undefined,
-    }))
+    })
+    withStorage(storage => storage.setItem(this.storageKey, serialized))
   }
 
   getValue(key: string): string | null { return this.core.getFilter(key) }
@@ -67,6 +108,6 @@ export class LocalStorageStateProvider implements StateProvider {
 
   clear(): void {
     this.core.clearAllValues()
-    localStorage.removeItem(this.storageKey)
+    withStorage(storage => storage.removeItem(this.storageKey))
   }
 }

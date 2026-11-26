@@ -1,6 +1,16 @@
 import type { StateProvider, ReactiveState } from './StateProvider'
 import type { SortState, RouterLike } from '../types'
 import { createStateCore } from './stateCore'
+import {
+  applyUrlState,
+  decodeSafely,
+  formatSort,
+  latestLocation,
+  onExternalRouteChange,
+  parseSort,
+  replaceLocation,
+  routeHash,
+} from './routerSync'
 
 export interface HashStateProviderConfig {
   router: RouterLike
@@ -16,16 +26,24 @@ export class HashStateProvider implements StateProvider {
   constructor(config: HashStateProviderConfig) {
     this.router = config.router
     this.prefix = config.prefix ?? 'search'
-    Object.assign(this.core.state.filters, this.readFiltersFromHash())
-    this.core.state.sort = this.readSortFromHash()
+    this.syncFromHash()
+    onExternalRouteChange(this.router, routeHash, () => { this.syncFromHash() })
   }
 
   private paramName(key: string): string {
     return `${this.prefix}-${key}`
   }
 
-  private parseHash(): Record<string, string> {
-    const hash = this.router.currentRoute.value.hash
+  private syncFromHash(): void {
+    const params = this.parseHash(routeHash(this.router.currentRoute.value))
+    applyUrlState(this.core, this.readFilters(params), parseSort(params[this.paramName('sort')]))
+  }
+
+  private latestParams(): Record<string, string> {
+    return this.parseHash(latestLocation(this.router).hash ?? '')
+  }
+
+  private parseHash(hash: string): Record<string, string> {
     if (!hash || hash === '#') return {}
     const result: Record<string, string> = {}
     for (const pair of hash.replace(/^#/, '').split('&')) {
@@ -33,7 +51,7 @@ export class HashStateProvider implements StateProvider {
       if (idx <= 0) continue
       const k = pair.slice(0, idx)
       const v = pair.slice(idx + 1)
-      result[decodeURIComponent(k)] = decodeURIComponent(v)
+      result[decodeSafely(k)] = decodeSafely(v)
     }
     return result
   }
@@ -46,16 +64,11 @@ export class HashStateProvider implements StateProvider {
   }
 
   private setHashParams(params: Record<string, string>): void {
-    this.router.replace({
-      path: this.router.currentRoute.value.path,
-      query: this.router.currentRoute.value.query,
-      hash: this.buildHash(params),
-    })
+    replaceLocation(this.router, { ...latestLocation(this.router), hash: this.buildHash(params) })
   }
 
-  private readFiltersFromHash(): Record<string, string> {
+  private readFilters(params: Record<string, string>): Record<string, string> {
     const filters: Record<string, string> = {}
-    const params = this.parseHash()
     const prefixDash = `${this.prefix}-`
     const sortKey = this.paramName('sort')
     for (const [key, val] of Object.entries(params)) {
@@ -64,14 +77,6 @@ export class HashStateProvider implements StateProvider {
       }
     }
     return filters
-  }
-
-  private readSortFromHash(): SortState | null {
-    const v = this.parseHash()[this.paramName('sort')]
-    if (!v) return null
-    return v.startsWith('-')
-      ? { field: v.slice(1), order: 'desc' }
-      : { field: v, order: 'asc' }
   }
 
   getValue(key: string): string | null { return this.core.getFilter(key) }
@@ -84,7 +89,7 @@ export class HashStateProvider implements StateProvider {
 
   setFilter(key: string, value: string): void {
     this.core.setFilterValue(key, value)
-    const params = this.parseHash()
+    const params = this.latestParams()
     if (value) {
       params[this.paramName(key)] = value
     } else {
@@ -95,7 +100,7 @@ export class HashStateProvider implements StateProvider {
 
   clearFilter(key: string): void {
     this.core.clearFilterValue(key)
-    const params = this.parseHash()
+    const params = this.latestParams()
     delete params[this.paramName(key)]
     this.setHashParams(params)
   }
@@ -104,20 +109,20 @@ export class HashStateProvider implements StateProvider {
 
   setSort(field: string, order: 'asc' | 'desc'): void {
     this.core.setSortValue(field, order)
-    const params = this.parseHash()
-    params[this.paramName('sort')] = order === 'desc' ? `-${field}` : field
+    const params = this.latestParams()
+    params[this.paramName('sort')] = formatSort(field, order)
     this.setHashParams(params)
   }
 
   clearSort(): void {
     this.core.clearSortValue()
-    const params = this.parseHash()
+    const params = this.latestParams()
     delete params[this.paramName('sort')]
     this.setHashParams(params)
   }
 
   clear(): void {
-    const params = this.parseHash()
+    const params = this.latestParams()
     const prefixDash = `${this.prefix}-`
     for (const key of Object.keys(params)) {
       if (key.startsWith(prefixDash)) delete params[key]

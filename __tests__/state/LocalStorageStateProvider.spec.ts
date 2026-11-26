@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { LocalStorageStateProvider } from '../../src/state/LocalStorageStateProvider'
 
 describe('LocalStorageStateProvider', () => {
@@ -262,5 +262,120 @@ describe('LocalStorageStateProvider', () => {
 
     expect(provider.state.filters).toEqual({})
     expect(provider.state.sort).toBeNull()
+  })
+
+  describe('stored format compatibility', () => {
+    const payloadsWrittenBy044 = [
+      '{"filters":{"status":"Active"},"sort":{"field":"name","order":"desc"}}',
+      '{"filters":{"name":"Alice","status":"active"}}',
+      '{"filters":{},"sort":{"field":"date","order":"asc"}}',
+      '{"filters":{}}',
+    ]
+
+    it.each(payloadsWrittenBy044)('round-trips %s byte-identical', (payload) => {
+      localStorage.setItem('grid-demo-state', payload)
+      provider = new LocalStorageStateProvider({ storageKey: 'grid-demo-state' })
+
+      provider.setValue('roundtrip-probe', 'x')
+      provider.deleteValue('roundtrip-probe')
+
+      expect(localStorage.getItem('grid-demo-state')).toBe(payload)
+    })
+  })
+
+  describe('unreadable stored state', () => {
+    it.each([
+      ['invalid JSON', '{bad json'],
+      ['JSON null', 'null'],
+      ['JSON array', '[1,2]'],
+      ['JSON string', '"text"'],
+      ['JSON number', '42'],
+    ])('falls back to empty state on %s', (_label, raw) => {
+      localStorage.setItem('grid-state', raw)
+
+      provider = new LocalStorageStateProvider()
+
+      expect(provider.state.filters).toEqual({})
+      expect(provider.state.sort).toBeNull()
+    })
+
+    it('keeps only string filter values and a valid sort from a foreign shape', () => {
+      localStorage.setItem('grid-state', JSON.stringify({
+        filters: { name: 'Alice', count: 3, nested: { a: 1 }, empty: '' },
+        sort: { field: 'name', order: 'sideways' },
+      }))
+
+      provider = new LocalStorageStateProvider()
+
+      expect(provider.getAllFilters()).toEqual({ name: 'Alice' })
+      expect(provider.getSort()).toBeNull()
+    })
+
+    it.each([
+      ['filters as array', { filters: ['a'], sort: { field: 'name', order: 'asc' } }],
+      ['filters as string', { filters: 'a', sort: { field: 'name', order: 'asc' } }],
+    ])('ignores %s and still reads a valid sort', (_label, stored) => {
+      localStorage.setItem('grid-state', JSON.stringify(stored))
+
+      provider = new LocalStorageStateProvider()
+
+      expect(provider.getAllFilters()).toEqual({})
+      expect(provider.getSort()).toEqual({ field: 'name', order: 'asc' })
+    })
+
+    it.each([
+      ['sort without field', { sort: { order: 'asc' } }],
+      ['sort with numeric field', { sort: { field: 1, order: 'asc' } }],
+      ['sort as string', { sort: 'name' }],
+    ])('ignores %s', (_label, stored) => {
+      localStorage.setItem('grid-state', JSON.stringify(stored))
+
+      provider = new LocalStorageStateProvider()
+
+      expect(provider.getSort()).toBeNull()
+    })
+
+    it('overwrites an unreadable entry on the next change', () => {
+      localStorage.setItem('grid-state', '{bad json')
+      provider = new LocalStorageStateProvider()
+
+      provider.setFilter('name', 'Alice')
+
+      expect(localStorage.getItem('grid-state')).toBe('{"filters":{"name":"Alice"}}')
+    })
+  })
+
+  describe('without usable localStorage', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals()
+    })
+
+    it('works in memory when localStorage is undefined (SSR)', () => {
+      vi.stubGlobal('localStorage', undefined)
+
+      provider = new LocalStorageStateProvider()
+      provider.setFilter('name', 'Alice')
+      provider.setSort('name', 'desc')
+
+      expect(provider.getFilter('name')).toBe('Alice')
+      expect(provider.getSort()).toEqual({ field: 'name', order: 'desc' })
+      expect(() => provider.clear()).not.toThrow()
+      expect(provider.state.filters).toEqual({})
+    })
+
+    it('works in memory when localStorage access throws', () => {
+      const denied = () => { throw new DOMException('denied', 'SecurityError') }
+      vi.stubGlobal('localStorage', {
+        getItem: denied,
+        setItem: denied,
+        removeItem: denied,
+      })
+
+      provider = new LocalStorageStateProvider()
+      provider.setFilter('name', 'Alice')
+
+      expect(provider.getFilter('name')).toBe('Alice')
+      expect(() => provider.clear()).not.toThrow()
+    })
   })
 })

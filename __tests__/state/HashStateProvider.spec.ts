@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'
+import { createRouter, createMemoryHistory } from 'vue-router'
+import { flushPromises } from '@vue/test-utils'
 import { HashStateProvider } from '../../src/state/HashStateProvider'
+import { QueryParamsStateProvider } from '../../src/state/QueryParamsStateProvider'
 
 function createMockRouter(initialHash = '') {
   const currentRoute = ref({
@@ -274,5 +277,148 @@ describe('HashStateProvider', () => {
     provider = new HashStateProvider({ router })
 
     expect(provider.getFilter('name')).toBe('Bob')
+  })
+})
+
+describe('HashStateProvider with vue-router', () => {
+  function createRealRouter() {
+    return createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: { render: () => null } }],
+    })
+  }
+
+  async function routerAt(url: string) {
+    const router = createRealRouter()
+    await router.push(url)
+    return router
+  }
+
+  describe('0.4.4 URLs round-trip byte-identical', () => {
+    it.each([
+      ['/#hash-role=Admin%2520%2526%2520Co%253D1&hash-sort=name', { role: 'Admin & Co=1' }, { field: 'name', order: 'asc' }],
+      ['/#hash-name=Alice&hash-sort=-email', { name: 'Alice' }, { field: 'email', order: 'desc' }],
+      ['/#hash-name=John%2520Doe&hash-status=100%2525', { name: 'John Doe', status: '100%' }, null],
+      ['/?keep=1#hash-role=a%253Db', { role: 'a=b' }, null],
+    ] as const)('%s', async (url, filters, sort) => {
+      const router = await routerAt(url)
+      const provider = new HashStateProvider({ router, prefix: 'hash' })
+
+      expect(provider.getAllFilters()).toEqual(filters)
+      expect(provider.getSort()).toEqual(sort)
+
+      for (const [key, value] of Object.entries(filters)) provider.setFilter(key, value)
+      if (sort) provider.setSort(sort.field, sort.order)
+      await flushPromises()
+
+      expect(router.currentRoute.value.fullPath).toBe(url)
+    })
+
+    it('writes values in the 0.4.4 format', async () => {
+      const router = await routerAt('/')
+      const provider = new HashStateProvider({ router, prefix: 'hash' })
+
+      provider.setFilter('role', 'Admin & Co=1')
+      await flushPromises()
+      provider.setSort('name', 'asc')
+      await flushPromises()
+
+      expect(router.currentRoute.value.fullPath).toBe('/#hash-role=Admin%2520%2526%2520Co%253D1&hash-sort=name')
+    })
+
+    it('keeps the hash of a HashStateProvider when a QueryParamsStateProvider writes', async () => {
+      const url = '/?qp-name=Eve#hash-role=Admin%2520%2526%2520Co%253D1'
+      const router = await routerAt(url)
+      const hash = new HashStateProvider({ router, prefix: 'hash' })
+      const query = new QueryParamsStateProvider({ router, prefix: 'qp' })
+
+      query.setFilter('name', 'Eve')
+      await flushPromises()
+
+      expect(router.currentRoute.value.fullPath).toBe(url)
+      expect(hash.getFilter('role')).toBe('Admin & Co=1')
+    })
+  })
+
+  it('keeps a malformed percent sequence as text instead of throwing', async () => {
+    const router = await routerAt('/#search-name=100%&search-sort=id')
+    const provider = new HashStateProvider({ router })
+
+    expect(provider.getFilter('name')).toBe('100%')
+    expect(provider.getSort()).toEqual({ field: 'id', order: 'asc' })
+  })
+
+  describe('route changes', () => {
+    it('reads state from the initial navigation when built before the router is ready', async () => {
+      const router = createRealRouter()
+      const provider = new HashStateProvider({ router })
+
+      await router.push('/#search-name=Alice&search-sort=-id')
+
+      expect(provider.getAllFilters()).toEqual({ name: 'Alice' })
+      expect(provider.getSort()).toEqual({ field: 'id', order: 'desc' })
+    })
+
+    it('re-syncs filters and sort on external navigation', async () => {
+      const router = await routerAt('/#search-name=Alice&search-sort=name')
+      const provider = new HashStateProvider({ router })
+
+      await router.push('/#search-status=active')
+
+      expect(provider.state.filters).toEqual({ status: 'active' })
+      expect(provider.getSort()).toBeNull()
+    })
+
+    it('reflects back and forward navigation', async () => {
+      const router = await routerAt('/#search-name=Alice')
+      const provider = new HashStateProvider({ router })
+      await router.push('/#search-name=Bob&search-sort=name')
+
+      router.back()
+      await vi.waitFor(() => expect(provider.getFilter('name')).toBe('Alice'))
+      expect(provider.getSort()).toBeNull()
+
+      router.forward()
+      await vi.waitFor(() => expect(provider.getFilter('name')).toBe('Bob'))
+      expect(provider.getSort()).toEqual({ field: 'name', order: 'asc' })
+    })
+  })
+
+  describe('writes in the same tick', () => {
+    it('keeps both a sort and a page write', async () => {
+      const router = await routerAt('/#search-page=3')
+      const provider = new HashStateProvider({ router })
+
+      provider.setSort('name', 'asc')
+      provider.setValue('page', '1')
+      await flushPromises()
+
+      expect(router.currentRoute.value.fullPath).toBe('/#search-page=1&search-sort=name')
+      expect(provider.getSort()).toEqual({ field: 'name', order: 'asc' })
+    })
+
+    it('keeps writes from two providers sharing a router', async () => {
+      const router = await routerAt('/#products-sort=price')
+      const products = new HashStateProvider({ router, prefix: 'products' })
+      const users = new HashStateProvider({ router, prefix: 'users' })
+
+      products.setSort('name', 'asc')
+      users.setSort('email', 'asc')
+      await flushPromises()
+
+      expect(router.currentRoute.value.fullPath).toBe('/#products-sort=name&users-sort=email')
+    })
+
+    it('keeps a hash write and a query write in the same tick', async () => {
+      const router = await routerAt('/')
+      const hash = new HashStateProvider({ router, prefix: 'h' })
+      const query = new QueryParamsStateProvider({ router, prefix: 'q' })
+
+      hash.setFilter('name', 'a')
+      query.setFilter('name', 'b')
+      await flushPromises()
+
+      expect(router.currentRoute.value.fullPath).toBe('/?q-name=b#h-name=a')
+    })
   })
 })
