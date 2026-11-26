@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { CallbackDataProvider } from '../src/providers/CallbackDataProvider'
+import { InMemoryStateProvider } from '../src/state/InMemoryStateProvider'
 import type { LoadResult, SortState, KeysetPaginationState, OffsetPaginationState } from '../src/types'
 
 interface TestItem {
@@ -191,11 +192,227 @@ describe('CallbackDataProvider', () => {
     )
   })
 
-  it('getStateProvider returns null', () => {
+  it('getStateProvider defaults to an InMemoryStateProvider', () => {
     const loadFn = vi.fn().mockResolvedValue(makeLoadResult())
     const provider = new CallbackDataProvider<TestItem>({ loadFn })
 
-    expect(provider.getStateProvider('any-key')).toBeNull()
+    expect(provider.getStateProvider('any-key')).toBeInstanceOf(InMemoryStateProvider)
+  })
+
+  it('getStateProvider returns the configured state provider', () => {
+    const stateProvider = new InMemoryStateProvider()
+    const provider = new CallbackDataProvider<TestItem>({ loadFn: vi.fn(), stateProvider })
+
+    expect(provider.getStateProvider('any-key')).toBe(stateProvider)
+  })
+
+  describe('load options from current state', () => {
+    it('passes the sort set via setSort to loadFn on refresh', async () => {
+      const loadFn = vi.fn().mockResolvedValue(makeLoadResult())
+      const provider = new CallbackDataProvider<TestItem>({ loadFn })
+
+      provider.setSort({ field: 'name', order: 'desc' })
+      await provider.refresh()
+
+      expect(loadFn).toHaveBeenCalledWith({ sortField: 'name', sortOrder: 'desc' }, null, null)
+    })
+
+    it('passes sortOrder null after the sort is cleared', async () => {
+      const loadFn = vi.fn().mockResolvedValue(makeLoadResult())
+      const provider = new CallbackDataProvider<TestItem>({ loadFn })
+
+      provider.setSort({ field: 'name', order: 'asc' })
+      provider.setSort({ field: 'name', order: null })
+      await provider.refresh()
+
+      expect(loadFn).toHaveBeenCalledWith({ sortOrder: null }, null, null)
+    })
+
+    it('falls back to the sort stored in the state provider', async () => {
+      const stateProvider = new InMemoryStateProvider()
+      stateProvider.setSort('id', 'asc')
+      const loadFn = vi.fn().mockResolvedValue(makeLoadResult())
+      const provider = new CallbackDataProvider<TestItem>({ loadFn, stateProvider })
+
+      await provider.refresh()
+
+      expect(provider.getSort()).toEqual({ field: 'id', order: 'asc' })
+      expect(loadFn).toHaveBeenCalledWith({ sortField: 'id', sortOrder: 'asc' }, null, null)
+    })
+
+    it('passes non-empty filters except page as searchParams', async () => {
+      const stateProvider = new InMemoryStateProvider()
+      const loadFn = vi.fn().mockResolvedValue(makeLoadResult())
+      const provider = new CallbackDataProvider<TestItem>({ loadFn, stateProvider })
+
+      stateProvider.setFilter('name', 'ali')
+      stateProvider.setFilter('status', '')
+      stateProvider.setValue('page', '2')
+      await provider.refresh()
+
+      expect(loadFn).toHaveBeenCalledWith({ sortOrder: null, searchParams: { name: 'ali' } }, null, null)
+    })
+
+    it('passes explicit load options unchanged', async () => {
+      const stateProvider = new InMemoryStateProvider()
+      stateProvider.setFilter('name', 'ali')
+      const loadFn = vi.fn().mockResolvedValue(makeLoadResult())
+      const provider = new CallbackDataProvider<TestItem>({ loadFn, stateProvider })
+      provider.setSort({ field: 'id', order: 'desc' })
+
+      await provider.load({ sortOrder: null })
+
+      expect(loadFn).toHaveBeenCalledWith({ sortOrder: null }, null, null)
+    })
+  })
+
+  describe('returned pagination', () => {
+    it('merges returned totals into the offset pagination state', async () => {
+      const loadFn = vi.fn().mockResolvedValue({ items: sampleItems, pagination: { totalItems: 99 } })
+      const provider = new CallbackDataProvider<TestItem>({ loadFn, offsetPaginationFn: vi.fn() })
+      provider.setOffsetPagination({ page: 2, pageSize: 10 })
+
+      await provider.refresh()
+
+      expect(provider.getOffsetPagination()).toEqual({ page: 2, pageSize: 10, totalItems: 99 })
+    })
+
+    it('takes currentPage, pageSize and totalPages from the result', async () => {
+      const loadFn = vi.fn().mockResolvedValue({
+        items: sampleItems,
+        pagination: { currentPage: 3, pageSize: 25, totalItems: 120, totalPages: 5 },
+      })
+      const provider = new CallbackDataProvider<TestItem>({ loadFn, offsetPaginationFn: vi.fn() })
+      provider.setOffsetPagination({ page: 1, pageSize: 10 })
+
+      await provider.refresh()
+
+      expect(provider.getOffsetPagination()).toEqual({ page: 3, pageSize: 25, totalItems: 120, totalPages: 5 })
+    })
+
+    it('drops a stale totalPages when only totalItems is returned', async () => {
+      const loadFn = vi.fn().mockResolvedValue({ items: sampleItems, pagination: { totalItems: 30 } })
+      const provider = new CallbackDataProvider<TestItem>({ loadFn, offsetPaginationFn: vi.fn() })
+      provider.setOffsetPagination({ page: 1, pageSize: 10, totalItems: 99, totalPages: 10 })
+
+      await provider.refresh()
+
+      expect(provider.getOffsetPagination()).toEqual({ page: 1, pageSize: 10, totalItems: 30 })
+    })
+
+    it('creates the offset state from the result when none was set', async () => {
+      const loadFn = vi.fn().mockResolvedValue({ items: sampleItems, pagination: { totalItems: 9 } })
+      const provider = new CallbackDataProvider<TestItem>({ loadFn, offsetPaginationFn: vi.fn() })
+
+      await provider.refresh()
+
+      expect(provider.getOffsetPagination()).toEqual({ page: 1, pageSize: 3, totalItems: 9 })
+    })
+
+    it('leaves the offset state null when no page size can be determined', async () => {
+      const loadFn = vi.fn().mockResolvedValue({ items: [], pagination: { totalItems: 0 } })
+      const provider = new CallbackDataProvider<TestItem>({ loadFn, offsetPaginationFn: vi.fn() })
+
+      await provider.refresh()
+
+      expect(provider.getOffsetPagination()).toBeNull()
+    })
+
+    it('does not call offsetPaginationFn for returned totals', async () => {
+      const offsetPaginationFn = vi.fn()
+      const loadFn = vi.fn().mockResolvedValue({ items: sampleItems, pagination: { totalItems: 99 } })
+      const provider = new CallbackDataProvider<TestItem>({ loadFn, offsetPaginationFn })
+
+      await provider.refresh()
+
+      expect(offsetPaginationFn).not.toHaveBeenCalled()
+    })
+
+    it('ignores returned pagination when offset pagination is not configured', async () => {
+      const loadFn = vi.fn().mockResolvedValue({ items: sampleItems, pagination: { totalItems: 99 } })
+      const provider = new CallbackDataProvider<TestItem>({ loadFn })
+
+      await expect(provider.refresh()).resolves.toEqual({ items: sampleItems, pagination: { totalItems: 99 } })
+      expect(() => provider.getOffsetPagination()).toThrow('offset pagination is not configured')
+    })
+  })
+
+  describe('request sequencing', () => {
+    function deferred<R>() {
+      let resolve!: (value: R) => void
+      let reject!: (error: Error) => void
+      const promise = new Promise<R>((res, rej) => { resolve = res; reject = rej })
+      return { promise, resolve, reject }
+    }
+
+    it('ignores a stale response that resolves after a newer one', async () => {
+      const first = deferred<LoadResult<TestItem>>()
+      const second = deferred<LoadResult<TestItem>>()
+      const loadFn = vi.fn()
+        .mockReturnValueOnce(first.promise)
+        .mockReturnValueOnce(second.promise)
+      const provider = new CallbackDataProvider<TestItem>({ loadFn, offsetPaginationFn: vi.fn() })
+
+      const firstLoad = provider.load()
+      const secondLoad = provider.load()
+      second.resolve({ items: [{ id: 2, name: 'Bob' }], pagination: { totalItems: 2, pageSize: 1 } })
+      await secondLoad
+      first.resolve({ items: [{ id: 1, name: 'Alice' }], pagination: { totalItems: 50, pageSize: 1 } })
+      await firstLoad
+
+      expect(provider.getCurrentItems()).toEqual([{ id: 2, name: 'Bob' }])
+      expect(provider.getOffsetPagination()).toEqual({ page: 1, pageSize: 1, totalItems: 2 })
+    })
+
+    it('stays loading until the latest request settles', async () => {
+      const first = deferred<LoadResult<TestItem>>()
+      const second = deferred<LoadResult<TestItem>>()
+      const loadFn = vi.fn()
+        .mockReturnValueOnce(first.promise)
+        .mockReturnValueOnce(second.promise)
+      const provider = new CallbackDataProvider<TestItem>({ loadFn })
+
+      const firstLoad = provider.load()
+      const secondLoad = provider.load()
+      first.resolve({ items: [{ id: 1, name: 'Alice' }] })
+      await firstLoad
+
+      expect(provider.isLoading()).toBe(true)
+      expect(provider.getCurrentItems()).toEqual([])
+
+      second.resolve({ items: [{ id: 2, name: 'Bob' }] })
+      await secondLoad
+
+      expect(provider.isLoading()).toBe(false)
+    })
+
+    it('a failing stale request does not end loading of the latest one', async () => {
+      const first = deferred<LoadResult<TestItem>>()
+      const second = deferred<LoadResult<TestItem>>()
+      const loadFn = vi.fn()
+        .mockReturnValueOnce(first.promise)
+        .mockReturnValueOnce(second.promise)
+      const provider = new CallbackDataProvider<TestItem>({ loadFn })
+
+      const firstLoad = provider.load()
+      const secondLoad = provider.load()
+      first.reject(new Error('stale failure'))
+
+      await expect(firstLoad).rejects.toThrow('stale failure')
+      expect(provider.isLoading()).toBe(true)
+
+      second.resolve({ items: sampleItems })
+      await secondLoad
+      expect(provider.isLoading()).toBe(false)
+    })
+
+    it('a failing latest request ends loading', async () => {
+      const loadFn = vi.fn().mockRejectedValue(new Error('boom'))
+      const provider = new CallbackDataProvider<TestItem>({ loadFn })
+
+      await expect(provider.load()).rejects.toThrow('boom')
+      expect(provider.isLoading()).toBe(false)
+    })
   })
 
   describe('setRows', () => {

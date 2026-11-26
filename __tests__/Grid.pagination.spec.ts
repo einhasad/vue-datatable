@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
-import { Grid, CallbackDataProvider, PagePagination } from '../src/index'
+import { Grid, CallbackDataProvider, ArrayDataProvider, InMemoryStateProvider, PagePagination } from '../src/index'
 import type { Column, LoadResult } from '../src/types'
 
 interface TestItem {
@@ -201,5 +201,60 @@ describe('Grid pagination', () => {
     // Active page updated
     const newActive = wrapper.find('.grid-pagination-active')
     expect(newActive.text()).toBe('2')
+  })
+
+  it('pages through ArrayDataProvider rows when a state provider is configured', async () => {
+    const stateProvider = new InMemoryStateProvider()
+    const provider = new ArrayDataProvider<TestItem>({ items: generateItems(12), stateProvider })
+    provider.setOffsetPagination({ page: 1, pageSize: 5 })
+
+    const wrapper = mount(Grid as any, {
+      props: { dataProvider: provider, columns },
+      slots: {
+        pagination: `
+          <template #pagination="{ pagination, setPage }">
+            <span data-qa="total-items">{{ pagination.totalItems }}</span>
+            <button data-qa="page-1" @click="setPage(1)">1</button>
+            <button data-qa="page-2" @click="setPage(2)">2</button>
+          </template>
+        `,
+      },
+    })
+    await flushPromises()
+
+    const renderedIds = () => wrapper.findAll('tbody tr').map(row => row.find('td').text())
+
+    await wrapper.find('[data-qa="page-2"]').trigger('click')
+    await flushPromises()
+    expect(renderedIds()).toEqual(['6', '7', '8', '9', '10'])
+    expect(wrapper.find('[data-qa="total-items"]').text()).toBe('12')
+
+    await wrapper.find('[data-qa="page-1"]').trigger('click')
+    await flushPromises()
+    expect(renderedIds()).toEqual(['1', '2', '3', '4', '5'])
+  })
+
+  it('shows totals of the filtered ArrayDataProvider rows', async () => {
+    const stateProvider = new InMemoryStateProvider()
+    const provider = new ArrayDataProvider<TestItem>({ items: generateItems(12), stateProvider })
+    provider.setOffsetPagination({ page: 1, pageSize: 5 })
+
+    const wrapper = mount(Grid as any, {
+      props: { dataProvider: provider, columns },
+      slots: {
+        pagination: `
+          <template #pagination="{ pagination }">
+            <span data-qa="totals">{{ pagination.totalItems }}/{{ pagination.totalPages }}</span>
+          </template>
+        `,
+      },
+    })
+    await flushPromises()
+    expect(wrapper.find('[data-qa="totals"]').text()).toBe('12/3')
+
+    stateProvider.setFilter('name', 'Item 1')
+    await flushPromises()
+
+    expect(wrapper.find('[data-qa="totals"]').text()).toBe('4/1')
   })
 })

@@ -20,14 +20,14 @@ export type { ScrollPaginationInfo } from './ScrollPagination.vue'
 export { CallbackDataProvider } from './providers/CallbackDataProvider'
 export type { CallbackDataProviderConfig, CallbackLoadFn, CallbackSortFn, CallbackKeysetPaginationFn, CallbackOffsetPaginationFn } from './providers/CallbackDataProvider'
 export { ArrayDataProvider } from './providers/ArrayDataProvider'
-export { ElasticSearchDataProvider } from './providers/ElasticSearchDataProvider.ts'
+export type { ArrayDataProviderConfig } from './providers/ArrayDataProvider'
+export { ElasticSearchDataProvider, DefaultElasticResponseAdapter } from './providers/ElasticSearchDataProvider.ts'
 export type {
   ElasticsearchDataProviderConfig,
   ElasticResponseAdapter,
   ElasticQuery,
   ElasticResponse,
-  ElasticHttpClient,
-  DefaultElasticResponseAdapter
+  ElasticHttpClient
 } from './providers/ElasticSearchDataProvider.ts'
 
 // State Providers
@@ -64,6 +64,9 @@ export type {
   LoadOptions,
   LoadResult,
   SortState,
+  SortOrder,
+  RouterLike,
+  RouteLocation,
   Column,
   ComponentOptions,
   Filter,
