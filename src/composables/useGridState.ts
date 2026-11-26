@@ -1,4 +1,4 @@
-import { ref, computed, watch, onMounted, type ComputedRef, type Ref } from 'vue'
+import { ref, computed, watch, onMounted, type ComputedRef } from 'vue'
 import type {
   DataProvider,
   LoadResult,
@@ -22,7 +22,7 @@ interface UseGridStateOptions<T> {
 interface UseGridStateReturn<T> {
   items: ComputedRef<T[]>
   loading: ComputedRef<boolean>
-  sortState: Ref<SortState | null>
+  sortState: ComputedRef<SortState | null>
   paginationState: ComputedRef<PaginationInfo | null>
   handleSort: (field: string, order: SortOrder) => void
   handleSetPage: (page: number) => Promise<void>
@@ -38,6 +38,10 @@ function toPaginationInfo(offset: OffsetPaginationState): PaginationInfo {
   }
 }
 
+function sortKey(sort: SortState | null | undefined): string {
+  return sort?.order ? `${sort.field}:${sort.order}` : ''
+}
+
 function safeGetOffsetPagination<T>(dp: DataProvider<T>): OffsetPaginationState | null {
   try { return dp.getOffsetPagination() } catch { return null }
 }
@@ -45,16 +49,22 @@ function safeGetOffsetPagination<T>(dp: DataProvider<T>): OffsetPaginationState 
 export function useGridState<T>(options: UseGridStateOptions<T>): UseGridStateReturn<T> {
   const { dataProvider, stateProvider, emit } = options
 
-  // Reactive from provider — auto-updates on ANY dataProvider.refresh() call
   const items = computed(() => dataProvider.getCurrentItems())
   const loading = computed(() => dataProvider.isLoading())
 
-  // Initialized from provider so first render sees the configured state
-  const sortState = ref<SortState | null>(dataProvider.getSort())
-  // Reactive read-through of the provider's offset pagination. Providers
-  // (e.g. CallbackDataProvider) keep their offsetState in a Ref, so this
-  // computed re-evaluates whenever the provider mutates pagination — including
-  // mutations performed inside loadFn during an external dataProvider.refresh().
+  const sortVersion = ref(0)
+  const sortState = computed<SortState | null>(() => {
+    void sortVersion.value
+    const sort = dataProvider.getSort()
+    return sort ? { ...sort } : null
+  })
+
+  const restoredSort = stateProvider.value?.getSort()
+  if (restoredSort && sortKey(restoredSort) !== sortKey(dataProvider.getSort())) {
+    dataProvider.setSort({ ...restoredSort })
+  }
+  let appliedSortKey = sortKey(stateProvider.value?.getSort())
+
   const rawPagination = computed<OffsetPaginationState | null>(() => safeGetOffsetPagination(dataProvider))
 
   const paginationState = computed<PaginationInfo | null>(() => {
@@ -65,10 +75,7 @@ export function useGridState<T>(options: UseGridStateOptions<T>): UseGridStateRe
   async function refresh(): Promise<LoadResult<T>> {
     try {
       const result = await dataProvider.refresh()
-      // sortState is held locally; sync after refresh in case the provider's
-      // sort state changed under us. paginationState is a computed and updates
-      // automatically.
-      sortState.value = dataProvider.getSort()
+      sortVersion.value++
       emit('loaded')
       return result
     } catch (error) {
@@ -78,21 +85,32 @@ export function useGridState<T>(options: UseGridStateOptions<T>): UseGridStateRe
   }
 
   function handleSort(field: string, order: SortOrder): void {
+    dataProvider.setSort({ field, order })
     if (order) {
-      sortState.value = { field, order }
-      dataProvider.setSort({ field, order })
       stateProvider.value?.setSort(field, order)
     } else {
-      sortState.value = null
-      dataProvider.setSort({ field, order: null })
       stateProvider.value?.clearSort()
     }
+    appliedSortKey = sortKey({ field, order })
+    sortVersion.value++
+    resetToFirstPage()
+    refresh().catch(() => {})
+  }
+
+  function resetToFirstPage(): void {
     const current = safeGetOffsetPagination(dataProvider)
     if (current && current.page !== 1) {
       dataProvider.setOffsetPagination({ ...current, page: 1 })
       stateProvider.value?.setValue('page', '1')
     }
-    refresh().catch(() => {})
+  }
+
+  function applyStateSort(sort: SortState | null): void {
+    appliedSortKey = sortKey(sort)
+    if (appliedSortKey !== sortKey(dataProvider.getSort())) {
+      dataProvider.setSort(sort ? { ...sort } : { field: dataProvider.getSort()?.field ?? '', order: null })
+    }
+    sortVersion.value++
   }
 
   async function handleSetPage(page: number): Promise<void> {
@@ -112,21 +130,19 @@ export function useGridState<T>(options: UseGridStateOptions<T>): UseGridStateRe
 
   watch(
     () => {
-      const filters = stateProvider.value?.state.filters
-      if (!filters) return undefined
-      const { page: _, ...rest } = filters
-      return JSON.stringify(rest)
+      const state = stateProvider.value?.state
+      if (!state) return undefined
+      const { page: _, ...filters } = state.filters
+      return { filtersKey: JSON.stringify(filters), sort: state.sort }
     },
-    () => {
-      // When a filter changes, snap back to page 1 — landing on page N of a freshly
-      // filtered (often smaller) result set is confusing UX. Also clear the page
-      // entry from the state provider so it doesn't linger in the URL.
-      const current = safeGetOffsetPagination(dataProvider)
-      if (current && current.page !== 1) {
-        dataProvider.setOffsetPagination({ ...current, page: 1 })
-        stateProvider.value?.setValue('page', '1')
+    (current, previous) => {
+      const filtersChanged = current?.filtersKey !== previous?.filtersKey
+      const sortChanged = sortKey(current?.sort) !== appliedSortKey
+      if (sortChanged) applyStateSort(current?.sort ?? null)
+      if (filtersChanged || sortChanged) {
+        resetToFirstPage()
+        refresh().catch(() => {})
       }
-      refresh().catch(() => {})
     }
   )
 

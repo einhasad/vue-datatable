@@ -100,6 +100,35 @@ describe('Grid slots', () => {
     })
   })
 
+  describe('#toolbar', () => {
+    it('renders with loading scope before the search slot and the table', async () => {
+      const loadFn = vi.fn(() => new Promise<LoadResult<TestItem>>(() => {}))
+      const provider = new CallbackDataProvider<TestItem>({ loadFn, offsetPaginationFn: () => {} })
+      provider.setOffsetPagination({ page: 1, pageSize: 20 })
+
+      const wrapper = mount(Grid as any, {
+        props: { dataProvider: provider, columns },
+        slots: {
+          toolbar: `
+            <template #toolbar="{ loading }">
+              <div data-qa="toolbar" :data-loading="String(loading)">TB</div>
+            </template>
+          `,
+          search: `<template #search><div data-qa="search-slot">S</div></template>`,
+        },
+      })
+
+      await flushPromises()
+
+      const toolbar = wrapper.find('[data-qa="toolbar"]')
+      expect(toolbar.exists()).toBe(true)
+      expect(toolbar.attributes('data-loading')).toBe('true')
+      const html = wrapper.html()
+      expect(html.indexOf('data-qa="toolbar"')).toBeLessThan(html.indexOf('data-qa="search-slot"'))
+      expect(html.indexOf('data-qa="search-slot"')).toBeLessThan(html.indexOf('<table'))
+    })
+  })
+
   describe('#empty', () => {
     it('renders when items are empty, replacing the default emptyText', async () => {
       const provider = makeProvider([])

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { defineComponent, h, nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
 import { InMemoryRowStateProvider } from '../../src/rowState/InMemoryRowStateProvider'
+import { rowStateInjectionKey } from '../../src/rowState/injection'
 import { useRowState } from '../../src/composables/useRowState'
 
 interface Item { id: string; name: string }
@@ -78,6 +79,31 @@ describe('useRowState', () => {
     const wrapper = mount(makeHost([], provider))
     const vm = wrapper.vm as unknown as { rowState: ReturnType<typeof useRowState<Item>> }
     vm.rowState.clear('selected')
+    expect(provider.entries('selected')).toEqual([])
+  })
+
+  it('uses the injected provider when no override is passed', () => {
+    const Host = defineComponent({
+      setup() {
+        const rowState = useRowState<Item>()
+        rowState.set({ id: 'a', name: 'A' }, 'selected', true)
+        return () => h('div')
+      }
+    })
+    mount(Host, { global: { provide: { [rowStateInjectionKey as symbol]: provider } } })
+    expect(provider.entries('selected')).toEqual(['a'])
+  })
+
+  it('falls back to its own in-memory provider when nothing is injected', () => {
+    let rowState: ReturnType<typeof useRowState<Item>> | undefined
+    mount(defineComponent({
+      setup() {
+        rowState = useRowState<Item>()
+        rowState.set({ id: '7', name: 'A' }, 'selected', true)
+        return () => h('div')
+      }
+    }))
+    expect(rowState?.entries('selected')).toEqual(['7'])
     expect(provider.entries('selected')).toEqual([])
   })
 
