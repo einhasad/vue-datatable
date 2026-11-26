@@ -29,6 +29,7 @@ export default mergeConfig(
         exclude: [
           'node_modules/',
           'dist/',
+          'demo/dist/**',
           'doc/',
           'examples/',
           '*.config.ts',
