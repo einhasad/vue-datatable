@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Before 1.0, a behaviour change bumps the minor version and a fix bumps the patch version.
 
-## [Unreleased]
+## [0.5.0] - 2026-11-27
 
 ### Security
 - Cell values, `value()` results, column footers and `ComponentOptions.content` are rendered as plain text instead of HTML, so row data can no longer inject markup or script. To render HTML on purpose, return a native element with `props: { innerHTML }` from `column.component` and sanitize the string yourself (see "Changed").
