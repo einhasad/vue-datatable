@@ -39,7 +39,7 @@ describe('GridSearch', () => {
     expect(inputs[0].attributes('type')).toBe('text')
   })
 
-  it('renders no cells for columns without filters', () => {
+  it('renders an empty cell for each visible column without a filter', () => {
     const stateProvider = new InMemoryStateProvider()
     const columns: Column<TestItem>[] = [
       { key: 'name', label: 'Name' },
@@ -50,7 +50,81 @@ describe('GridSearch', () => {
       props: { columns, stateProvider }
     })
 
-    expect(wrapper.findAll('td.grid-search-cell')).toHaveLength(0)
+    const cells = wrapper.findAll('td.grid-search-cell')
+    expect(cells).toHaveLength(2)
+    expect(cells[0].element.children).toHaveLength(0)
+    expect(cells[1].element.children).toHaveLength(0)
+  })
+
+  it('aligns each filter under its own column when only some columns filter', () => {
+    const stateProvider = new InMemoryStateProvider()
+    const columns: Column<TestItem>[] = [
+      { key: 'id', sort: 'id', expandToggle: true },
+      { key: 'name', sort: 'name' },
+      { key: 'hidden', showColumn: false, filter: { name: 'hidden', type: 'text' } },
+      { key: 'status', label: 'Status', filter: { name: 'status', type: 'text' } },
+      { key: 'actions', label: 'Actions' }
+    ]
+
+    const wrapper = mount(GridSearch, {
+      props: { columns, stateProvider }
+    })
+
+    const cells = wrapper.findAll('td.grid-search-cell')
+    expect(cells).toHaveLength(4)
+    expect(cells[0].find('input, select').exists()).toBe(false)
+    expect(cells[1].find('input, select').exists()).toBe(false)
+    expect(cells[2].find('input.grid-search-input').exists()).toBe(true)
+    expect(cells[3].find('input, select').exists()).toBe(false)
+  })
+
+  it('gives text inputs and selects an accessible name from the column label', () => {
+    const stateProvider = new InMemoryStateProvider()
+    const columns: Column<TestItem>[] = [
+      { key: 'name', label: 'Name', filter: { name: 'name', type: 'text' } },
+      { key: 'status', label: () => 'Status', filter: { name: 'status', type: 'select', options: [] } },
+      { key: 'id', filter: { name: 'id', type: 'text' } }
+    ]
+
+    const wrapper = mount(GridSearch, {
+      props: { columns, stateProvider }
+    })
+
+    const inputs = wrapper.findAll('input.grid-search-input')
+    expect(inputs[0].attributes('aria-label')).toBe('Filter by Name')
+    expect(wrapper.find('select.grid-search-select').attributes('aria-label')).toBe('Filter by Status')
+    expect(inputs[1].attributes('aria-label')).toBe('Filter by id')
+  })
+
+  it('uses filter.placeholder when it is a string and the column label otherwise', () => {
+    const stateProvider = new InMemoryStateProvider()
+    const columns: Column<TestItem>[] = [
+      { key: 'name', label: 'Name', filter: { name: 'name', type: 'text', placeholder: 'Search name...' } },
+      { key: 'status', label: 'Status', filter: { name: 'status', type: 'text', placeholder: 42 } },
+      { key: 'id', label: 'ID', filter: { name: 'id', type: 'text' } }
+    ]
+
+    const wrapper = mount(GridSearch, {
+      props: { columns, stateProvider }
+    })
+
+    const inputs = wrapper.findAll('input.grid-search-input')
+    expect(inputs[0].attributes('placeholder')).toBe('Search name...')
+    expect(inputs[1].attributes('placeholder')).toBe('Status')
+    expect(inputs[2].attributes('placeholder')).toBe('ID')
+  })
+
+  it('does not force a one-character input width', () => {
+    const stateProvider = new InMemoryStateProvider()
+    const columns: Column<TestItem>[] = [
+      { key: 'name', filter: { name: 'name', type: 'text' } }
+    ]
+
+    const wrapper = mount(GridSearch, {
+      props: { columns, stateProvider }
+    })
+
+    expect(wrapper.find('input.grid-search-input').attributes('size')).toBeUndefined()
   })
 
   it('shows current filter value from stateProvider', () => {
