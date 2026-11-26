@@ -20,14 +20,15 @@ const customColumnsProvider = new ArrayDataProvider({
   items: tasks
 })
 
-function getPriorityColor(priority: string) {
-  const colors: Record<string, string> = {
-    critical: '#e53e3e',
-    high: '#dd6b20',
-    medium: '#d69e2e',
-    low: '#38a169'
-  }
-  return colors[priority] || '#718096'
+const PRIORITY_COLORS: Record<string, string> = {
+  critical: '#c53030',
+  high: '#c05621',
+  medium: '#975a16',
+  low: '#276749'
+}
+
+function getPriorityColor(priority: string): string {
+  return PRIORITY_COLORS[priority] ?? '#4a5568'
 }
 
 const customColumnsColumns: Column[] = [

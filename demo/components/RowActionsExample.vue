@@ -1,9 +1,14 @@
 <template>
   <div
-    v-if="selectedUser"
     class="demo-selected-info"
+    aria-live="polite"
   >
-    <strong>Selected:</strong> {{ selectedUser.name }} — {{ selectedUser.email }}
+    <template v-if="selectedUser">
+      <strong>Selected:</strong> {{ selectedUser.name }} — {{ selectedUser.email }}
+    </template>
+    <template v-else>
+      Click a row, or Tab to it and press Enter or Space, to select it.
+    </template>
   </div>
   <Grid
     :data-provider="rowActionsProvider"
@@ -71,7 +76,7 @@ const rowActionsColumns: Column<RowUser>[] = [
           borderRadius: '0.25rem',
           fontSize: '0.875rem',
           fontWeight: 'bold',
-          background: row.active ? '#48bb78' : '#cbd5e0',
+          background: row.active ? '#276749' : '#4a5568',
           color: 'white'
         }
       },
@@ -92,6 +97,6 @@ const rowActionsColumns: Column<RowUser>[] = [
 }
 
 :deep(.row-inactive) {
-  opacity: 0.6;
+  color: var(--ink-3);
 }
 </style>

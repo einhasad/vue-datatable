@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import LocalStorageStateExample from '../components/LocalStorageStateExample.vue'
+import { flushPromises } from '@vue/test-utils'
 import { mountExample } from './helpers'
 
 describe('LocalStorageStateExample', () => {
@@ -46,5 +47,20 @@ describe('LocalStorageStateExample', () => {
     await idHeader.trigger('click')
     const rowsSortAsc = wrapper.findAll('tbody tr.grid-row')
     expect(rowsSortAsc[0].findAll('td')[0].text()).toBe('3')
+  })
+
+  it('reaches every row through page navigation and stores the page', async () => {
+    const { wrapper } = mountExample(LocalStorageStateExample)
+
+    const pageButtons = wrapper.findAll('.grid-pagination-page-number')
+    expect(pageButtons.map(b => b.text())).toEqual(['1', '2', '3'])
+
+    await pageButtons[2].trigger('click')
+    await flushPromises()
+    expect(wrapper.findAll('tbody tr.grid-row').map(r => r.findAll('td')[1].text())).toEqual([
+      'Jack Ryan', 'Kate Morgan'
+    ])
+    expect(JSON.parse(localStorage.getItem('grid-demo-state') ?? '{}')).toEqual({ filters: { page: '3' } })
+    expect(wrapper.get('.state-inspector__hint').text()).toBe("Storage: localStorage['grid-demo-state']")
   })
 })

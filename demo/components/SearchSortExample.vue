@@ -9,7 +9,7 @@
         placeholder="Search by email..."
         class="demo-input"
         @input="handleGlobalSearchInput"
-      />
+      >
     </div>
   </div>
   <Grid
@@ -69,7 +69,7 @@ const searchSortColumns: Column[] = [
   { sort: 'salary', label: 'Salary ($)', filter: { name: 'salary', type: 'text' } }
 ]
 
-const handleGlobalSearchInput = async (event: Event) => {
+const handleGlobalSearchInput = (event: Event): void => {
   const value = (event.target as HTMLInputElement).value
   globalSearchQuery.value = value
 

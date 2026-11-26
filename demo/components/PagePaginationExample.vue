@@ -10,7 +10,7 @@
         :total-items="pagination.totalItems"
         :items-per-page="pagination.pageSize"
         :max-visible-pages="5"
-        :show-summary="true"
+        show-summary
         @page-change="setPage"
       />
     </template>

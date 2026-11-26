@@ -16,7 +16,7 @@
           :total-items="pagination.totalItems"
           :items-per-page="pagination.pageSize"
           :max-visible-pages="5"
-          :show-summary="true"
+          show-summary
           @page-change="setPage"
         />
       </template>
@@ -82,17 +82,13 @@ function fetchChildren(parent: Node): Promise<Node[]> {
   )
 }
 
-async function handleExpand(item: Node) {
+async function handleExpand(item: Node): Promise<void> {
   const children = await fetchChildren(item)
-  const current = provider.getCurrentItems()
-  const updated = updateNode(current, item.id, n => ({ ...n, children }))
-  provider.setRows(updated)
+  provider.setAllItems(updateNode(provider.getAllItems(), item.id, n => ({ ...n, children })))
 }
 
-function handleCollapse(item: Node) {
-  const current = provider.getCurrentItems()
-  const updated = updateNode(current, item.id, n => ({ ...n, children: undefined }))
-  provider.setRows(updated)
+function handleCollapse(item: Node): void {
+  provider.setAllItems(updateNode(provider.getAllItems(), item.id, n => ({ ...n, children: undefined })))
 }
 
 function updateNode(items: Node[], id: string, mapFn: (n: Node) => Node): Node[] {

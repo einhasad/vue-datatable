@@ -2,7 +2,17 @@
   <Grid
     :data-provider="inMemoryProvider"
     :columns="stateColumns"
-  />
+  >
+    <template #pagination="{ pagination, setPage }">
+      <PagePagination
+        :current-page="pagination.currentPage"
+        :total-pages="pagination.totalPages"
+        :total-items="pagination.totalItems"
+        :items-per-page="pagination.pageSize"
+        @page-change="setPage"
+      />
+    </template>
+  </Grid>
   <StateInspector
     :state-provider="inMemoryStateProvider"
     lifetime="Lost on reload"
@@ -14,6 +24,7 @@
 import {
   Grid,
   ArrayDataProvider,
+  PagePagination,
   InMemoryStateProvider,
   type Column
 } from '@einhasad-vue/datatable-vue'

@@ -6,7 +6,7 @@
   <StateInspector
     :state-provider="queryParamsStateProvider"
     lifetime="Survives reload · shareable URL"
-    storage-hint="Storage: URL query params (prefix=qp)"
+    :storage-hint="`Storage: URL query params (prefix=${PREFIX})`"
   />
 </template>
 
@@ -53,7 +53,8 @@ const stateColumns: Column<StateUser>[] = [
   { sort: 'status', label: 'Status', value: (m) => m.status, filter: { name: 'status', type: 'text' } }
 ]
 
-const queryParamsStateProvider = new QueryParamsStateProvider({ router, prefix: 'qp' })
+const PREFIX = 'qp'
+const queryParamsStateProvider = new QueryParamsStateProvider({ router, prefix: PREFIX })
 const queryParamsProvider = new ArrayDataProvider({
   items: stateUsers,
   stateProvider: queryParamsStateProvider

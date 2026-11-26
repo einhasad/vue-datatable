@@ -6,7 +6,7 @@
   <StateInspector
     :state-provider="hashStateProvider"
     lifetime="Survives reload · shareable URL"
-    storage-hint="Storage: URL hash fragment (prefix=hash)"
+    :storage-hint="`Storage: URL hash fragment (prefix=${PREFIX})`"
   />
 </template>
 
@@ -53,7 +53,8 @@ const stateColumns: Column<StateUser>[] = [
   { sort: 'status', label: 'Status', value: (m) => m.status, filter: { name: 'status', type: 'text' } }
 ]
 
-const hashStateProvider = new HashStateProvider({ router, prefix: 'hash' })
+const PREFIX = 'hash'
+const hashStateProvider = new HashStateProvider({ router, prefix: PREFIX })
 const hashProvider = new ArrayDataProvider({
   items: stateUsers,
   stateProvider: hashStateProvider

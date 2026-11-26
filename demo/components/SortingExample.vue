@@ -1,24 +1,28 @@
 <template>
   <div
     data-qa="select-search"
-    style="margin-bottom: 12px;"
+    class="demo-controls"
   >
-    <select
-      v-model="sortingSelectValue"
-      data-qa="sort-select"
-      class="demo-select"
-      @change="handleSortingSelect"
-    >
-      <option value="">
-        Default
-      </option>
-      <option value="position-desc">
-        Position Desc
-      </option>
-      <option value="position-asc">
-        Position Asc
-      </option>
-    </select>
+    <div class="demo-control-group">
+      <label for="sorting-select">Sort by position</label>
+      <select
+        id="sorting-select"
+        v-model="sortingSelectValue"
+        data-qa="sort-select"
+        class="demo-select"
+        @change="handleSortingSelect"
+      >
+        <option value="">
+          Default (ID)
+        </option>
+        <option value="position-desc">
+          Position Desc
+        </option>
+        <option value="position-asc">
+          Position Asc
+        </option>
+      </select>
+    </div>
   </div>
   <Grid
     :data-provider="sortingProvider"
@@ -62,7 +66,7 @@ const sortingColumns: Column[] = [
 
 const sortingSelectValue = ref('')
 
-function handleSortingSelect() {
+function handleSortingSelect(): void {
   const value = sortingSelectValue.value
   if (value === 'position-desc') {
     sortingProvider.setSort({ field: 'position', order: 'desc' })

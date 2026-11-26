@@ -38,10 +38,9 @@
   --grid-focus-ring: var(--shadow-focus);
 }
 
-.grid .grid-search-input:focus-visible,
-.grid .grid-search-input:focus {
-  box-shadow: none;
-  border-color: transparent !important;
+.grid .grid-search-input:focus-visible {
+  outline: 2px solid var(--focus-ring-color);
+  outline-offset: 2px;
 }
 
 /* ============================================================
@@ -103,28 +102,7 @@
 
 .demo-input:focus,
 .demo-select:focus {
-  outline: none;
   border-color: var(--ink);
-  box-shadow: var(--shadow-focus);
-}
-
-.demo-http-pagination {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) 0;
-  flex-wrap: wrap;
-}
-
-.demo-http-pagination .grid-pagination-summary {
-  font-size: var(--fs-sm);
-  color: var(--ink-3);
-  font-family: var(--font-mono);
-}
-
-.grid-pagination-page {
-  display: flex;
-  gap: 3px;
 }
 
 .grid-pagination-page-number {

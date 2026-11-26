@@ -6,7 +6,7 @@ import './design-system.css'
 import './style.css'
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
@@ -15,12 +15,12 @@ const router = createRouter({
   ]
 })
 
-async function prepare() {
+async function prepare(): Promise<unknown> {
   if (import.meta.env.DEV) {
     try {
       const { worker } = await import('../src/mocks/browser')
       return worker.start({
-        serviceWorker: { url: '/mockServiceWorker.js' },
+        serviceWorker: { url: `${import.meta.env.BASE_URL}mockServiceWorker.js` },
         onUnhandledRequest: 'bypass'
       })
     } catch {
@@ -30,8 +30,9 @@ async function prepare() {
   return Promise.resolve()
 }
 
-void prepare().then(() => {
+void prepare().then(async () => {
   const app = createApp(App)
   app.use(router)
+  await router.isReady()
   app.mount('#app')
 })
