@@ -45,6 +45,20 @@ describe('ScrollPagination', () => {
     expect(wrapper.find('.grid-scroll-loading').text()).toBe('Loading more...')
   })
 
+  it('renders the loading text inside a polite live region that exists before loading starts', async () => {
+    const wrapper = mount(ScrollPagination, {
+      props: { pagination: createPagination(true), loading: false }
+    })
+
+    const region = wrapper.find('[role="status"]')
+    expect(region.exists()).toBe(true)
+    expect(region.attributes('aria-live')).toBe('polite')
+
+    await wrapper.setProps({ loading: true })
+
+    expect(wrapper.find('[role="status"] .grid-scroll-loading').text()).toBe('Loading more...')
+  })
+
   it('shows end text when hasMore is false and not loading', () => {
     const wrapper = mount(ScrollPagination, {
       props: { pagination: createPagination(false), loading: false }

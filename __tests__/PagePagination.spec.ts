@@ -133,4 +133,75 @@ describe('PagePagination', () => {
     const texts = pageNumbers.map(el => el.text())
     expect(texts).toEqual(['6', '7', '8', '9', '10'])
   })
+
+  it('renders a labelled nav landmark', () => {
+    const wrapper = createWrapper()
+
+    const nav = wrapper.find('nav.grid-pagination')
+    expect(nav.exists()).toBe(true)
+    expect(nav.attributes('aria-label')).toBe('Pagination')
+  })
+
+  it('renders every control as a keyboard-focusable button', () => {
+    const wrapper = createWrapper({ currentPage: 3 })
+
+    const controls = wrapper.findAll('.grid-pagination-link')
+    expect(controls.length).toBeGreaterThan(0)
+    for (const control of controls) {
+      expect(control.element.tagName).toBe('BUTTON')
+      expect(control.attributes('type')).toBe('button')
+    }
+  })
+
+  it('marks only the current page with aria-current="page"', () => {
+    const wrapper = createWrapper({ currentPage: 3 })
+
+    const current = wrapper.findAll('[aria-current]')
+    expect(current).toHaveLength(1)
+    expect(current[0].attributes('aria-current')).toBe('page')
+    expect(current[0].text()).toBe('3')
+  })
+
+  it('names prev and next for assistive technology', () => {
+    const wrapper = createWrapper({ currentPage: 3 })
+
+    expect(wrapper.find('.grid-pagination-prev').attributes('aria-label')).toBe('Previous page')
+    expect(wrapper.find('.grid-pagination-next').attributes('aria-label')).toBe('Next page')
+  })
+
+  it('sets disabled on prev at the first page and next at the last page', () => {
+    const first = createWrapper({ currentPage: 1 })
+    expect(first.find('.grid-pagination-prev').attributes('disabled')).toBeDefined()
+    expect(first.find('.grid-pagination-next').attributes('disabled')).toBeUndefined()
+
+    const last = createWrapper({ currentPage: 10 })
+    expect(last.find('.grid-pagination-prev').attributes('disabled')).toBeUndefined()
+    expect(last.find('.grid-pagination-next').attributes('disabled')).toBeDefined()
+  })
+
+  it('announces the summary politely', () => {
+    const wrapper = createWrapper({ showSummary: true })
+
+    const summary = wrapper.find('.grid-pagination-summary')
+    expect(summary.attributes('role')).toBe('status')
+    expect(summary.attributes('aria-live')).toBe('polite')
+  })
+
+  it('clamps the summary range when currentPage is past the last page', () => {
+    const wrapper = createWrapper({ currentPage: 9, totalPages: 5, totalItems: 47, showSummary: true })
+
+    expect(wrapper.find('.grid-pagination-summary').text()).toBe('Showing 41-47 of 47 items')
+  })
+
+  it('clamps the summary range when currentPage is below 1', () => {
+    const wrapper = createWrapper({ currentPage: 0, totalPages: 5, totalItems: 47, showSummary: true })
+
+    expect(wrapper.find('.grid-pagination-summary').text()).toBe('Showing 1-10 of 47 items')
+  })
+
+  it('shows an empty range when there are no items', () => {
+    const wrapper = createWrapper({ currentPage: 1, totalPages: 1, totalItems: 0, showSummary: true })
+
+    expect(wrapper.find('.grid-pagination-summary').text()).toBe('Showing 0-0 of 0 items')
+  })
 })
