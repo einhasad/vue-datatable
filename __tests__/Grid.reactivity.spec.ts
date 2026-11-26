@@ -34,9 +34,9 @@ describe('Grid Reactivity', () => {
         label: 'Note',
         component: (item) => {
           if (!item.note) {
-            return { is: 'span', props: {}, content: '<span class="fa fa-file-o"></span>' }
+            return { is: 'span', props: { class: 'fa fa-file-o' }, content: 'No note' }
           }
-          return { is: 'div', props: { class: 'has-note' }, content: '<span class="fa fa-file"></span>' }
+          return { is: 'div', props: { class: 'has-note fa fa-file' }, content: 'Has note' }
         },
       },
     ]
@@ -70,6 +70,7 @@ describe('Grid Reactivity', () => {
     const updatedRow0 = wrapper.find('[data-qa="row-0"]')
     expect(updatedRow0.find('.fa-file').exists()).toBe(true)
     expect(updatedRow0.find('.fa-file-o').exists()).toBe(false)
+    expect(updatedRow0.find('.has-note').text()).toBe('Has note')
   })
 
   it('should re-render DynamicComponent when item data changes and component function reads updated field', async () => {

@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useGridDataProvider } from './dataProvider'
 import { useGridState } from './gridState'
-import {LoadResult} from "./types.ts";
+import type { LoadResult } from './types'
 
 const dataProvider = useGridDataProvider()
 const stateProvider = useGridState()

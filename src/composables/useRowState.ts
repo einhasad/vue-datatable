@@ -32,7 +32,7 @@ const defaultRowKey = <T>(item: T): RowKey | undefined => {
 export function useRowState<T = unknown>(options: UseRowStateOptions<T> = {}): UseRowStateReturn<T> {
   const provider: RowStateProvider =
     options.rowStateProvider
-    ?? inject(rowStateInjectionKey, undefined as unknown as RowStateProvider)
+    ?? inject(rowStateInjectionKey, null)
     ?? new InMemoryRowStateProvider()
 
   const rowKey = options.rowKey ?? defaultRowKey

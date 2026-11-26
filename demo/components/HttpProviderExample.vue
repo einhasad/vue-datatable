@@ -1,194 +1,86 @@
 <template>
-  <div class="demo-controls">
+  <form
+    class="demo-controls"
+    role="search"
+    aria-label="Repositories"
+    @submit.prevent="commitSearch"
+  >
     <div class="demo-control-group">
-      <label for="search">Search Repositories:</label>
-      <input
-        id="search"
-        v-model="searchQuery"
-        type="text"
-        placeholder="e.g., vue datatable"
-        class="demo-input grid-search-input"
-        @keyup.enter="handleSearch"
-      />
+      <label for="repo-search">Search repositories</label>
+      <div class="ds-row">
+        <input
+          id="repo-search"
+          v-model="searchTerm"
+          type="search"
+          placeholder="e.g. vue table"
+          class="demo-input"
+        >
+        <button
+          type="submit"
+          class="ds-btn ds-btn--outline ds-btn--sm"
+        >
+          Search
+        </button>
+      </div>
     </div>
-    <div class="demo-control-group">
-      <label for="sort">Sort By:</label>
-      <select
-        id="sort"
-        v-model="sortBy"
-        class="demo-select"
-        @change="handleSearch"
-      >
-        <option value="stars">
-          Stars
-        </option>
-        <option value="forks">
-          Forks
-        </option>
-        <option value="updated">
-          Recently Updated
-        </option>
-        <option value="help-wanted-issues">
-          Help Wanted
-        </option>
-      </select>
-    </div>
-    <div
-      class="demo-control-group"
-      style="justify-content: flex-end;"
-    >
-      <button
-        class="ds-btn ds-btn--outline ds-btn--sm"
-        style="align-self: flex-end;"
-        @click="handleSearch"
-      >
-        Search
-      </button>
-    </div>
-  </div>
+  </form>
 
   <Grid
-    :data-provider="gridProvider"
-    :columns="githubColumns"
-  />
-  <div
-    v-if="totalCount > 0"
-    class="demo-http-pagination"
+    :data-provider="repositoryProvider"
+    :columns="repositoryColumns"
   >
-    <span class="grid-pagination-summary">{{ totalCount }} items</span>
-    <span class="grid-pagination-summary">Showing {{ rangeStart }}-{{ rangeEnd }}</span>
-    <div class="grid-pagination-page">
-      <button
-        v-for="page in visiblePages"
-        :key="page"
-        type="button"
-        class="grid-pagination-page-number"
-        :class="{ 'grid-pagination-active': page === currentPage }"
-        @click="goToPage(page)"
-      >
-        {{ page }}
-      </button>
-    </div>
-  </div>
+    <template #pagination="{ pagination, setPage }">
+      <PagePagination
+        :current-page="pagination.currentPage"
+        :total-pages="pagination.totalPages"
+        :total-items="pagination.totalItems"
+        :items-per-page="pagination.pageSize"
+        :max-visible-pages="5"
+        show-summary
+        @page-change="setPage"
+      />
+    </template>
+  </Grid>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Grid, ArrayDataProvider, type Column } from '@einhasad-vue/datatable-vue'
-import { generateMockRepositories } from '../../examples/src/mocks/data'
-import { processSearchRequest } from '../../examples/src/mocks/search'
+import {
+  CallbackDataProvider,
+  Grid,
+  InMemoryStateProvider,
+  PagePagination,
+  useFilterField,
+  type Column
+} from '@einhasad-vue/datatable-vue'
+import { fetchRepositories, type Repository } from '../data/mockRepositories'
 
-interface GitHubRepo {
-  full_name: string
-  html_url: string
-  description: string | null
-  stargazers_count: number
-  forks_count: number
-  language: string | null
-  updated_at: string
-}
+const stateProvider = new InMemoryStateProvider()
+stateProvider.setSort('stars', 'desc')
 
-const allMockRepos = generateMockRepositories() as GitHubRepo[]
-const pageSize = 20
-
-const searchQuery = ref('vue table')
-const sortBy = ref('stars')
-const totalCount = ref(0)
-const currentPage = ref(1)
-
-function getFilteredItems() {
-  const result = processSearchRequest(allMockRepos, {
-    q: searchQuery.value,
-    sort: sortBy.value,
-    order: 'desc',
-    page: 1,
-    per_page: 1000
-  })
-  return result.items
-}
-
-const gridProvider = new ArrayDataProvider({
-  items: getFilteredItems()
-})
-
-totalCount.value = gridProvider.getCurrentItems().length
-gridProvider.setOffsetPagination({ page: 1, pageSize })
-
-const totalPages = computed(() => Math.ceil(totalCount.value / pageSize))
-
-const visiblePages = computed(() => {
-  const pages: number[] = []
-  for (let i = 1; i <= totalPages.value; i++) pages.push(i)
-  return pages
-})
-
-const rangeStart = computed(() => {
-  if (totalCount.value === 0) return 0
-  return (currentPage.value - 1) * pageSize + 1
-})
-
-const rangeEnd = computed(() => {
-  return Math.min(currentPage.value * pageSize, totalCount.value)
-})
-
-async function goToPage(page: number) {
-  currentPage.value = page
-  gridProvider.setOffsetPagination({ page, pageSize })
-}
-
-async function handleSearch() {
-  const filtered = getFilteredItems()
-  gridProvider.setAllItems(filtered)
-  currentPage.value = 1
-  gridProvider.setOffsetPagination({ page: 1, pageSize })
-  totalCount.value = filtered.length
-}
-
-const githubColumns: Column<GitHubRepo>[] = [
-  {
-    key: 'full_name',
-    label: 'Repository',
-    component: (row) => ({
-      is: 'a',
-      props: {
-        href: row.html_url,
-        target: '_blank',
-        style: {
-          color: '#667eea',
-          fontWeight: 'bold',
-          textDecoration: 'none'
-        }
-      },
-      content: row.full_name
+const repositoryProvider = new CallbackDataProvider<Repository>({
+  stateProvider,
+  loadFn: async ({ sortField, sortOrder, searchParams }, _keyset, offset) => {
+    const response = await fetchRepositories({
+      search: searchParams?.q ?? '',
+      sortField,
+      sortOrder,
+      page: offset?.page ?? 1,
+      perPage: offset?.pageSize ?? 20
     })
+    return { items: response.items, pagination: { totalItems: response.total } }
   },
-  {
-    key: 'description',
-    label: 'Description',
-    value: (row) => {
-      const desc = row.description ?? 'No description'
-      return desc.length > 100 ? desc.substring(0, 100) + '...' : desc
-    }
-  },
-  {
-    key: 'stargazers_count',
-    label: 'Stars',
-    value: (row) => row.stargazers_count.toLocaleString()
-  },
-  {
-    key: 'forks_count',
-    label: 'Forks',
-    value: (row) => row.forks_count.toLocaleString()
-  },
-  {
-    key: 'language',
-    label: 'Language',
-    value: (row) => row.language ?? 'Unknown'
-  },
-  {
-    key: 'updated_at',
-    label: 'Updated',
-    value: (row) => new Date(row.updated_at).toLocaleDateString()
-  }
+  offsetPaginationFn: () => {}
+})
+repositoryProvider.setOffsetPagination({ page: 1, pageSize: 20 })
+
+const { localValue: searchTerm, commit: commitSearch } = useFilterField({ stateProvider, filterName: 'q' })
+
+const repositoryColumns: Column<Repository>[] = [
+  { key: 'fullName', label: 'Repository', sort: 'name' },
+  { key: 'description', label: 'Description' },
+  { key: 'language', label: 'Language' },
+  { key: 'stars', label: 'Stars', sort: 'stars', value: (repo) => repo.stars.toLocaleString('en-US') },
+  { key: 'forks', label: 'Forks', sort: 'forks', value: (repo) => repo.forks.toLocaleString('en-US') },
+  { key: 'updatedAt', label: 'Updated', sort: 'updated' }
 ]
 </script>

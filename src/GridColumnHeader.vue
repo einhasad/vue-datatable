@@ -1,13 +1,13 @@
 <template>
   <template v-if="column.sort">
-    <a
-      href=""
+    <button
+      type="button"
       class="grid-sort-link"
       :class="{
         'asc': sortState && sortState.field === column.sort && sortState.order === 'asc',
         'desc': sortState && sortState.field === column.sort && sortState.order === 'desc'
       }"
-      @click.prevent="handleSortClick"
+      @click="handleSortClick"
     >
       <b>{{ label }}</b>
       <svg
@@ -35,7 +35,7 @@
           stroke-linejoin="round"
         />
       </svg>
-    </a>
+    </button>
   </template>
   <DynamicComponent
     v-else-if="column.labelComponent"
@@ -51,6 +51,7 @@ import DynamicComponent from './DynamicComponent.vue'
 
 const props = defineProps<{
   column: Column<T>
+  items?: T[]
   sortState?: SortState | null
   nextSortOrder?: (current: SortOrder) => SortOrder
 }>();
@@ -61,7 +62,7 @@ const emit = defineEmits<{
 
 const label = computed(() => {
   const l = props.column.label
-  if (typeof l === 'function') return ''
+  if (typeof l === 'function') return l(props.items ?? [])
   return l ?? ''
 })
 

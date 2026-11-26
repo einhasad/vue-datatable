@@ -17,7 +17,7 @@ type ExtractComponentProps<C extends Component> =
  */
 export interface RouteLocation {
   path: string
-  query: Record<string, string | string[] | undefined>
+  query: Record<string, string | null | (string | null)[] | undefined>
   hash?: string
 }
 
@@ -29,7 +29,7 @@ export interface RouterLike {
   currentRoute: {
     value: {
       path: string
-      query: Record<string, string | string[]>
+      query: Record<string, string | null | (string | null)[] | undefined>
       hash: string
     }
   }

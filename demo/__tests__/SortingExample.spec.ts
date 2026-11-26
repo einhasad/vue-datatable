@@ -121,4 +121,12 @@ describe('SortingExample', () => {
       expect(rowIds(wrapper)).toEqual(['1', '2', '3', '4', '5', '6', '7', '8'])
     })
   })
+
+  it('gives the sort select a linked visible label', () => {
+    const { wrapper } = mountExample(SortingExample)
+    const select = wrapper.get('[data-qa="sort-select"]')
+    const id = select.attributes('id')
+    expect(id).toBeTruthy()
+    expect(wrapper.get(`label[for="${id}"]`).text()).toBe('Sort by position')
+  })
 })

@@ -1,6 +1,15 @@
 import type { StateProvider, ReactiveState } from './StateProvider'
 import type { SortState, RouterLike } from '../types'
 import { createStateCore } from './stateCore'
+import {
+  applyUrlState,
+  firstQueryValue,
+  formatSort,
+  latestLocation,
+  onExternalRouteChange,
+  parseSort,
+  replaceLocation,
+} from './routerSync'
 
 export interface QueryParamsStateProviderConfig {
   router: RouterLike
@@ -16,12 +25,16 @@ export class QueryParamsStateProvider implements StateProvider {
   constructor(config: QueryParamsStateProviderConfig) {
     this.router = config.router
     this.prefix = config.prefix ?? 'search'
-    Object.assign(this.core.state.filters, this.readFiltersFromUrl())
-    this.core.state.sort = this.readSortFromUrl()
+    this.syncFromUrl()
+    onExternalRouteChange(this.router, route => route.query, () => { this.syncFromUrl() })
   }
 
   private paramName(key: string): string {
     return `${this.prefix}-${key}`
+  }
+
+  private syncFromUrl(): void {
+    applyUrlState(this.core, this.readFiltersFromUrl(), parseSort(this.getUrlParam('sort')))
   }
 
   private readFiltersFromUrl(): Record<string, string> {
@@ -32,37 +45,26 @@ export class QueryParamsStateProvider implements StateProvider {
 
     for (const [key, val] of Object.entries(query)) {
       if (key.startsWith(prefixDash) && key !== sortKey) {
-        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-        const v = Array.isArray(val) ? (val[0] ?? '') : (val ?? '')
+        const v = firstQueryValue(val)
         if (v) filters[key.slice(prefixDash.length)] = v
       }
     }
     return filters
   }
 
-  private readSortFromUrl(): SortState | null {
-    const v = this.getUrlParam('sort')
-    if (!v) return null
-    return v.startsWith('-')
-      ? { field: v.slice(1), order: 'desc' }
-      : { field: v, order: 'asc' }
-  }
-
   private getUrlParam(key: string): string | null {
-    const v = this.router.currentRoute.value.query[this.paramName(key)]
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    return Array.isArray(v) ? (v[0] ?? null) : (v ?? null)
+    return firstQueryValue(this.router.currentRoute.value.query[this.paramName(key)])
   }
 
   private setUrlParam(key: string, value: string | null): void {
-    const query = { ...this.router.currentRoute.value.query }
+    const location = latestLocation(this.router)
     const param = this.paramName(key)
     if (!value) {
-      delete query[param]
+      delete location.query[param]
     } else {
-      query[param] = value
+      location.query[param] = value
     }
-    this.router.replace({ path: this.router.currentRoute.value.path, query, hash: this.router.currentRoute.value.hash })
+    replaceLocation(this.router, location)
   }
 
   getValue(key: string): string | null { return this.core.getFilter(key) }
@@ -87,7 +89,7 @@ export class QueryParamsStateProvider implements StateProvider {
 
   setSort(field: string, order: 'asc' | 'desc'): void {
     this.core.setSortValue(field, order)
-    this.setUrlParam('sort', order === 'desc' ? `-${field}` : field)
+    this.setUrlParam('sort', formatSort(field, order))
   }
 
   clearSort(): void {
@@ -96,12 +98,12 @@ export class QueryParamsStateProvider implements StateProvider {
   }
 
   clear(): void {
-    const query = { ...this.router.currentRoute.value.query }
+    const location = latestLocation(this.router)
     const prefixDash = `${this.prefix}-`
-    for (const key of Object.keys(query)) {
-      if (key.startsWith(prefixDash)) delete query[key]
+    for (const key of Object.keys(location.query)) {
+      if (key.startsWith(prefixDash)) delete location.query[key]
     }
     this.core.clearAllValues()
-    this.router.replace({ path: this.router.currentRoute.value.path, query, hash: this.router.currentRoute.value.hash })
+    replaceLocation(this.router, location)
   }
 }

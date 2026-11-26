@@ -5,6 +5,11 @@
     :aria-busy="loading"
   >
     <slot
+      name="toolbar"
+      :loading="loading"
+    />
+
+    <slot
       name="search"
       :provider="dataProvider"
       :loading="loading"
@@ -113,6 +118,8 @@ import type { Column, RowOptions, SortState, SortOrder, PaginationInfo, DataProv
 import type { StateProvider } from './state'
 import GridTable from './GridTable.vue'
 import { useGridState } from './composables/useGridState'
+import { provideGridDataProvider } from './dataProvider'
+import { provideGridState } from './gridState'
 import { rowStateInjectionKey } from './rowState/injection'
 import { InMemoryRowStateProvider } from './rowState/InMemoryRowStateProvider'
 
@@ -153,7 +160,7 @@ provide(rowStateInjectionKey, rowStateProvider)
 
 const resolveRowKey = computed<(item: T) => RowKey | undefined>(() => {
   if (props.rowKey) return props.rowKey
-  const field = props.rowKeyField ?? 'id'
+  const field = props.rowKeyField
   return (item: T) => {
     if (item != null && typeof item === 'object') {
       const v = (item as Record<string, unknown>)[field]
@@ -191,6 +198,9 @@ defineSlots<{
 const stateProvider = computed<StateProvider | undefined>(() => {
   return props.dataProvider.getStateProvider('default') ?? undefined
 })
+
+provideGridDataProvider(props.dataProvider)
+provideGridState(stateProvider.value)
 
 const { items, loading, sortState, paginationState, handleSort, handleSetPage } = useGridState<T>({
   dataProvider: props.dataProvider,

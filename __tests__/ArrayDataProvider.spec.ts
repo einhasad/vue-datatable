@@ -1,6 +1,22 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { computed } from 'vue'
 import { ArrayDataProvider } from '../src/providers/ArrayDataProvider'
+import { InMemoryStateProvider } from '../src/state/InMemoryStateProvider'
 import type { SortState, OffsetPaginationState, KeysetPaginationState } from '../src/types'
+
+interface Person {
+  id: number
+  name: string
+  role: string
+}
+
+function people(count: number): Person[] {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i + 1,
+    name: `Person ${i + 1}`,
+    role: i % 4 === 0 ? 'Admin' : 'User'
+  }))
+}
 
 interface TestItem {
   id: number
@@ -182,8 +198,14 @@ describe('ArrayDataProvider', () => {
     expect(provider.isLoading()).toBe(false)
   })
 
-  it('getStateProvider returns null when not configured', () => {
-    expect(provider.getStateProvider('test')).toBeNull()
+  it('getStateProvider defaults to an InMemoryStateProvider when not configured', () => {
+    expect(provider.getStateProvider('test')).toBeInstanceOf(InMemoryStateProvider)
+  })
+
+  it('getStateProvider returns the configured state provider', () => {
+    const stateProvider = new InMemoryStateProvider()
+    const configured = new ArrayDataProvider<TestItem>({ items: sampleItems, stateProvider })
+    expect(configured.getStateProvider('test')).toBe(stateProvider)
   })
 
   it('load returns all items without sort when sortOrder is null', async () => {
@@ -239,6 +261,189 @@ describe('ArrayDataProvider', () => {
       expect(provider.isLoading()).toBe(false)
       provider.setRows([{ id: 2 }])
       expect(provider.isLoading()).toBe(false)
+    })
+  })
+
+  describe('sort state', () => {
+    it('reads the initial sort from the state provider', async () => {
+      const stateProvider = new InMemoryStateProvider()
+      stateProvider.setSort('name', 'desc')
+      const provider = new ArrayDataProvider<TestItem>({ items: sampleItems, stateProvider })
+
+      expect(provider.getSort()).toEqual({ field: 'name', order: 'desc' })
+      const result = await provider.load()
+      expect(result.items.map(item => item.name)).toEqual(['Charlie', 'Bob', 'Alice'])
+    })
+
+    it('getSort is reactive', () => {
+      const sortField = computed(() => provider.getSort()?.field ?? null)
+      expect(sortField.value).toBeNull()
+
+      provider.setSort({ field: 'id', order: 'asc' })
+      expect(sortField.value).toBe('id')
+
+      provider.setSort({ field: 'name', order: 'desc' })
+      expect(sortField.value).toBe('name')
+    })
+  })
+
+  describe('filters', () => {
+    it('ignores the reserved page key written by the Grid', async () => {
+      const stateProvider = new InMemoryStateProvider()
+      const paged = new ArrayDataProvider<Person>({ items: people(12), stateProvider })
+      paged.setOffsetPagination({ page: 2, pageSize: 5 })
+      stateProvider.setValue('page', '2')
+
+      const result = await paged.load()
+
+      expect(result.items.map(item => item.id)).toEqual([6, 7, 8, 9, 10])
+    })
+
+    it('still filters by other keys while page is stored', async () => {
+      const stateProvider = new InMemoryStateProvider()
+      const paged = new ArrayDataProvider<Person>({ items: people(12), stateProvider })
+      stateProvider.setValue('page', '1')
+      stateProvider.setFilter('role', 'admin')
+
+      const result = await paged.load()
+
+      expect(result.items.map(item => item.id)).toEqual([1, 5, 9])
+    })
+  })
+
+  describe('pagination totals', () => {
+    it('count only the items that match the filters', async () => {
+      const stateProvider = new InMemoryStateProvider()
+      const paged = new ArrayDataProvider<Person>({ items: people(12), stateProvider })
+      paged.setOffsetPagination({ page: 1, pageSize: 5 })
+      stateProvider.setFilter('role', 'Admin')
+
+      await paged.refresh()
+
+      expect(paged.getOffsetPagination()).toEqual({ page: 1, pageSize: 5, totalItems: 3, totalPages: 1 })
+    })
+
+    it('are reactive after setAllItems', () => {
+      const paged = new ArrayDataProvider<Person>({ items: people(47) })
+      paged.setOffsetPagination({ page: 1, pageSize: 10 })
+      const totals = computed(() => {
+        const offset = paged.getOffsetPagination()
+        return `${offset?.totalItems}/${offset?.totalPages}`
+      })
+      expect(totals.value).toBe('47/5')
+
+      paged.setAllItems(people(15))
+
+      expect(totals.value).toBe('15/2')
+    })
+
+    it('clamp the page to the last page after the dataset shrinks', () => {
+      const paged = new ArrayDataProvider<Person>({ items: people(47) })
+      paged.setOffsetPagination({ page: 5, pageSize: 10 })
+
+      paged.setAllItems(people(15))
+
+      expect(paged.getOffsetPagination()?.page).toBe(2)
+      expect(paged.getCurrentItems().map(item => item.id)).toEqual([11, 12, 13, 14, 15])
+    })
+
+    it('clamp a page beyond the last page', () => {
+      const paged = new ArrayDataProvider<Person>({ items: people(47) })
+      paged.setOffsetPagination({ page: 9, pageSize: 10 })
+
+      expect(paged.getOffsetPagination()?.page).toBe(5)
+      expect(paged.getCurrentItems()).toHaveLength(7)
+    })
+
+    it('clamp a page below 1 to the first page', () => {
+      const paged = new ArrayDataProvider<Person>({ items: people(47) })
+      paged.setOffsetPagination({ page: 0, pageSize: 10 })
+
+      expect(paged.getOffsetPagination()?.page).toBe(1)
+      expect(paged.getCurrentItems().map(item => item.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    })
+
+    it('keep page 1 when nothing matches', () => {
+      const paged = new ArrayDataProvider<Person>({ items: [] })
+      paged.setOffsetPagination({ page: 3, pageSize: 10 })
+
+      expect(paged.getOffsetPagination()).toEqual({ page: 1, pageSize: 10, totalItems: 0, totalPages: 0 })
+      expect(paged.getCurrentItems()).toEqual([])
+    })
+  })
+
+  describe('setRows on a paginated dataset', () => {
+    it('replaces only the displayed rows and keeps the other pages', () => {
+      const paged = new ArrayDataProvider<Person & { children?: Person[] }>({ items: people(12) })
+      paged.setOffsetPagination({ page: 1, pageSize: 5 })
+      const current = paged.getCurrentItems()
+
+      paged.setRows(current.map(row => (row.id === 1 ? { ...row, children: [{ id: 101, name: 'Child', role: 'User' }] } : row)))
+
+      expect(paged.getCurrentItems()[0].children).toHaveLength(1)
+      expect(paged.getAllItems().map(item => item.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+
+      paged.setOffsetPagination({ page: 2, pageSize: 5 })
+      expect(paged.getCurrentItems().map(item => item.id)).toEqual([6, 7, 8, 9, 10])
+
+      paged.setOffsetPagination({ page: 1, pageSize: 5 })
+      expect(paged.getCurrentItems()[0].children).toHaveLength(1)
+    })
+
+    it('removes displayed rows left out of the new rows and keeps the rest', () => {
+      const paged = new ArrayDataProvider<Person>({ items: people(12) })
+      paged.setOffsetPagination({ page: 2, pageSize: 5 })
+
+      paged.setRows(paged.getCurrentItems().filter(row => row.id !== 7))
+
+      expect(paged.getAllItems().map(item => item.id)).toEqual([1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12])
+      expect(paged.getOffsetPagination()?.totalItems).toBe(11)
+    })
+
+    it('keeps the dataset intact over repeated calls with rows from getCurrentItems', () => {
+      const paged = new ArrayDataProvider<Person & { c?: number }>({ items: people(10) })
+      paged.setOffsetPagination({ page: 1, pageSize: 5 })
+
+      paged.setRows(paged.getCurrentItems().map(r => (r.id === 1 ? { ...r, c: 1 } : r)))
+      paged.setRows(paged.getCurrentItems().map(r => (r.id === 1 ? { ...r, c: undefined } : r)))
+
+      expect(paged.getAllItems().map(item => item.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+      expect(paged.getOffsetPagination()?.totalItems).toBe(10)
+    })
+
+    it('keeps the dataset intact over three calls', () => {
+      const paged = new ArrayDataProvider<Person & { c?: number }>({ items: people(10) })
+      paged.setOffsetPagination({ page: 1, pageSize: 5 })
+
+      for (const c of [1, 2, 3]) {
+        paged.setRows(paged.getCurrentItems().map(r => (r.id === 1 ? { ...r, c } : r)))
+      }
+
+      expect(paged.getAllItems().map(item => item.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+      expect(paged.getCurrentItems()[0].c).toBe(3)
+      paged.setOffsetPagination({ page: 2, pageSize: 5 })
+      expect(paged.getCurrentItems().map(item => item.id)).toEqual([6, 7, 8, 9, 10])
+    })
+
+    it('keeps the dataset intact when every row is a spread copy', () => {
+      const paged = new ArrayDataProvider<Person>({ items: people(10) })
+      paged.setOffsetPagination({ page: 1, pageSize: 5 })
+
+      paged.setRows(paged.getCurrentItems().map(r => ({ ...r })))
+      paged.setRows(paged.getCurrentItems().map(r => ({ ...r, name: `${r.name}!` })))
+
+      expect(paged.getAllItems().map(item => item.id)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+      expect(paged.getCurrentItems()[0].name).toBe('Person 1!')
+    })
+
+    it('does not change the pagination state', () => {
+      const paged = new ArrayDataProvider<Person>({ items: people(12) })
+      paged.setOffsetPagination({ page: 2, pageSize: 5 })
+
+      paged.setRows(paged.getCurrentItems())
+
+      expect(paged.getOffsetPagination()).toEqual({ page: 2, pageSize: 5, totalItems: 12, totalPages: 3 })
+      expect(paged.getCurrentItems().map(item => item.id)).toEqual([6, 7, 8, 9, 10])
     })
   })
 })

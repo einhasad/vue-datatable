@@ -87,6 +87,16 @@ describe('utils', () => {
       expect(getCellValue(column, { meta: { a: 1 } }, 0)).toBe('{"a":1}')
     })
 
+    it('renders Date properties as ISO string without JSON quotes', () => {
+      const column = { key: 'createdAt' } as Column<{ createdAt: Date }>
+      expect(getCellValue(column, { createdAt: new Date('2026-01-02T00:00:00Z') }, 0)).toBe('2026-01-02T00:00:00.000Z')
+    })
+
+    it('renders an invalid Date property as empty string', () => {
+      const column = { key: 'createdAt' } as Column<{ createdAt: Date }>
+      expect(getCellValue(column, { createdAt: new Date('not a date') }, 0)).toBe('')
+    })
+
     it('returns empty string when model is null', () => {
       const column = { key: 'name' } as Column<null>
       expect(getCellValue(column, null, 0)).toBe('')

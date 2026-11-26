@@ -1,7 +1,7 @@
 <template>
   <tr class="grid-search-row">
     <td
-      v-for="(column, colIndex) in filterColumns"
+      v-for="(column, colIndex) in visibleColumns"
       :key="column.key || column.sort || colIndex"
       class="grid-search-cell"
     >
@@ -34,10 +34,10 @@
         </svg>
         <input
           type="text"
-          size="1"
           class="grid-search-input"
           :value="getFilterValue(column)"
-          :placeholder="getColumnLabel(column, [])"
+          :placeholder="getPlaceholder(column)"
+          :aria-label="getAccessibleName(column)"
           @change="handleInput(column, ($event.target as HTMLInputElement).value)"
         >
       </div>
@@ -45,6 +45,7 @@
         v-else-if="column.filter?.type === 'select'"
         class="grid-search-select"
         :value="getFilterValue(column)"
+        :aria-label="getAccessibleName(column)"
         @change="handleInput(column, ($event.target as HTMLSelectElement).value)"
       >
         <option value="">
@@ -77,12 +78,22 @@ const emit = defineEmits<{
   filterChange: []
 }>()
 
-const filterColumns = computed(() => {
-  return props.columns.filter(column => shouldShowColumn(column) && column.filter)
+const visibleColumns = computed(() => {
+  return props.columns.filter(column => shouldShowColumn(column))
 })
 
 function getFilterKey(column: Column<T>): string {
   return column.filter?.name ?? column.key ?? column.sort ?? ''
+}
+
+function getPlaceholder(column: Column<T>): string {
+  const placeholder = column.filter?.placeholder
+  return typeof placeholder === 'string' ? placeholder : getColumnLabel(column, [])
+}
+
+function getAccessibleName(column: Column<T>): string {
+  const name = getColumnLabel(column, []) || getFilterKey(column)
+  return name ? `Filter by ${name}` : 'Filter'
 }
 
 function getFilterValue(column: Column<T>): string {

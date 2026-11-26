@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'
+import { createRouter, createMemoryHistory } from 'vue-router'
+import { flushPromises } from '@vue/test-utils'
 import { QueryParamsStateProvider } from '../../src/state/QueryParamsStateProvider'
 
 function createMockRouter(initialQuery: Record<string, string | string[]> = {}) {
@@ -297,5 +299,197 @@ describe('QueryParamsStateProvider', () => {
     provider = new QueryParamsStateProvider({ router })
 
     expect(provider.getSort()).toEqual({ field: 'name', order: 'desc' })
+  })
+})
+
+describe('QueryParamsStateProvider when router.replace rejects', () => {
+  it('raises no unhandled rejection and clears the pending location', async () => {
+    const unhandled: unknown[] = []
+    const onUnhandled = (reason: unknown) => { unhandled.push(reason) }
+    process.on('unhandledRejection', onUnhandled)
+    const currentRoute = ref({ path: '/', query: {} as Record<string, string>, hash: '' })
+    const router = {
+      currentRoute,
+      replace: vi.fn(() => Promise.reject(new Error('navigation guard failed'))),
+    }
+    try {
+      const provider = new QueryParamsStateProvider({ router })
+
+      provider.setFilter('name', 'Alice')
+      await new Promise(resolve => setTimeout(resolve, 0))
+
+      currentRoute.value = { path: '/', query: { 'search-name': 'Bob' }, hash: '' }
+      expect(provider.getFilter('name')).toBe('Bob')
+      expect(unhandled).toEqual([])
+    } finally {
+      process.off('unhandledRejection', onUnhandled)
+    }
+  })
+})
+
+describe('QueryParamsStateProvider with vue-router', () => {
+  function createRealRouter() {
+    return createRouter({
+      history: createMemoryHistory(),
+      routes: [{ path: '/', component: { render: () => null } }],
+    })
+  }
+
+  async function routerAt(url: string) {
+    const router = createRealRouter()
+    await router.push(url)
+    return router
+  }
+
+  describe('0.4.4 URLs round-trip byte-identical', () => {
+    it.each([
+      ['/?qp-name=Eve&qp-sort=-email', 'qp', { name: 'Eve' }, { field: 'email', order: 'desc' }],
+      ['/?users-name=John&users-sort=email', 'users', { name: 'John' }, { field: 'email', order: 'asc' }],
+      ['/?search-name=John+Doe&search-status=active', 'search', { name: 'John Doe', status: 'active' }, null],
+      ['/?qp-name=Eve&qp-sort=-email&users-username=a&users-sort=email', 'qp', { name: 'Eve' }, { field: 'email', order: 'desc' }],
+      ['/?qp-name=Eve&qp-sort=-email&users-username=a&users-sort=email', 'users', { username: 'a' }, { field: 'email', order: 'asc' }],
+      ['/?search-role=Admin+%26+Co%3D1&other=keep', 'search', { role: 'Admin & Co=1' }, null],
+    ] as const)('%s (prefix %s)', async (url, prefix, filters, sort) => {
+      const router = await routerAt(url)
+      const provider = new QueryParamsStateProvider({ router, prefix })
+
+      expect(provider.getAllFilters()).toEqual(filters)
+      expect(provider.getSort()).toEqual(sort)
+
+      for (const [key, value] of Object.entries(filters)) provider.setFilter(key, value)
+      if (sort) provider.setSort(sort.field, sort.order)
+      await flushPromises()
+
+      expect(router.currentRoute.value.fullPath).toBe(url)
+    })
+
+    it('writes filter values in the 0.4.4 format', async () => {
+      const router = await routerAt('/')
+      const provider = new QueryParamsStateProvider({ router, prefix: 'qp' })
+
+      provider.setFilter('name', 'Eve')
+      await flushPromises()
+      provider.setSort('email', 'desc')
+      await flushPromises()
+
+      expect(router.currentRoute.value.fullPath).toBe('/?qp-name=Eve&qp-sort=-email')
+    })
+  })
+
+  describe('null query values', () => {
+    it('skips a valueless prefixed param', async () => {
+      const router = await routerAt('/?search-name&search-sort')
+      const provider = new QueryParamsStateProvider({ router })
+
+      expect(provider.getAllFilters()).toEqual({})
+      expect(provider.getSort()).toBeNull()
+    })
+
+    it('uses the first non-null value of a repeated param', async () => {
+      const router = await routerAt('/?search-name&search-name=Alice')
+      const provider = new QueryParamsStateProvider({ router })
+
+      expect(provider.getFilter('name')).toBe('Alice')
+    })
+
+    it('keeps unrelated valueless params on write', async () => {
+      const router = await routerAt('/?debug&search-name=Alice')
+      const provider = new QueryParamsStateProvider({ router })
+
+      provider.setSort('id', 'asc')
+      await flushPromises()
+
+      expect(router.currentRoute.value.fullPath).toBe('/?debug&search-name=Alice&search-sort=id')
+    })
+  })
+
+  describe('route changes', () => {
+    it('reads state from the initial navigation when built before the router is ready', async () => {
+      const router = createRealRouter()
+      const provider = new QueryParamsStateProvider({ router, prefix: 'qp' })
+
+      await router.push('/?qp-name=Eve&qp-sort=-email')
+
+      expect(provider.getAllFilters()).toEqual({ name: 'Eve' })
+      expect(provider.getSort()).toEqual({ field: 'email', order: 'desc' })
+    })
+
+    it('re-syncs filters and sort on external navigation', async () => {
+      const router = await routerAt('/?search-name=Alice&search-sort=name')
+      const provider = new QueryParamsStateProvider({ router })
+
+      await router.push('/?search-status=active&search-sort=-id')
+
+      expect(provider.state.filters).toEqual({ status: 'active' })
+      expect(provider.getSort()).toEqual({ field: 'id', order: 'desc' })
+    })
+
+    it('reflects back and forward navigation', async () => {
+      const router = await routerAt('/?search-name=Alice')
+      const provider = new QueryParamsStateProvider({ router })
+      await router.push('/?search-name=Bob&search-sort=name')
+
+      router.back()
+      await vi.waitFor(() => expect(provider.getFilter('name')).toBe('Alice'))
+      expect(provider.getSort()).toBeNull()
+
+      router.forward()
+      await vi.waitFor(() => expect(provider.getFilter('name')).toBe('Bob'))
+      expect(provider.getSort()).toEqual({ field: 'name', order: 'asc' })
+    })
+
+    it('does not reassign sort when the URL sort is unchanged', async () => {
+      const router = await routerAt('/?search-sort=name')
+      const provider = new QueryParamsStateProvider({ router })
+      const sortBefore = provider.state.sort
+
+      await router.push('/?search-sort=name&search-name=Alice')
+
+      expect(provider.state.sort).toBe(sortBefore)
+      expect(provider.getFilter('name')).toBe('Alice')
+    })
+  })
+
+  describe('writes in the same tick', () => {
+    it('keeps both a sort and a page write', async () => {
+      const router = await routerAt('/?search-page=3')
+      const provider = new QueryParamsStateProvider({ router })
+
+      provider.setSort('name', 'asc')
+      provider.setValue('page', '1')
+      await flushPromises()
+
+      expect(router.currentRoute.value.query).toEqual({ 'search-page': '1', 'search-sort': 'name' })
+      expect(provider.getSort()).toEqual({ field: 'name', order: 'asc' })
+      expect(provider.getValue('page')).toBe('1')
+    })
+
+    it('keeps writes from two providers sharing a router', async () => {
+      const router = await routerAt('/?products-sort=price')
+      const products = new QueryParamsStateProvider({ router, prefix: 'products' })
+      const users = new QueryParamsStateProvider({ router, prefix: 'users' })
+
+      products.setSort('name', 'asc')
+      users.setSort('email', 'asc')
+      await flushPromises()
+
+      expect(router.currentRoute.value.fullPath).toBe('/?products-sort=name&users-sort=email')
+      expect(products.getSort()).toEqual({ field: 'name', order: 'asc' })
+      expect(users.getSort()).toEqual({ field: 'email', order: 'asc' })
+    })
+
+    it('keeps a filter write followed by clear of another provider', async () => {
+      const router = await routerAt('/?a-name=x&b-name=y')
+      const a = new QueryParamsStateProvider({ router, prefix: 'a' })
+      const b = new QueryParamsStateProvider({ router, prefix: 'b' })
+
+      a.setFilter('name', 'z')
+      b.clear()
+      await flushPromises()
+
+      expect(router.currentRoute.value.fullPath).toBe('/?a-name=z')
+      expect(a.getFilter('name')).toBe('z')
+      expect(b.getAllFilters()).toEqual({})
+    })
   })
 })

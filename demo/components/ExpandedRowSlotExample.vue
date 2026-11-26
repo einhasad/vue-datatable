@@ -14,7 +14,7 @@
           :total-items="pagination.totalItems"
           :items-per-page="pagination.pageSize"
           :max-visible-pages="5"
-          :show-summary="true"
+          show-summary
           @page-change="setPage"
         />
       </template>
@@ -23,7 +23,9 @@
         <div class="expanded-slot-demo__panel">
           <div class="expanded-slot-demo__panel-head">
             <div>
-              <div class="expanded-slot-demo__panel-eyebrow">Order details</div>
+              <div class="expanded-slot-demo__panel-eyebrow">
+                Order details
+              </div>
               <div class="expanded-slot-demo__panel-title">
                 {{ item.id }} · {{ item.customer }}
               </div>
@@ -51,9 +53,15 @@
               <tr>
                 <th>Line</th>
                 <th>Description</th>
-                <th class="r">Qty</th>
-                <th class="r">Unit price</th>
-                <th class="r">Amount</th>
+                <th class="r">
+                  Qty
+                </th>
+                <th class="r">
+                  Unit price
+                </th>
+                <th class="r">
+                  Amount
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -63,9 +71,15 @@
               >
                 <td>{{ line.id }}</td>
                 <td>{{ line.description }}</td>
-                <td class="r">{{ line.qty }}</td>
-                <td class="r">{{ formatMoney(line.unitPrice) }}</td>
-                <td class="r"><b>{{ formatMoney(line.amount) }}</b></td>
+                <td class="r">
+                  {{ line.qty }}
+                </td>
+                <td class="r">
+                  {{ formatMoney(line.unitPrice) }}
+                </td>
+                <td class="r">
+                  <b>{{ formatMoney(line.amount) }}</b>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -156,13 +170,13 @@ function fetchLineItems(parent: Order): Promise<OrderLine[]> {
   })
 }
 
-async function handleExpand(item: Order) {
-  if (lineItems.value[item.id]) return
+async function handleExpand(item: Order): Promise<void> {
+  if (item.id in lineItems.value) return
   const lines = await fetchLineItems(item)
   lineItems.value = { ...lineItems.value, [item.id]: lines }
 }
 
-function handleCollapse(item: Order) {
+function handleCollapse(item: Order): void {
   if (!(item.id in lineItems.value)) return
   const next = { ...lineItems.value }
   delete next[item.id]

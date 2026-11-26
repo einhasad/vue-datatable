@@ -5,7 +5,7 @@ export interface UseFilterFieldOptions {
   stateProvider: StateProvider
   filterName: string
   defaultValue?: string
-  /** If true, value is only committed to stateProvider on commit() call (blur/enter) */
+  /** true (default): localValue edits reach stateProvider only on commit() (blur/enter). false: every localValue edit is committed. */
   lazy?: boolean
 }
 
@@ -16,8 +16,7 @@ export function useFilterField(options: UseFilterFieldOptions): {
   clearFilter: () => void
   commit: () => void
 } {
-  const { stateProvider, filterName, defaultValue } = options
-  void options.lazy // lazy mode support — commit() used instead of auto-sync
+  const { stateProvider, filterName, defaultValue, lazy = true } = options
 
   // Read initial value from stateProvider (which reads from URL via QueryParamsStateProvider)
   const currentValue = ref<string>(
@@ -49,7 +48,10 @@ export function useFilterField(options: UseFilterFieldOptions): {
   // For lazy mode (text inputs): edit locally, commit on blur/enter
   const localValue = computed({
     get: () => currentValue.value,
-    set: (v: string) => { currentValue.value = v }
+    set: (v: string) => {
+      currentValue.value = v
+      if (!lazy) commit()
+    }
   })
 
   function commit(): void {

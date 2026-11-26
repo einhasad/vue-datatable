@@ -22,6 +22,9 @@ export function getCellValue<T = unknown>(column: Column<T>, model: T, index: nu
       if (valueType === 'number' || valueType === 'boolean') {
         return String(value as number | boolean)
       }
+      if (value instanceof Date) {
+        return Number.isNaN(value.getTime()) ? '' : value.toISOString()
+      }
       if (valueType === 'object') {
         return JSON.stringify(value)
       }

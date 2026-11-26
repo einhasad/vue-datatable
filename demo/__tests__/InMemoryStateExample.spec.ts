@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import InMemoryStateExample from '../components/InMemoryStateExample.vue'
+import { flushPromises } from '@vue/test-utils'
 import { mountExample } from './helpers'
 
 describe('InMemoryStateExample', () => {
@@ -33,5 +34,32 @@ describe('InMemoryStateExample', () => {
 
     const rowsAfterRole = wrapper.findAll('tbody tr.grid-row')
     expect(rowsAfterRole.length).toBe(3)
+  })
+
+  it('reaches every row through page navigation', async () => {
+    const { wrapper } = mountExample(InMemoryStateExample)
+
+    const pageButtons = wrapper.findAll('.grid-pagination-page-number')
+    expect(pageButtons.map(b => b.text())).toEqual(['1', '2', '3'])
+
+    await pageButtons[1].trigger('click')
+    await flushPromises()
+    expect(wrapper.findAll('tbody tr.grid-row').map(r => r.findAll('td')[1].text())).toEqual([
+      'Frank Miller', 'Grace Lee', 'Henry Wilson', 'Ivy Chen', 'Jack Ryan'
+    ])
+
+    await wrapper.get('.grid-pagination-next').trigger('click')
+    await flushPromises()
+    expect(wrapper.findAll('tbody tr.grid-row').map(r => r.findAll('td')[1].text())).toEqual([
+      'Kate Morgan', 'Leo Turner'
+    ])
+  })
+
+  it('shows the configured filter placeholders', () => {
+    const { wrapper } = mountExample(InMemoryStateExample)
+
+    expect(wrapper.findAll('.grid-search-input').map(i => i.attributes('placeholder'))).toEqual([
+      'Search ID...', 'Search Name...', 'Search Email...', 'Search Role...', 'Search Status...'
+    ])
   })
 })

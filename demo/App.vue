@@ -1,8 +1,28 @@
 <template>
   <header class="ds-header">
     <div class="ds-header__inner">
+      <button
+        ref="menuButton"
+        type="button"
+        class="ds-header__menu"
+        :aria-expanded="menuOpen"
+        aria-controls="ds-sidebar"
+        aria-label="Sections"
+        @click="menuOpen = !menuOpen"
+      >
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 20 20"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          aria-hidden="true"
+        ><path d="M3 5h14M3 10h14M3 15h14" /></svg>
+      </button>
       <a
-        href="/"
+        :href="docsRoot"
         class="ds-header__brand"
       >
         <svg
@@ -46,12 +66,16 @@
         <span class="ds-header__wordmark">
           <span class="ds-header__wordmark-scope">@einhasad-vue/</span>datatable-vue
         </span>
-        <span class="ds-header__version">v0.4.0</span>
+        <span class="ds-header__version">v{{ version }}</span>
       </a>
-      <nav class="ds-header__nav">
+      <nav
+        class="ds-header__nav"
+        aria-label="Site"
+      >
         <a
-          href="/"
+          :href="docsRoot"
           class="is-active"
+          aria-current="page"
         >Docs</a>
         <a
           href="https://github.com/einhasad/vue-datatable"
@@ -79,203 +103,31 @@
     </div>
   </header>
 
-  <div class="ds-layout">
-    <aside class="ds-sidebar">
-      <div class="ds-sidebar__group">
-        <span class="ds-caps ds-sidebar__label">Getting started</span>
+  <div class="ds-layout ds-layout--no-toc">
+    <aside
+      id="ds-sidebar"
+      class="ds-sidebar"
+      :class="{ 'is-open': menuOpen }"
+      aria-label="Sections"
+    >
+      <div
+        v-for="group in navGroups"
+        :key="group.label"
+        class="ds-sidebar__group"
+      >
+        <span class="ds-caps ds-sidebar__label">{{ group.label }}</span>
         <ul>
-          <li>
+          <li
+            v-for="link in group.links"
+            :key="link.id"
+          >
             <a
-              href="#introduction"
+              :href="`#${link.id}`"
               class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'introduction' }"
-              @click.prevent="scrollTo('introduction')"
-            >Introduction</a>
-          </li>
-          <li>
-            <a
-              href="#api"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'api' }"
-              @click.prevent="scrollTo('api')"
-            >API Reference</a>
-          </li>
-          <li>
-            <a
-              href="#basic"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'basic' }"
-              @click.prevent="scrollTo('basic')"
-            >Basic Example</a>
-          </li>
-        </ul>
-      </div>
-      <div class="ds-sidebar__group">
-        <span class="ds-caps ds-sidebar__label">Data providers</span>
-        <ul>
-          <li>
-            <a
-              href="#array-provider"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'array-provider' }"
-              @click.prevent="scrollTo('array-provider')"
-            >Array Provider</a>
-          </li>
-          <li>
-            <a
-              href="#http-provider"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'http-provider' }"
-              @click.prevent="scrollTo('http-provider')"
-            >HTTP Provider</a>
-          </li>
-        </ul>
-      </div>
-      <div class="ds-sidebar__group">
-        <span class="ds-caps ds-sidebar__label">State providers</span>
-        <ul>
-          <li>
-            <a
-              href="#state-inmemory"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'state-inmemory' }"
-              @click.prevent="scrollTo('state-inmemory')"
-            >InMemory</a>
-          </li>
-          <li>
-            <a
-              href="#state-localstorage"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'state-localstorage' }"
-              @click.prevent="scrollTo('state-localstorage')"
-            >LocalStorage</a>
-          </li>
-          <li>
-            <a
-              href="#state-queryparams"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'state-queryparams' }"
-              @click.prevent="scrollTo('state-queryparams')"
-            >QueryParams</a>
-          </li>
-          <li>
-            <a
-              href="#state-hash"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'state-hash' }"
-              @click.prevent="scrollTo('state-hash')"
-            >Hash</a>
-          </li>
-          <li>
-            <a
-              href="#multi-state"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'multi-state' }"
-              @click.prevent="scrollTo('multi-state')"
-            >Multi-State</a>
-          </li>
-        </ul>
-      </div>
-      <div class="ds-sidebar__group">
-        <span class="ds-caps ds-sidebar__label">Pagination</span>
-        <ul>
-          <li>
-            <a
-              href="#page-pagination"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'page-pagination' }"
-              @click.prevent="scrollTo('page-pagination')"
-            >Page Pagination</a>
-          </li>
-          <li>
-            <a
-              href="#cursor-pagination"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'cursor-pagination' }"
-              @click.prevent="scrollTo('cursor-pagination')"
-            >Cursor / Load More</a>
-          </li>
-          <li>
-            <a
-              href="#scroll-pagination"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'scroll-pagination' }"
-              @click.prevent="scrollTo('scroll-pagination')"
-            >Infinite Scroll</a>
-          </li>
-        </ul>
-      </div>
-      <div class="ds-sidebar__group">
-        <span class="ds-caps ds-sidebar__label">Columns &amp; UX</span>
-        <ul>
-          <li>
-            <a
-              href="#sorting"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'sorting' }"
-              @click.prevent="scrollTo('sorting')"
-            >Sorting</a>
-          </li>
-          <li>
-            <a
-              href="#search-sort"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'search-sort' }"
-              @click.prevent="scrollTo('search-sort')"
-            >Search &amp; Sort</a>
-          </li>
-          <li>
-            <a
-              href="#custom-columns"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'custom-columns' }"
-              @click.prevent="scrollTo('custom-columns')"
-            >Custom Columns</a>
-          </li>
-          <li>
-            <a
-              href="#row-actions"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'row-actions' }"
-              @click.prevent="scrollTo('row-actions')"
-            >Row Actions</a>
-          </li>
-          <li>
-            <a
-              href="#customizing"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'customizing' }"
-              @click.prevent="scrollTo('customizing')"
-            >Customizing</a>
-          </li>
-        </ul>
-      </div>
-      <div class="ds-sidebar__group">
-        <span class="ds-caps ds-sidebar__label">Row state</span>
-        <ul>
-          <li>
-            <a
-              href="#expandable-rows"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'expandable-rows' }"
-              @click.prevent="scrollTo('expandable-rows')"
-            >Expandable Rows</a>
-          </li>
-          <li>
-            <a
-              href="#mass-action"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'mass-action' }"
-              @click.prevent="scrollTo('mass-action')"
-            >Mass Action / Selection</a>
-          </li>
-          <li>
-            <a
-              href="#expanded-row-slot"
-              class="ds-sidebar__link"
-              :class="{ 'is-active': activeSection === 'expanded-row-slot' }"
-              @click.prevent="scrollTo('expanded-row-slot')"
-            >Custom expanded content</a>
+              :class="{ 'is-active': activeSection === link.id }"
+              :aria-current="activeSection === link.id ? 'location' : undefined"
+              @click.prevent="scrollTo(link.id)"
+            >{{ link.title }}</a>
           </li>
         </ul>
       </div>
@@ -286,8 +138,8 @@
         <div class="ds-hero__grid-bg" />
         <div class="ds-hero__content">
           <div class="ds-hero__eyebrow">
-            <span class="ds-hero__eyebrow-tag">v0.4</span>
-            <span>Pluggable providers · Vue 3.4+</span>
+            <span class="ds-hero__eyebrow-tag">v{{ version }}</span>
+            <span>Pluggable providers · Vue {{ vueRange }}</span>
           </div>
           <h1 class="ds-hero__title">
             Tables that <em>scale</em>,<br>not tables that fight you.
@@ -364,7 +216,7 @@
         and state persistence — so your code doesn't have to.
       </p>
       <p>
-        Give it a <strong>data provider</strong> (array, callback, or HTTP) and a <strong>column definition</strong>,
+        Give it a <strong>data provider</strong> (array, callback, Elasticsearch, or your own) and a <strong>column definition</strong>,
         and it runs. Swap in a <code>StateProvider</code> to persist state to the URL, localStorage, or a hash fragment.
         Replace any part via slots. That's the whole model.
       </p>
@@ -392,7 +244,7 @@
             /><path d="M4 5v5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5V5" /><path d="M4 10v5c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-5" /></svg>
           </span>
           <h3 class="ds-concept-card__title">Pluggable providers</h3>
-          <p class="ds-concept-card__desc">Array, HTTP, or custom. One interface, swap without changing your template.</p>
+          <p class="ds-concept-card__desc">Array, callback, or custom. One interface, swap without changing your template.</p>
         </a>
         <a
           href="#page-pagination"
@@ -450,7 +302,12 @@
         <h3 class="ds-api-heading">
           Props
         </h3>
-        <div class="ds-api-table-wrap">
+        <div
+          class="ds-api-table-wrap"
+          tabindex="0"
+          role="region"
+          aria-label="Grid props"
+        >
           <table class="ds-api-table">
             <thead>
               <tr>
@@ -465,13 +322,13 @@
                 <td><code>dataProvider</code></td>
                 <td><code>DataProvider&lt;T&gt;</code></td>
                 <td><span class="ds-api-required">required</span></td>
-                <td>Data source. Implementations include <code>ArrayDataProvider</code>, <code>CallbackDataProvider</code>, and any custom class implementing the <code>DataProvider</code> interface.</td>
+                <td>Data source. Implementations include <code>ArrayDataProvider</code>, <code>CallbackDataProvider</code>, <code>ElasticSearchDataProvider</code>, and any custom class implementing the <code>DataProvider</code> interface.</td>
               </tr>
               <tr>
                 <td><code>columns</code></td>
                 <td><code>Column&lt;T&gt;[]</code></td>
                 <td><span class="ds-api-required">required</span></td>
-                <td>Column definitions: <code>key</code>, <code>label</code>, optional <code>sort</code>, <code>filter</code>, <code>value</code>, <code>component</code>, <code>show</code>, <code>options</code>.</td>
+                <td>Column definitions. See the <a href="#api-columns">Column</a> table below.</td>
               </tr>
               <tr>
                 <td><code>rowOptions</code></td>
@@ -483,19 +340,19 @@
                 <td><code>onRowClick</code></td>
                 <td><code>(model: T) =&gt; void</code></td>
                 <td>—</td>
-                <td>Click handler attached to every <code>&lt;tr&gt;</code>.</td>
+                <td>Click handler attached to every <code>&lt;tr&gt;</code>. Rows become focusable and also activate with Enter or Space.</td>
               </tr>
               <tr>
                 <td><code>showLoader</code></td>
                 <td><code>boolean</code></td>
                 <td><code>true</code></td>
-                <td>Toggles the built-in loader row during refresh.</td>
+                <td>Shows the built-in loader row (or the <code>#loader</code> slot) while a load is running.</td>
               </tr>
               <tr>
                 <td><code>showFooter</code></td>
                 <td><code>boolean</code></td>
                 <td><code>true</code></td>
-                <td>Renders the table footer (used by some pagination layouts).</td>
+                <td>Renders the column footer row (<code>&lt;tfoot&gt;</code>) when at least one visible column defines <code>footer</code>. Set <code>false</code> to hide it.</td>
               </tr>
               <tr>
                 <td><code>emptyText</code></td>
@@ -507,13 +364,31 @@
                 <td><code>autoLoad</code></td>
                 <td><code>boolean</code></td>
                 <td><code>true</code></td>
-                <td>Calls <code>refresh()</code> on mount. Set <code>false</code> to load lazily.</td>
+                <td>Loads data on mount. Set <code>false</code> to load lazily.</td>
               </tr>
               <tr>
                 <td><code>rowKeyField</code></td>
                 <td><code>string</code></td>
                 <td><code>'id'</code></td>
-                <td>Field used as <code>:key</code> for row tracking across renders.</td>
+                <td>Item field that identifies a row: the rows' Vue <code>:key</code> and, when <code>rowKey</code> is not set, the key for per-row state (expansion, selection).</td>
+              </tr>
+              <tr>
+                <td><code>rowKey</code></td>
+                <td><code>(item: T) =&gt; RowKey | undefined</code></td>
+                <td>—</td>
+                <td>Row identity resolver for per-row state. Falls back to <code>item[rowKeyField]</code>.</td>
+              </tr>
+              <tr>
+                <td><code>childrenField</code></td>
+                <td><code>string | ((item: T) =&gt; T[] | undefined)</code></td>
+                <td><code>'children'</code></td>
+                <td>Where a row's nested child rows live: a field name or an accessor. Used by the expandable tree.</td>
+              </tr>
+              <tr>
+                <td><code>rowStateProvider</code></td>
+                <td><code>RowStateProvider</code></td>
+                <td>new <code>InMemoryRowStateProvider</code> per Grid</td>
+                <td>Store for per-row flags such as <code>expanded</code> and <code>selected</code>. Pass your own to share or persist them.</td>
               </tr>
             </tbody>
           </table>
@@ -522,7 +397,12 @@
         <h3 class="ds-api-heading">
           Slots
         </h3>
-        <div class="ds-api-table-wrap">
+        <div
+          class="ds-api-table-wrap"
+          tabindex="0"
+          role="region"
+          aria-label="Grid slots"
+        >
           <table class="ds-api-table">
             <thead>
               <tr>
@@ -533,9 +413,14 @@
             </thead>
             <tbody>
               <tr>
+                <td><code>#toolbar</code></td>
+                <td><code>{ loading }</code></td>
+                <td>Renders first, above <code>#search</code> and the table. The Grid provides its data provider and state here, so <code>&lt;ResetButton&gt;</code> works inside it.</td>
+              </tr>
+              <tr>
                 <td><code>#search</code></td>
                 <td><code>{ provider, loading }</code></td>
-                <td>Top toolbar area above the table — drop in your global search or filters here.</td>
+                <td>Area above the table — drop in your global search or filters here.</td>
               </tr>
               <tr>
                 <td><code>#table</code></td>
@@ -548,6 +433,11 @@
                 <td>Replace the per-column filter row inside the default table.</td>
               </tr>
               <tr>
+                <td><code>#headerCell</code></td>
+                <td><code>{ column, colIndex, sortState, onSort }</code></td>
+                <td>Replace the content of each header cell (the <code>&lt;th&gt;</code> stays).</td>
+              </tr>
+              <tr>
                 <td><code>#row</code></td>
                 <td><code>{ items }</code></td>
                 <td>Replace the row-rendering loop. Useful for grouped rows, virtual rows, or collapsible details.</td>
@@ -555,17 +445,22 @@
               <tr>
                 <td><code>#empty</code></td>
                 <td>—</td>
-                <td>Empty-state UI when <code>items.length === 0</code>.</td>
+                <td>Empty-state UI when there are no items.</td>
               </tr>
               <tr>
                 <td><code>#loader</code></td>
                 <td>—</td>
-                <td>Custom loader UI shown while <code>loading</code> is true and <code>showLoader</code> is on.</td>
+                <td>Custom loader UI shown while loading when <code>showLoader</code> is on.</td>
+              </tr>
+              <tr>
+                <td><code>#expandedRow</code></td>
+                <td><code>{ item, depth, rowKey, toggle }</code></td>
+                <td>Full-width row rendered under an expanded row, for content that does not share the parent's columns.</td>
               </tr>
               <tr>
                 <td><code>#pagination</code></td>
                 <td><code>{ pagination, setPage }</code></td>
-                <td>Pagination renderer. Pair with the lib's <code>&lt;PagePagination&gt;</code> or your own.</td>
+                <td>Pagination renderer, shown when the provider has page (offset) pagination. Pair with the lib's <code>&lt;PagePagination&gt;</code> or your own.</td>
               </tr>
             </tbody>
           </table>
@@ -574,7 +469,12 @@
         <h3 class="ds-api-heading">
           Events
         </h3>
-        <div class="ds-api-table-wrap">
+        <div
+          class="ds-api-table-wrap"
+          tabindex="0"
+          role="region"
+          aria-label="Grid events"
+        >
           <table class="ds-api-table">
             <thead>
               <tr>
@@ -587,12 +487,124 @@
               <tr>
                 <td><code>@loaded</code></td>
                 <td>—</td>
-                <td>Fires after every successful <code>refresh()</code>.</td>
+                <td>Fires after each Grid-initiated load (mount, sort, page or filter change). Not fired when you call <code>provider.refresh()</code> yourself.</td>
               </tr>
               <tr>
                 <td><code>@error</code></td>
                 <td><code>Error</code></td>
-                <td>Fires when <code>refresh()</code> rejects.</td>
+                <td>Fires when a Grid-initiated load rejects.</td>
+              </tr>
+              <tr>
+                <td><code>@expand</code></td>
+                <td><code>(item: T, { depth, rowKey })</code></td>
+                <td>A row was expanded with the <code>expandToggle</code> chevron. Load and attach its children here.</td>
+              </tr>
+              <tr>
+                <td><code>@collapse</code></td>
+                <td><code>(item: T, { depth, rowKey })</code></td>
+                <td>A row was collapsed with the <code>expandToggle</code> chevron.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3
+          id="api-columns"
+          class="ds-api-heading"
+        >
+          Column
+        </h3>
+        <p>
+          Cell, header, footer and <code>ComponentOptions.content</code> values render as plain text, so markup in your
+          data is shown, never executed. To render trusted HTML, return a native element with
+          <code>props: { innerHTML }</code> from <code>component</code>, e.g.
+          <code>{ is: 'span', props: { innerHTML: html } }</code>, and sanitize it yourself; <code>content</code> and
+          <code>children</code> are ignored when <code>innerHTML</code> is set.
+        </p>
+        <div
+          class="ds-api-table-wrap"
+          tabindex="0"
+          role="region"
+          aria-label="Column fields"
+        >
+          <table class="ds-api-table">
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>key</code></td>
+                <td><code>string</code></td>
+                <td>Item field shown in the cell when <code>value</code> is not set; also the filter name fallback.</td>
+              </tr>
+              <tr>
+                <td><code>label</code></td>
+                <td><code>string | ((models: T[]) =&gt; string)</code></td>
+                <td>Header text. Defaults to <code>sort</code>.</td>
+              </tr>
+              <tr>
+                <td><code>labelComponent</code></td>
+                <td><code>ComponentOptions</code></td>
+                <td>Renders the header of a non-sortable column as a component instead of <code>label</code>.</td>
+              </tr>
+              <tr>
+                <td><code>value</code></td>
+                <td><code>(model: T, index: number) =&gt; string | number | boolean | null | undefined</code></td>
+                <td>Cell text; <code>null</code> and <code>undefined</code> render empty. Without it the <code>key</code> field is shown (dates as ISO strings).</td>
+              </tr>
+              <tr>
+                <td><code>show</code></td>
+                <td><code>(model: T) =&gt; boolean</code></td>
+                <td>Hides the cell content for rows where it returns <code>false</code>.</td>
+              </tr>
+              <tr>
+                <td><code>showColumn</code></td>
+                <td><code>boolean | (() =&gt; boolean)</code></td>
+                <td>Hides the whole column when <code>false</code>.</td>
+              </tr>
+              <tr>
+                <td><code>component</code></td>
+                <td><code>(model: T, index: number, rowContext?: RowContext) =&gt; ComponentOptions</code></td>
+                <td>Renders the cell as a component. <code>rowContext</code> gives access to per-row state (expansion, selection).</td>
+              </tr>
+              <tr>
+                <td><code>footer</code></td>
+                <td><code>(models: T[]) =&gt; string</code></td>
+                <td>Footer cell text for the current items; any column with <code>footer</code> shows the footer row.</td>
+              </tr>
+              <tr>
+                <td><code>footerOptions</code></td>
+                <td><code>(models: T[]) =&gt; Record&lt;string, unknown&gt;</code></td>
+                <td>Class / style / attributes for the footer cell.</td>
+              </tr>
+              <tr>
+                <td><code>action</code></td>
+                <td><code>(model: T) =&gt; void</code></td>
+                <td>Cell click handler; the cell becomes focusable and also activates with Enter or Space.</td>
+              </tr>
+              <tr>
+                <td><code>sort</code></td>
+                <td><code>string</code></td>
+                <td>Sort field. Makes the header a sort button.</td>
+              </tr>
+              <tr>
+                <td><code>options</code></td>
+                <td><code>(model: T) =&gt; Record&lt;string, unknown&gt;</code></td>
+                <td>Class / style / attributes for the cell.</td>
+              </tr>
+              <tr>
+                <td><code>filter</code></td>
+                <td><code>{ name, type?, placeholder?, options? }</code></td>
+                <td>Adds an input to the filter row (shown when the provider has a state provider). <code>type: 'text'</code> or <code>'select'</code> with <code>options: { value, label }[]</code>; <code>placeholder</code> defaults to the column label. The filter row has one cell per visible column.</td>
+              </tr>
+              <tr>
+                <td><code>expandToggle</code></td>
+                <td><code>boolean</code></td>
+                <td>Prepends the expand chevron and depth indent to this column's cells. Set it on one column.</td>
               </tr>
             </tbody>
           </table>
@@ -605,6 +617,7 @@
           The grid does not expose a <code>refresh()</code> method on the component instance. Hold a reference
           to your <code>DataProvider</code> and call <code>provider.refresh()</code> directly — that's the
           single source of truth for re-fetching data, and the same method the grid uses internally.
+          The grid shows the new items; <code>@loaded</code> fires only for loads the grid starts itself.
         </p>
         <pre class="ds-code-inline"><code>// after a mutation
 await dataProvider.refresh()</code></pre>
@@ -646,13 +659,15 @@ await dataProvider.refresh()</code></pre>
       </section>
 
       <section
-        id="http-provider"
+        id="callback-provider"
         class="demo-section"
       >
-        <h2>HTTP Provider</h2>
+        <h2>Callback Provider</h2>
         <p>
-          Demonstrates <code>ArrayDataProvider</code> with client-side search and pagination over mock GitHub
-          repository data. Search for repositories, sort by stars or forks, and navigate pages.
+          <code>CallbackDataProvider</code> with an async <code>loadFn</code>: a mock server (250 ms latency) does
+          search, sort and pagination. The grid sends the sort (column headers), the filters (search box) and the
+          page, and renders the pager from the returned <code>totalItems</code>. Replace the mock with a
+          <code>fetch()</code> to your API.
         </p>
         <ExampleFrame
           file="HttpProviderExample.vue"
@@ -694,7 +709,7 @@ await dataProvider.refresh()</code></pre>
             <div class="ds-callout__title">
               Persistent preferences
             </div>
-            <p style="margin:0">
+            <p class="ds-callout__text">
               Try sorting or filtering, then refresh the page. Your state will be restored from <code>localStorage</code> key <code>grid-demo-state</code>.
             </p>
           </div>
@@ -722,8 +737,10 @@ await dataProvider.refresh()</code></pre>
             <div class="ds-callout__title">
               Shareable URLs
             </div>
-            <p style="margin:0">
-              Notice the URL updates as you interact. Browser back/forward navigation restores the previous state. Requires Vue Router.
+            <p class="ds-callout__text">
+              Notice the URL updates as you interact. The provider writes with <code>router.replace</code>, so it adds no
+              history entries of its own; it follows every route change, so opening a shared link or going back/forward
+              between entries your app pushes restores that state. Requires Vue Router.
             </p>
           </div>
         </div>
@@ -767,8 +784,8 @@ await dataProvider.refresh()</code></pre>
             <div class="ds-callout__title">
               Independent prefixes
             </div>
-            <p style="margin:0">
-              Sort or paginate either grid — the URL params are namespaced so they never collide.
+            <p class="ds-callout__text">
+              Sort, filter or page either grid — each writes only its own prefixed URL params, so they never collide.
             </p>
           </div>
         </div>
@@ -821,9 +838,9 @@ await dataProvider.refresh()</code></pre>
       >
         <h2>Infinite Scroll Pagination (10,000 rows)</h2>
         <p>
-          Automatic infinite scroll with a large dataset (10,000 rows), search functionality, column
-          sorting, and URL state persistence via <code>QueryParamsStateProvider</code>. Scroll down to
-          load more — no button needed.
+          <code>CallbackDataProvider</code> serves a sliding window over 10,000 rows. Search and sort (the select
+          or the column headers) run on the whole dataset and persist in the URL via
+          <code>QueryParamsStateProvider</code>. Scroll down to load more — no button needed.
         </p>
         <ExampleFrame
           file="ScrollPaginationExample.vue"
@@ -875,7 +892,8 @@ await dataProvider.refresh()</code></pre>
         <p>
           Use the <code>component</code> and <code>value</code> column properties to render badges,
           progress bars, and formatted text. The <code>component</code> function returns a
-          <code>ComponentOptions</code> descriptor; the library handles mounting.
+          <code>ComponentOptions</code> descriptor; the library handles mounting. Values and <code>content</code>
+          render as plain text; for trusted, sanitized HTML pass <code>props: { innerHTML }</code> on a native element.
         </p>
         <ExampleFrame
           file="CustomColumnsExample.vue"
@@ -910,8 +928,8 @@ await dataProvider.refresh()</code></pre>
         <p>
           Slots are the customization layer. Replace the <code>#empty</code>, <code>#loader</code>, or
           <code>#pagination</code> UI without forking — or take over <code>#row</code> / <code>#table</code>
-          to swap the entire renderer. Real-world wrappers (e.g. <code>admin-panel</code> using Ant Design,
-          <code>elite-vehicle</code> using a custom search row) are built on the same primitives.
+          to swap the entire renderer. Wrappers around other UI kits (an Ant Design table via <code>#table</code>,
+          a custom filter row via <code>#searchRow</code>) are built on the same primitives.
         </p>
         <ExampleFrame
           file="CustomizingExample.vue"
@@ -929,7 +947,9 @@ await dataProvider.refresh()</code></pre>
         <p>
           Mark a column with <code>expandToggle: true</code> to render a chevron + indent.
           The grid emits <code>@expand</code> with the clicked item; the consumer fetches children
-          and reattaches them via <code>provider.setRows()</code>. Expansion state lives in an
+          and writes them into the whole dataset with <code>provider.setAllItems(updateNode(provider.getAllItems(), ...))</code>,
+          which stays correct even if the page changes while children load. (<code>provider.setRows(rows)</code> replaces
+          only the currently displayed rows.) Expansion state lives in an
           <code>InMemoryRowStateProvider</code> keyed by <code>:row-key</code>, so it survives
           pagination, sort, and filter changes within the session.
         </p>
@@ -980,11 +1000,9 @@ await dataProvider.refresh()</code></pre>
         </ExampleFrame>
       </section>
 
-      <div style="margin-top:56px;padding:20px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:13px;color:var(--ink-3);">
-        <span>Last updated <time>April 22, 2026</time></span>
+      <div class="ds-page-end">
         <a
           href="https://github.com/einhasad/vue-datatable"
-          style="color:var(--ink-3);"
           target="_blank"
           rel="noopener"
         >Edit on GitHub ↗</a>
@@ -997,7 +1015,7 @@ await dataProvider.refresh()</code></pre>
       <div class="ds-footer__brand">
         <a
           class="ds-header__brand"
-          href="/"
+          :href="docsRoot"
         >
           <svg
             width="22"
@@ -1074,18 +1092,11 @@ await dataProvider.refresh()</code></pre>
               rel="noopener"
             >Issues</a>
           </li>
-          <li>
-            <a
-              href="https://github.com/einhasad/vue-datatable/discussions"
-              target="_blank"
-              rel="noopener"
-            >Discussions</a>
-          </li>
         </ul>
       </div>
     </div>
     <div class="ds-footer__legal">
-      <span>© 2026 einhasad · MIT</span>
+      <span>© {{ year }} einhasad · MIT</span>
       <span>Built with datatable-vue itself.</span>
     </div>
   </footer>
@@ -1133,16 +1144,89 @@ import customizingSource from './components/CustomizingExample.vue?raw'
 import expandableRowsSource from './components/ExpandableRowsExample.vue?raw'
 import expandedRowSlotSource from './components/ExpandedRowSlotExample.vue?raw'
 import massActionSource from './components/MassActionExample.vue?raw'
+import { version, peerDependencies } from '../package.json'
+
+interface NavLink {
+  id: string
+  title: string
+}
+
+interface NavGroup {
+  label: string
+  links: NavLink[]
+}
+
+const navGroups: NavGroup[] = [
+  {
+    label: 'Getting started',
+    links: [
+      { id: 'introduction', title: 'Introduction' },
+      { id: 'api', title: 'API Reference' },
+      { id: 'basic', title: 'Basic Example' }
+    ]
+  },
+  {
+    label: 'Data providers',
+    links: [
+      { id: 'array-provider', title: 'Array Provider' },
+      { id: 'callback-provider', title: 'Callback Provider' }
+    ]
+  },
+  {
+    label: 'State providers',
+    links: [
+      { id: 'state-inmemory', title: 'InMemory' },
+      { id: 'state-localstorage', title: 'LocalStorage' },
+      { id: 'state-queryparams', title: 'QueryParams' },
+      { id: 'state-hash', title: 'Hash' },
+      { id: 'multi-state', title: 'Multi-State' }
+    ]
+  },
+  {
+    label: 'Pagination',
+    links: [
+      { id: 'page-pagination', title: 'Page Pagination' },
+      { id: 'cursor-pagination', title: 'Cursor / Load More' },
+      { id: 'scroll-pagination', title: 'Infinite Scroll' }
+    ]
+  },
+  {
+    label: 'Columns & UX',
+    links: [
+      { id: 'sorting', title: 'Sorting' },
+      { id: 'search-sort', title: 'Search & Sort' },
+      { id: 'custom-columns', title: 'Custom Columns' },
+      { id: 'row-actions', title: 'Row Actions' },
+      { id: 'customizing', title: 'Customizing' }
+    ]
+  },
+  {
+    label: 'Row state',
+    links: [
+      { id: 'expandable-rows', title: 'Expandable Rows' },
+      { id: 'mass-action', title: 'Mass Action / Selection' },
+      { id: 'expanded-row-slot', title: 'Custom expanded content' }
+    ]
+  }
+]
+
+const sectionIds = navGroups.flatMap(group => group.links.map(link => link.id))
+
+const docsRoot = import.meta.env.BASE_URL
+const vueRange = peerDependencies.vue
+const year = new Date().getFullYear()
 
 const activeSection = ref('introduction')
+const menuOpen = ref(false)
+const menuButton = ref<HTMLButtonElement | null>(null)
 
 const installCommand = 'npm install @einhasad-vue/datatable-vue'
 const installCopied = ref(false)
 let installCopiedTimer: ReturnType<typeof setTimeout> | null = null
 
-async function copyInstallCommand() {
+async function copyInstallCommand(): Promise<void> {
   try {
-    if (navigator.clipboard?.writeText) {
+    if ('clipboard' in navigator) {
       await navigator.clipboard.writeText(installCommand)
     } else {
       const textarea = document.createElement('textarea')
@@ -1165,44 +1249,32 @@ async function copyInstallCommand() {
   }
 }
 
-const sections = [
-  'introduction',
-  'api',
-  'basic',
-  'array-provider',
-  'http-provider',
-  'state-inmemory',
-  'state-localstorage',
-  'state-queryparams',
-  'state-hash',
-  'multi-state',
-  'page-pagination',
-  'cursor-pagination',
-  'scroll-pagination',
-  'sorting',
-  'search-sort',
-  'custom-columns',
-  'row-actions',
-  'customizing',
-  'expandable-rows',
-  'mass-action',
-  'expanded-row-slot'
-]
+function prefersReducedMotion(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
 
-function scrollTo(id: string) {
+function scrollTo(id: string): void {
+  menuOpen.value = false
   const element = document.getElementById(id)
   if (element) {
-    element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    element.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' })
     activeSection.value = id
   }
 }
 
-function updateActiveSection() {
+function closeMenuOnEscape(event: KeyboardEvent): void {
+  if (event.key === 'Escape' && menuOpen.value) {
+    menuOpen.value = false
+    menuButton.value?.focus()
+  }
+}
+
+function updateActiveSection(): void {
   const scrollPosition = window.scrollY + 150
-  for (let i = sections.length - 1; i >= 0; i--) {
-    const section = document.getElementById(sections[i])
+  for (let i = sectionIds.length - 1; i >= 0; i--) {
+    const section = document.getElementById(sectionIds[i])
     if (section && section.offsetTop <= scrollPosition) {
-      activeSection.value = sections[i]
+      activeSection.value = sectionIds[i]
       break
     }
   }
@@ -1210,10 +1282,32 @@ function updateActiveSection() {
 
 onMounted(() => {
   window.addEventListener('scroll', updateActiveSection)
+  document.addEventListener('keydown', closeMenuOnEscape)
   updateActiveSection()
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', updateActiveSection)
+  document.removeEventListener('keydown', closeMenuOnEscape)
+  if (installCopiedTimer) clearTimeout(installCopiedTimer)
 })
 </script>
+
+<style>
+.ds-callout__text {
+  margin: 0;
+}
+
+.ds-page-end {
+  margin-top: 56px;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: flex-end;
+  font-size: 13px;
+}
+
+.ds-app .ds-page-end a {
+  color: var(--ink-2);
+}
+</style>

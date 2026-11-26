@@ -4,11 +4,13 @@ import type {
   DataProviderConfig,
   LoadOptions,
   LoadResult,
+  PaginationInfo,
   SortState,
   KeysetPaginationState,
   OffsetPaginationState
 } from '../types'
 import type { StateProvider } from '../state/StateProvider'
+import { InMemoryStateProvider } from '../state/InMemoryStateProvider'
 
 export type CallbackLoadFn<T> = (
   options: LoadOptions,
@@ -20,10 +22,16 @@ export type CallbackSortFn = (sort: SortState) => void
 export type CallbackKeysetPaginationFn = (state: KeysetPaginationState) => void
 export type CallbackOffsetPaginationFn = (state: OffsetPaginationState) => void
 
+const PAGE_STATE_KEY = 'page'
+
 export interface CallbackDataProviderConfig<T = unknown> extends DataProviderConfig {
-  /** Required: function that loads data */
+  /**
+   * Required: loads data. Receives the current sort (`sortField`/`sortOrder`), the non-empty
+   * filters of the state provider (`searchParams`) and the current pagination states.
+   * A returned `pagination` updates the offset pagination state (when enabled).
+   */
   loadFn: CallbackLoadFn<T>
-  /** Optional: custom sort handler. If not provided, sort state is stored internally. */
+  /** Optional: custom sort handler. Sort state is always stored internally as well. */
   sortFn?: CallbackSortFn
   /**
    * Optional: enable keyset pagination.
@@ -35,6 +43,8 @@ export interface CallbackDataProviderConfig<T = unknown> extends DataProviderCon
    * If not provided → setOffsetPagination() / getOffsetPagination() throw.
    */
   offsetPaginationFn?: CallbackOffsetPaginationFn
+  /** Optional: holds filters and sort. Defaults to a new InMemoryStateProvider. */
+  stateProvider?: StateProvider
 }
 
 /**
@@ -43,34 +53,43 @@ export interface CallbackDataProviderConfig<T = unknown> extends DataProviderCon
  * Pagination is opt-in:
  * - No `keysetPaginationFn` in config → setKeysetPagination() / getKeysetPagination() throw
  * - No `offsetPaginationFn` in config → setOffsetPagination() / getOffsetPagination() throw
- * - ElasticsearchDataProvider and ArrayDataProvider support both by default (no config needed)
+ *
+ * Only the most recent load() updates items, pagination and the loading flag;
+ * responses of superseded requests are returned to their caller but otherwise ignored.
  */
 export class CallbackDataProvider<T = unknown> implements DataProvider<T> {
   private readonly config: CallbackDataProviderConfig<T>
+  private readonly stateProvider: StateProvider
   private loading = ref(false)
   private items = ref<T[]>([])
   private sortState: SortState | null = null
   private keysetState: KeysetPaginationState | null = null
-  // Reactive so consumers (e.g. useGridState) can observe state changes that
-  // happen inside loadFn / external setOffsetPagination calls without manual sync.
   private offsetState: Ref<OffsetPaginationState | null> = ref(null)
+  private latestRequestId = 0
 
   constructor(config: CallbackDataProviderConfig<T>) {
     this.config = config
+    this.stateProvider = config.stateProvider ?? new InMemoryStateProvider()
   }
 
   async load(options?: LoadOptions): Promise<LoadResult<T>> {
+    const requestId = ++this.latestRequestId
     this.loading.value = true
     try {
       const result = await this.config.loadFn(
-        options ?? { sortOrder: null },
+        options ?? this.currentLoadOptions(),
         this.keysetState,
         this.offsetState.value
       )
-      this.items.value = result.items
+      if (requestId === this.latestRequestId) {
+        this.items.value = result.items
+        this.applyReturnedPagination(result.pagination, result.items.length)
+      }
       return result
     } finally {
-      this.loading.value = false
+      if (requestId === this.latestRequestId) {
+        this.loading.value = false
+      }
     }
   }
 
@@ -86,8 +105,8 @@ export class CallbackDataProvider<T = unknown> implements DataProvider<T> {
     if (this.config.sortFn) { this.config.sortFn(sort) }
   }
 
-  getSort(): SortState | null { return this.sortState }
-  getStateProvider(_key: string): StateProvider | null { return null }
+  getSort(): SortState | null { return this.sortState ?? this.stateProvider.getSort() }
+  getStateProvider(_key: string): StateProvider | null { return this.stateProvider }
 
   // --- Keyset pagination (THROWS if not configured) ---
   setKeysetPagination(state: KeysetPaginationState): void {
@@ -139,5 +158,42 @@ export class CallbackDataProvider<T = unknown> implements DataProvider<T> {
    */
   setRows(newRows: T[]): void {
     this.items.value = newRows
+  }
+
+  private currentLoadOptions(): LoadOptions {
+    const sort = this.getSort()
+    const options: LoadOptions = sort?.order
+      ? { sortField: sort.field, sortOrder: sort.order }
+      : { sortOrder: null }
+    const searchParams = this.activeFilters()
+    if (Object.keys(searchParams).length > 0) {
+      options.searchParams = searchParams
+    }
+    return options
+  }
+
+  private activeFilters(): Record<string, string> {
+    return Object.fromEntries(
+      Object.entries(this.stateProvider.getAllFilters())
+        .filter(([key, value]) => key !== PAGE_STATE_KEY && value !== '')
+    )
+  }
+
+  private applyReturnedPagination(pagination: Partial<PaginationInfo> | undefined, itemCount: number): void {
+    if (!pagination || !this.config.offsetPaginationFn) return
+    const current = this.offsetState.value
+    const pageSize = pagination.pageSize ?? current?.pageSize ?? itemCount
+    if (pageSize <= 0) return
+    const next: OffsetPaginationState = {
+      ...current,
+      page: pagination.currentPage ?? current?.page ?? 1,
+      pageSize,
+    }
+    if (pagination.totalItems !== undefined) {
+      next.totalItems = pagination.totalItems
+      delete next.totalPages
+    }
+    if (pagination.totalPages !== undefined) next.totalPages = pagination.totalPages
+    this.offsetState.value = next
   }
 }

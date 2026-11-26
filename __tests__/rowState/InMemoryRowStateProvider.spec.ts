@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { computed, watch } from 'vue'
 import { InMemoryRowStateProvider } from '../../src/rowState/InMemoryRowStateProvider'
 
 describe('InMemoryRowStateProvider', () => {
@@ -70,5 +71,47 @@ describe('InMemoryRowStateProvider', () => {
   it('supports numeric row keys', () => {
     provider.set(42, 'expanded', true)
     expect(provider.get(42, 'expanded')).toBe(true)
+  })
+
+  it('returns numeric-looking string keys from entries() as strings', () => {
+    provider.set('7', 'selected', true)
+    provider.set('x', 'selected', true)
+    expect(provider.entries('selected')).toEqual(['7', 'x'])
+  })
+
+  it('returns numeric keys from entries() as numbers', () => {
+    provider.set(7, 'selected', true)
+    expect(provider.entries('selected')).toEqual([7])
+  })
+
+  it('treats 7 and "7" as the same row and reports the key type last used in set()', () => {
+    provider.set(7, 'selected', true)
+    provider.set('7', 'expanded', true)
+    expect(provider.get(7, 'expanded')).toBe(true)
+    expect(provider.entries('selected')).toEqual(['7'])
+  })
+
+  it('forgets the original key once the row is pruned', () => {
+    provider.set(7, 'selected', true)
+    provider.delete(7, 'selected')
+    provider.set('7', 'selected', true)
+    expect(provider.entries('selected')).toEqual(['7'])
+    provider.clear('selected')
+    provider.set(7, 'selected', true)
+    expect(provider.entries('selected')).toEqual([7])
+  })
+
+  it('notifies a sync watcher with the final value when a new row gets its first flag', () => {
+    const seen: unknown[] = []
+    watch(() => provider.get('row-1', 'expanded'), (value) => seen.push(value), { flush: 'sync' })
+    provider.set('row-1', 'expanded', true)
+    expect(seen.at(-1)).toBe(true)
+  })
+
+  it('re-runs a computed over entries() when a row is selected', () => {
+    const selected = computed(() => provider.entries('selected'))
+    expect(selected.value).toEqual([])
+    provider.set('7', 'selected', true)
+    expect(selected.value).toEqual(['7'])
   })
 })

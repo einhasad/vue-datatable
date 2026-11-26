@@ -2,11 +2,21 @@
   <Grid
     :data-provider="localStorageProvider"
     :columns="stateColumns"
-  />
+  >
+    <template #pagination="{ pagination, setPage }">
+      <PagePagination
+        :current-page="pagination.currentPage"
+        :total-pages="pagination.totalPages"
+        :total-items="pagination.totalItems"
+        :items-per-page="pagination.pageSize"
+        @page-change="setPage"
+      />
+    </template>
+  </Grid>
   <StateInspector
     :state-provider="localStorageStateProvider"
     lifetime="Survives reload"
-    storage-hint="Storage: localStorage['grid-demo-state']"
+    :storage-hint="`Storage: localStorage['${STORAGE_KEY}']`"
   />
 </template>
 
@@ -14,6 +24,7 @@
 import {
   Grid,
   ArrayDataProvider,
+  PagePagination,
   LocalStorageStateProvider,
   type Column
 } from '@einhasad-vue/datatable-vue'
@@ -50,7 +61,8 @@ const stateColumns: Column<StateUser>[] = [
   { sort: 'status', label: 'Status', value: (m) => m.status, filter: { name: 'status', type: 'text' } }
 ]
 
-const localStorageStateProvider = new LocalStorageStateProvider({ storageKey: 'grid-demo-state' })
+const STORAGE_KEY = 'grid-demo-state'
+const localStorageStateProvider = new LocalStorageStateProvider({ storageKey: STORAGE_KEY })
 const localStorageProvider = new ArrayDataProvider({
   items: stateUsers,
   stateProvider: localStorageStateProvider

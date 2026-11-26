@@ -2,6 +2,8 @@
   <div
     class="grid-scroll-pagination"
     :class="`grid-scroll-pagination--${position}`"
+    role="status"
+    aria-live="polite"
   >
     <div
       v-if="canLoad"
