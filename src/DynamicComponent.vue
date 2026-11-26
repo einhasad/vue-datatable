@@ -1,27 +1,40 @@
-<template>
-  <component
-    :is="options.is"
-    v-bind="options.props"
-    v-on="options.events || {}"
-  >
-    <span
-      v-if="options.content"
-      v-html="options.content"
-    />
-    <template v-if="options.children">
-      <DynamicComponent
-        v-for="(child, index) in options.children"
-        :key="child.props?.key ?? index"
-        :options="child"
-      />
-    </template>
-  </component>
-</template>
-
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent, h, mergeProps, resolveDynamicComponent, toHandlers } from 'vue'
+import type { PropType, VNode } from 'vue'
 import type { ComponentOptions } from './types'
 
-defineProps<{
-  options: ComponentOptions
-}>()
+const DynamicComponent = defineComponent({
+  name: 'DynamicComponent',
+  props: {
+    options: {
+      type: Object as PropType<ComponentOptions>,
+      required: true
+    }
+  },
+  setup(props: { options: ComponentOptions }) {
+    return () => {
+      const { options } = props
+      const ownProps: Record<string, unknown> & { key?: string | number } = options.props ?? {}
+      const rendersHtml = ownProps.innerHTML != null
+      const key = rendersHtml ? `innerHTML:${ownProps.key ?? ''}` : ownProps.key
+      const vnodeProps = mergeProps(ownProps, toHandlers(options.events ?? {}), key === undefined ? {} : { key })
+      const type = resolveDynamicComponent(options.is) as string
+
+      if (rendersHtml) {
+        return h(type, vnodeProps)
+      }
+
+      return h(type, vnodeProps, {
+        default: (): VNode[] => [
+          ...(options.content ? [h('span', options.content)] : []),
+          ...(options.children ?? []).map((child, index) =>
+            h(DynamicComponent, { key: child.props?.key ?? index, options: child })
+          )
+        ]
+      })
+    }
+  }
+})
+
+export default DynamicComponent
 </script>

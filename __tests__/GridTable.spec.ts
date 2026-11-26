@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import GridTable from '../src/GridTable.vue'
 import { InMemoryStateProvider } from '../src/state/InMemoryStateProvider'
@@ -65,7 +65,7 @@ describe('GridTable', () => {
     expect(row0.text()).toContain('active')
   })
 
-  it('renders DynamicComponent when column.component is defined', () => {
+  it('renders DynamicComponent when column.component is defined, with content as plain text', () => {
     const columns: Column<TestItem>[] = [
       {
         key: 'name',
@@ -79,7 +79,8 @@ describe('GridTable', () => {
 
     const row0 = wrapper.find('[data-qa="row-0"]')
     expect(row0.find('span').exists()).toBe(true)
-    expect(row0.find('b').exists()).toBe(true)
+    expect(row0.find('b').exists()).toBe(false)
+    expect(row0.text()).toBe('<b>Alice</b>')
   })
 
   it('shows empty row with default emptyText and custom emptyText', () => {
@@ -209,7 +210,7 @@ describe('GridTable', () => {
       props: { columns, items, sortState, onSort, rowKeyField: 'id' }
     })
 
-    const sortLink = wrapper.find('a.grid-sort-link')
+    const sortLink = wrapper.find('button.grid-sort-link')
     expect(sortLink.exists()).toBe(true)
     expect(sortLink.classes()).toContain('asc')
 
@@ -317,5 +318,220 @@ describe('GridTable', () => {
 
     expect(wrapper.findAll('tr.grid-row')).toHaveLength(1)
     expect(wrapper.find('[data-qa="row-0"]').exists()).toBe(true)
+  })
+
+  describe('plain text output', () => {
+    const hostile = '<img src=x onerror="window.__gridXss=1"><b>bold</b>'
+
+    it('renders key-based cell values as text, not HTML', () => {
+      const wrapper = mount(GridTable, {
+        props: { columns: [{ key: 'name', label: 'Name' }], items: [{ id: 1, name: hostile, status: '' }], rowKeyField: 'id' }
+      })
+
+      const cell = wrapper.find('[data-qa="row-0"] td.grid-cell')
+      expect(cell.find('img').exists()).toBe(false)
+      expect(cell.find('b').exists()).toBe(false)
+      expect(cell.text()).toBe(hostile)
+    })
+
+    it('renders value() results as text, not HTML', () => {
+      const columns: Column<TestItem>[] = [{ key: 'name', label: 'Name', value: (m) => `<u>${m.name}</u>` }]
+      const wrapper = mount(GridTable, { props: { columns, items, rowKeyField: 'id' } })
+
+      const cell = wrapper.find('[data-qa="row-0"] td.grid-cell')
+      expect(cell.find('u').exists()).toBe(false)
+      expect(cell.text()).toBe('<u>Alice</u>')
+    })
+
+    it('renders footer content as text, not HTML', () => {
+      const columns: Column<TestItem>[] = [{ key: 'name', label: 'Name', footer: () => '<em>Total</em> & more' }]
+      const wrapper = mount(GridTable, { props: { columns, items, rowKeyField: 'id' } })
+
+      const footerCell = wrapper.find('td.grid-footer-cell')
+      expect(footerCell.find('em').exists()).toBe(false)
+      expect(footerCell.text()).toBe('<em>Total</em> & more')
+    })
+  })
+
+  describe('row index passed to column callbacks', () => {
+    it('passes the real row index to value()', () => {
+      const columns: Column<TestItem>[] = [{ key: 'id', label: 'ID', value: (m, i) => `${m.id}@${i}` }]
+      const wrapper = mount(GridTable, {
+        props: { columns, items: [...items, { id: 3, name: 'Cid', status: 'active' }], rowKeyField: 'id' }
+      })
+
+      expect(wrapper.findAll('td.grid-cell').map(td => td.text())).toEqual(['1@0', '2@1', '3@2'])
+    })
+
+    it('passes the real row index to component()', () => {
+      const columns: Column<TestItem>[] = [
+        { key: 'id', label: 'ID', component: (m, i) => ({ is: 'span', content: `${m.id}@${i}` }) }
+      ]
+      const wrapper = mount(GridTable, { props: { columns, items, rowKeyField: 'id' } })
+
+      expect(wrapper.findAll('td.grid-cell').map(td => td.text())).toEqual(['1@0', '2@1'])
+    })
+  })
+
+  it('renders a function label with the current items', () => {
+    const columns: Column<TestItem>[] = [{ key: 'id', label: (models) => `IDS(${models.length})` }]
+    const wrapper = mount(GridTable, { props: { columns, items, rowKeyField: 'id' } })
+
+    expect(wrapper.find('th.grid-header-cell').text()).toBe('IDS(2)')
+  })
+
+  describe('aria-sort', () => {
+    const columns: Column<TestItem>[] = [
+      { key: 'name', label: 'Name', sort: 'name' },
+      { key: 'status', label: 'Status', sort: 'status' },
+      { key: 'id', label: 'ID' }
+    ]
+
+    it('marks the sorted column ascending, other sortable columns none, and leaves unsortable columns unmarked', () => {
+      const wrapper = mount(GridTable, {
+        props: { columns, items, sortState: { field: 'name', order: 'asc' }, rowKeyField: 'id' }
+      })
+
+      const ths = wrapper.findAll('th.grid-header-cell')
+      expect(ths[0].attributes('aria-sort')).toBe('ascending')
+      expect(ths[1].attributes('aria-sort')).toBe('none')
+      expect(ths[2].attributes('aria-sort')).toBeUndefined()
+    })
+
+    it('marks descending and resets to none when order is null', async () => {
+      const wrapper = mount(GridTable, {
+        props: { columns, items, sortState: { field: 'status', order: 'desc' }, rowKeyField: 'id' }
+      })
+      expect(wrapper.findAll('th.grid-header-cell')[1].attributes('aria-sort')).toBe('descending')
+
+      await wrapper.setProps({ sortState: { field: 'status', order: null } })
+      expect(wrapper.findAll('th.grid-header-cell')[1].attributes('aria-sort')).toBe('none')
+    })
+  })
+
+  describe('keyboard activation', () => {
+    it('makes rows focusable and activates onRowClick with Enter and Space', async () => {
+      const onRowClick = vi.fn()
+      const wrapper = mount(GridTable, { props: { columns: makeColumns(), items, onRowClick, rowKeyField: 'id' } })
+
+      const row = wrapper.find('[data-qa="row-1"]')
+      expect(row.attributes('tabindex')).toBe('0')
+
+      await row.trigger('keydown', { key: 'Enter' })
+      await row.trigger('keydown', { key: ' ' })
+      await row.trigger('keydown', { key: 'a' })
+      expect(onRowClick).toHaveBeenCalledTimes(2)
+      expect(onRowClick).toHaveBeenCalledWith(items[1])
+    })
+
+    it('prevents page scroll when Space activates a row', async () => {
+      const wrapper = mount(GridTable, { props: { columns: makeColumns(), items, onRowClick: vi.fn(), rowKeyField: 'id' } })
+
+      const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true })
+      wrapper.find('[data-qa="row-0"]').element.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(true)
+    })
+
+    it('makes action cells focusable and activates column.action with Enter and Space', async () => {
+      const action = vi.fn()
+      const columns: Column<TestItem>[] = [{ key: 'name', label: 'Name', action }, { key: 'status', label: 'Status' }]
+      const wrapper = mount(GridTable, { props: { columns, items, rowKeyField: 'id' } })
+
+      const cells = wrapper.findAll('[data-qa="row-0"] td.grid-cell')
+      expect(cells[0].attributes('tabindex')).toBe('0')
+      expect(cells[1].attributes('tabindex')).toBeUndefined()
+
+      await cells[0].trigger('keydown', { key: 'Enter' })
+      await cells[0].trigger('keydown', { key: ' ' })
+      expect(action).toHaveBeenCalledTimes(2)
+      expect(action).toHaveBeenCalledWith(items[0])
+    })
+
+    it('adds no tabindex when no row or cell handler is set', () => {
+      const wrapper = mount(GridTable, { props: { columns: makeColumns(), items, rowKeyField: 'id' } })
+
+      expect(wrapper.find('[data-qa="row-0"]').attributes('tabindex')).toBeUndefined()
+      expect(wrapper.find('[data-qa="row-0"] td.grid-cell').attributes('tabindex')).toBeUndefined()
+    })
+
+    it('ignores keys pressed inside nested controls', async () => {
+      const onRowClick = vi.fn()
+      const action = vi.fn()
+      const columns: Column<TestItem>[] = [
+        { key: 'name', label: 'Name', action, component: () => ({ is: 'input', props: { 'data-qa': 'inner' } }) }
+      ]
+      const wrapper = mount(GridTable, { props: { columns, items, onRowClick, rowKeyField: 'id' } })
+
+      const input = wrapper.find('[data-qa="row-0"] [data-qa="inner"]')
+      const event = new KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true })
+      input.element.dispatchEvent(event)
+      await input.trigger('keydown', { key: 'Enter' })
+
+      expect(event.defaultPrevented).toBe(false)
+      expect(onRowClick).not.toHaveBeenCalled()
+      expect(action).not.toHaveBeenCalled()
+    })
+  })
+
+  it('announces the loader as a status region', () => {
+    const wrapper = mount(GridTable, {
+      props: { columns: makeColumns(), items, loading: true, showLoader: true, rowKeyField: 'id' }
+    })
+
+    expect(wrapper.find('.grid-loader').attributes('role')).toBe('status')
+  })
+
+  describe('footer placement', () => {
+    const columns: Column<TestItem>[] = [{ key: 'name', label: 'Name', footer: (ms) => `Total ${ms.length}` }]
+
+    it('renders the footer row inside tfoot, not tbody', () => {
+      const wrapper = mount(GridTable, { props: { columns, items, rowKeyField: 'id' } })
+
+      expect(wrapper.find('tbody tr.grid-footer-row').exists()).toBe(false)
+      expect(wrapper.find('tfoot tr.grid-footer-row').text()).toBe('Total 2')
+    })
+
+    it('keeps the footer for an empty list and hides it while the loader shows', async () => {
+      const wrapper = mount(GridTable, { props: { columns, items: [], rowKeyField: 'id' } })
+      expect(wrapper.find('tfoot tr.grid-footer-row').text()).toBe('Total 0')
+
+      await wrapper.setProps({ loading: true })
+      expect(wrapper.find('tfoot').exists()).toBe(false)
+    })
+  })
+
+  describe('undefined row key dev warning', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs()
+      vi.restoreAllMocks()
+      vi.resetModules()
+    })
+
+    async function mountFreshWithoutKeys(): Promise<void> {
+      vi.resetModules()
+      const { default: FreshGridTable } = await import('../src/GridTable.vue')
+      mount(FreshGridTable, {
+        props: { columns: makeColumns(), items: [{ name: 'Alice', status: 'active' }], rowKeyField: 'missing_key' }
+      })
+    }
+
+    it('warns once outside production', async () => {
+      vi.stubEnv('NODE_ENV', 'development')
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+
+      await mountFreshWithoutKeys()
+
+      expect(warn).toHaveBeenCalledTimes(1)
+      expect(warn.mock.calls[0][0]).toContain('[grid] rowKey returned undefined')
+    })
+
+    it('stays silent when NODE_ENV is production', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+
+      await mountFreshWithoutKeys()
+
+      expect(warn).not.toHaveBeenCalled()
+    })
   })
 })

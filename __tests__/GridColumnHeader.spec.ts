@@ -16,18 +16,41 @@ describe('GridColumnHeader', () => {
     expect(bold.text()).toBe('Name')
   })
 
-  it('renders empty string when label is a function', () => {
-    const column = {
-      label: (_models: unknown[]) => 'dynamic'
-    } as unknown as Column<{ name: string }>
+  it('renders a function label called with the items', () => {
+    const column: Column<{ name: string }> = {
+      label: (models) => `Names (${models.length})`
+    }
+
+    const wrapper = mount(GridColumnHeader, {
+      props: { column, items: [{ name: 'a' }, { name: 'b' }], sortState: null }
+    })
+
+    expect(wrapper.find('b').text()).toBe('Names (2)')
+  })
+
+  it('calls a function label with an empty list when items are not given', () => {
+    const column: Column<{ name: string }> = {
+      label: (models) => `Names (${models.length})`
+    }
 
     const wrapper = mount(GridColumnHeader, {
       props: { column, sortState: null }
     })
 
-    const bold = wrapper.find('b')
-    expect(bold.exists()).toBe(true)
-    expect(bold.text()).toBe('')
+    expect(wrapper.find('b').text()).toBe('Names (0)')
+  })
+
+  it('renders a function label inside the sort button', () => {
+    const column: Column<{ name: string }> = {
+      label: (models) => `Names (${models.length})`,
+      sort: 'name'
+    }
+
+    const wrapper = mount(GridColumnHeader, {
+      props: { column, items: [{ name: 'a' }], sortState: null }
+    })
+
+    expect(wrapper.find('button.grid-sort-link b').text()).toBe('Names (1)')
   })
 
   it('renders sort link when column.sort is defined', () => {
@@ -37,8 +60,10 @@ describe('GridColumnHeader', () => {
       props: { column, sortState: null }
     })
 
-    const link = wrapper.find('a.grid-sort-link')
+    const link = wrapper.find('button.grid-sort-link')
     expect(link.exists()).toBe(true)
+    expect(link.attributes('type')).toBe('button')
+    expect(link.attributes('href')).toBeUndefined()
     expect(link.find('b').text()).toBe('Name')
   })
 
@@ -50,7 +75,7 @@ describe('GridColumnHeader', () => {
       props: { column, sortState }
     })
 
-    const link = wrapper.find('a.grid-sort-link')
+    const link = wrapper.find('button.grid-sort-link')
     expect(link.classes()).toContain('asc')
     expect(link.classes()).not.toContain('desc')
   })
@@ -63,7 +88,7 @@ describe('GridColumnHeader', () => {
       props: { column, sortState }
     })
 
-    const link = wrapper.find('a.grid-sort-link')
+    const link = wrapper.find('button.grid-sort-link')
     expect(link.classes()).toContain('desc')
     expect(link.classes()).not.toContain('asc')
   })
@@ -76,7 +101,7 @@ describe('GridColumnHeader', () => {
       props: { column, sortState }
     })
 
-    const link = wrapper.find('a.grid-sort-link')
+    const link = wrapper.find('button.grid-sort-link')
     expect(link.classes()).not.toContain('asc')
     expect(link.classes()).not.toContain('desc')
   })
@@ -88,7 +113,7 @@ describe('GridColumnHeader', () => {
       props: { column, sortState: null }
     })
 
-    await wrapper.find('a.grid-sort-link').trigger('click')
+    await wrapper.find('button.grid-sort-link').trigger('click')
 
     expect(wrapper.emitted('sort')).toHaveLength(1)
     expect(wrapper.emitted('sort')![0]).toEqual([{ field: 'name', order: 'asc' }])
@@ -102,7 +127,7 @@ describe('GridColumnHeader', () => {
       props: { column, sortState }
     })
 
-    await wrapper.find('a.grid-sort-link').trigger('click')
+    await wrapper.find('button.grid-sort-link').trigger('click')
 
     expect(wrapper.emitted('sort')).toHaveLength(1)
     expect(wrapper.emitted('sort')![0]).toEqual([{ field: 'name', order: 'desc' }])
@@ -116,7 +141,7 @@ describe('GridColumnHeader', () => {
       props: { column, sortState }
     })
 
-    await wrapper.find('a.grid-sort-link').trigger('click')
+    await wrapper.find('button.grid-sort-link').trigger('click')
 
     expect(wrapper.emitted('sort')).toHaveLength(1)
     expect(wrapper.emitted('sort')![0]).toEqual([{ field: 'name', order: null }])
@@ -135,12 +160,12 @@ describe('GridColumnHeader', () => {
     })
 
     // First click: null -> desc (custom)
-    await wrapper.find('a.grid-sort-link').trigger('click')
+    await wrapper.find('button.grid-sort-link').trigger('click')
     expect(wrapper.emitted('sort')![0]).toEqual([{ field: 'name', order: 'desc' }])
 
     // Update sortState and click again: desc -> asc (custom)
     await wrapper.setProps({ sortState: { field: 'name', order: 'desc' } })
-    await wrapper.find('a.grid-sort-link').trigger('click')
+    await wrapper.find('button.grid-sort-link').trigger('click')
     expect(wrapper.emitted('sort')![1]).toEqual([{ field: 'name', order: 'asc' }])
   })
 
@@ -155,7 +180,8 @@ describe('GridColumnHeader', () => {
     })
 
     expect(wrapper.find('span').exists()).toBe(true)
-    expect(wrapper.find('em').text()).toBe('Custom')
+    expect(wrapper.find('em').exists()).toBe(false)
+    expect(wrapper.find('span').text()).toBe('<em>Custom</em>')
   })
 
   it('renders empty string when label is undefined', () => {

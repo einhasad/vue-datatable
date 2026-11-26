@@ -83,22 +83,22 @@ describe('Grid', () => {
 
     await flushPromises()
 
-    const sortLink = wrapper.find('a.grid-sort-link')
+    const sortLink = wrapper.find('button.grid-sort-link')
 
     // Click 1: no sort -> asc
     await sortLink.trigger('click')
     await flushPromises()
-    expect(wrapper.find('a.grid-sort-link').classes()).toContain('asc')
+    expect(wrapper.find('button.grid-sort-link').classes()).toContain('asc')
 
     // Click 2: asc -> desc
-    await wrapper.find('a.grid-sort-link').trigger('click')
+    await wrapper.find('button.grid-sort-link').trigger('click')
     await flushPromises()
-    expect(wrapper.find('a.grid-sort-link').classes()).toContain('desc')
+    expect(wrapper.find('button.grid-sort-link').classes()).toContain('desc')
 
     // Click 3: desc -> null (no sort class)
-    await wrapper.find('a.grid-sort-link').trigger('click')
+    await wrapper.find('button.grid-sort-link').trigger('click')
     await flushPromises()
-    const linkAfter = wrapper.find('a.grid-sort-link')
+    const linkAfter = wrapper.find('button.grid-sort-link')
     expect(linkAfter.classes()).not.toContain('asc')
     expect(linkAfter.classes()).not.toContain('desc')
   })

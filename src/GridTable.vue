@@ -7,6 +7,7 @@
             v-for="(column, colIndex) in visibleColumns"
             :key="column.sort || colIndex"
             class="grid-header-cell"
+            :aria-sort="ariaSortFor(column)"
           >
             <slot
               name="headerCell"
@@ -17,6 +18,7 @@
             >
               <GridColumnHeader
                 :column="column"
+                :items="items"
                 :sort-state="sortState"
                 @sort="onSortSortState"
               />
@@ -46,7 +48,10 @@
               :colspan="visibleColumns.length"
               class="grid-loading-cell"
             >
-              <div class="grid-loader">
+              <div
+                class="grid-loader"
+                role="status"
+              >
                 <slot name="loader">
                   <span>Loading...</span>
                 </slot>
@@ -69,14 +74,18 @@
                 :data-depth="row.depth"
                 class="grid-row"
                 v-bind="buildAttributes(getRowOptions(rowOptions, row.item))"
+                :tabindex="onRowClick ? 0 : undefined"
                 @click="handleRowClick(row.item)"
+                @keydown="activateOnKey($event, onRowClick && (() => handleRowClick(row.item)))"
               >
                 <td
                   v-for="(column, colIndex) in visibleColumns"
                   :key="column.sort || colIndex"
                   class="grid-cell"
                   v-bind="buildAttributes(getCellOptions(column, row.item))"
+                  :tabindex="column.action ? 0 : undefined"
                   @click="column.action && column.action(row.item)"
+                  @keydown="activateOnKey($event, column.action && (() => column.action!(row.item)))"
                 >
                   <template v-if="shouldShowCell(column, row.item)">
                     <ChevronIndent
@@ -86,13 +95,10 @@
                       @toggle="onToggle(row.item, row.depth)"
                     />
                     <DynamicComponent
-                      v-if="getCellComponent(column, row.item, 0, buildRowContext(row.item, row.depth))"
-                      :options="getCellComponent(column, row.item, 0, buildRowContext(row.item, row.depth))!"
+                      v-if="getCellComponent(column, row.item, row.flatIndex, buildRowContext(row.item, row.depth))"
+                      :options="getCellComponent(column, row.item, row.flatIndex, buildRowContext(row.item, row.depth))!"
                     />
-                    <span
-                      v-else
-                      v-html="getCellValue(column, row.item, 0)"
-                    />
+                    <span v-else>{{ getCellValue(column, row.item, row.flatIndex) }}</span>
                   </template>
                 </td>
               </tr>
@@ -132,22 +138,20 @@
               </slot>
             </td>
           </tr>
-
-          <tr
-            v-if="showFooter && hasFooter"
-            class="grid-footer-row"
-          >
-            <td
-              v-for="(column, colIndex) in visibleColumns"
-              :key="column.sort || colIndex"
-              class="grid-footer-cell"
-              v-bind="buildAttributes(getFooterOptions(column, items))"
-            >
-              <span v-html="getFooterContent(column, items)" />
-            </td>
-          </tr>
         </template>
       </tbody>
+      <tfoot v-if="!(loading && showLoader) && showFooter && hasFooter">
+        <tr class="grid-footer-row">
+          <td
+            v-for="(column, colIndex) in visibleColumns"
+            :key="column.sort || colIndex"
+            class="grid-footer-cell"
+            v-bind="buildAttributes(getFooterOptions(column, items))"
+          >
+            <span>{{ getFooterContent(column, items) }}</span>
+          </td>
+        </tr>
+      </tfoot>
     </table>
   </div>
 </template>
@@ -206,7 +210,7 @@ const emit = defineEmits<{
 
 const fallbackRowKey = (item: T): RowKey | undefined => {
   if (item != null && typeof item === 'object') {
-    const v = (item as Record<string, unknown>)[props.rowKeyField ?? 'id']
+    const v = (item as Record<string, unknown>)[props.rowKeyField]
     if (typeof v === 'string' || typeof v === 'number') return v
   }
   return undefined
@@ -263,10 +267,17 @@ function onToggle(item: T, depth: number): void {
 
 let undefinedRowKeyWarned = false
 
+function isDevEnvironment(): boolean {
+  try {
+    return process.env.NODE_ENV !== 'production'
+  } catch {
+    return false
+  }
+}
+
 function warnUndefinedRowKey(): void {
   if (undefinedRowKeyWarned) return
   undefinedRowKeyWarned = true
-  // eslint-disable-next-line no-console
   console.warn(
     '[grid] rowKey returned undefined for an item — row-state features (expansion, selection, etc.) ' +
     "won't persist across pagination/filter. Provide :row-key=\"(item) => item.someId\"."
@@ -278,15 +289,15 @@ interface FlatRow { item: T; depth: number; key: string; flatIndex: number }
 const flatRows = computed<FlatRow[]>(() => {
   const out: FlatRow[] = []
   let flat = 0
-  const walk = (items: readonly T[], depth: number, prefix: string) => {
+  const walk = (items: readonly T[], depth: number, prefix: string): void => {
     items.forEach((item, idx) => {
       const k = resolveRowKeyFn.value(item)
-      if (k === undefined && (import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV !== false) warnUndefinedRowKey()
+      if (k === undefined && isDevEnvironment()) warnUndefinedRowKey()
       const key = `${prefix}${k ?? `__idx_${idx}`}`
       out.push({ item, depth, key, flatIndex: flat++ })
       if (isExpandedItem(item)) {
         const children = resolveChildrenFn.value(item)
-        if (children && children.length) walk(children, depth + 1, `${key}/`)
+        if (children?.length) walk(children, depth + 1, `${key}/`)
       }
     })
   }
@@ -326,6 +337,21 @@ function handleRowClick(item: T): void {
   if (props.onRowClick) {
     props.onRowClick(item)
   }
+}
+
+function ariaSortFor(column: Column<T>): 'ascending' | 'descending' | 'none' | undefined {
+  if (!column.sort) return undefined
+  if (props.sortState?.field !== column.sort) return 'none'
+  if (props.sortState.order === 'asc') return 'ascending'
+  if (props.sortState.order === 'desc') return 'descending'
+  return 'none'
+}
+
+function activateOnKey(event: KeyboardEvent, handler: (() => void) | undefined | false): void {
+  if (!handler || event.target !== event.currentTarget) return
+  if (event.key !== 'Enter' && event.key !== ' ') return
+  event.preventDefault()
+  handler()
 }
 
 function onSortSortState(newSort: SortState): void {

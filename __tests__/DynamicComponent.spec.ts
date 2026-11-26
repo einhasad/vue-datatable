@@ -5,7 +5,7 @@ import DynamicComponent from '../src/DynamicComponent.vue'
 import type { ComponentOptions } from '../src/types'
 
 describe('DynamicComponent', () => {
-  it('renders HTML element with text content via v-html', () => {
+  it('renders content as plain text, not HTML', () => {
     const options: ComponentOptions = {
       is: 'span',
       content: '<strong>Hello</strong>'
@@ -14,8 +14,55 @@ describe('DynamicComponent', () => {
     const wrapper = mount(DynamicComponent, { props: { options } })
 
     expect(wrapper.element.tagName).toBe('SPAN')
-    expect(wrapper.find('strong').exists()).toBe(true)
+    expect(wrapper.find('strong').exists()).toBe(false)
+    expect(wrapper.text()).toBe('<strong>Hello</strong>')
+  })
+
+  it('does not execute markup from content', () => {
+    const options: ComponentOptions = {
+      is: 'div',
+      content: '<img src="x" onerror="window.__xss = 1"><script>window.__xss = 2</script>'
+    }
+
+    const wrapper = mount(DynamicComponent, { props: { options } })
+
+    expect(wrapper.find('img').exists()).toBe(false)
+    expect(wrapper.find('script').exists()).toBe(false)
+    expect(wrapper.text()).toBe(options.content)
+  })
+
+  it('renders HTML when opted in via props.innerHTML on a native element', () => {
+    const options: ComponentOptions = {
+      is: 'span',
+      props: { innerHTML: '<strong>Hello</strong>' }
+    }
+
+    const wrapper = mount(DynamicComponent, { props: { options } })
+
+    expect(wrapper.element.tagName).toBe('SPAN')
     expect(wrapper.find('strong').text()).toBe('Hello')
+  })
+
+  it('updates opted-in innerHTML when options change', async () => {
+    const wrapper = mount(DynamicComponent, {
+      props: { options: { is: 'span', props: { innerHTML: '<b>one</b>' } } as ComponentOptions }
+    })
+
+    await wrapper.setProps({ options: { is: 'span', props: { innerHTML: '<i>two</i>' } } })
+
+    expect(wrapper.find('b').exists()).toBe(false)
+    expect(wrapper.find('i').text()).toBe('two')
+  })
+
+  it('switches from innerHTML to content without leaving stale markup', async () => {
+    const wrapper = mount(DynamicComponent, {
+      props: { options: { is: 'span', props: { innerHTML: '<b>html</b>' } } as ComponentOptions }
+    })
+
+    await wrapper.setProps({ options: { is: 'span', content: '<b>text</b>' } })
+
+    expect(wrapper.find('b').exists()).toBe(false)
+    expect(wrapper.text()).toBe('<b>text</b>')
   })
 
   it('renders div element', () => {
