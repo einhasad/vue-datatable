@@ -289,6 +289,7 @@ describe('demo stylesheet accessibility guards', () => {
   const readDemoFile = (path: string): string => readFileSync(new URL(path, import.meta.url), 'utf8')
   const designSystemCss = readDemoFile('../design-system.css')
   const demoCss = readDemoFile('../style.css')
+  const gridCss = readDemoFile('../../src/grid-default-styles.css')
   const exampleFrameSource = readDemoFile('../components/ExampleFrame.vue')
   const rootBlock = designSystemCss.match(/:root\s*{([^}]*)}/)![1]
   const tokens = Object.fromEntries(
@@ -344,7 +345,9 @@ describe('demo stylesheet accessibility guards', () => {
       expect(css).not.toMatch(/outline:\s*(none|0)\b/)
     }
     expect(ruleBody(designSystemCss, '.ds-app :focus-visible')).toMatch(/outline:\s*2px solid var\(--focus-ring-color\)/)
-    expect(ruleBody(demoCss, '.grid .grid-search-input:focus-visible')).toMatch(/outline:\s*2px solid/)
+    expect(ruleBody(gridCss, '.grid-search-input-wrap:focus-within')).toMatch(/outline:\s*2px solid var\(--grid-focus-shadow-color\)/)
+    expect(ruleBody(demoCss, '.grid')).toMatch(/--grid-focus-shadow-color:\s*var\(--focus-ring-color\)/)
+    expect(demoCss).not.toMatch(/\.grid-search-input:focus/)
   })
 
   it('uses readable colours for frame tabs, required badges and tip titles', () => {

@@ -36,11 +36,7 @@
   --grid-font-mono: var(--font-mono);
   --grid-radius: var(--radius-xs);
   --grid-focus-ring: var(--shadow-focus);
-}
-
-.grid .grid-search-input:focus-visible {
-  outline: 2px solid var(--focus-ring-color);
-  outline-offset: 2px;
+  --grid-focus-shadow-color: var(--focus-ring-color);
 }
 
 /* ============================================================
@@ -157,6 +153,7 @@
 .demo-scroll-container {
   max-height: 500px;
   overflow-y: auto;
+  overflow-anchor: none;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
 }

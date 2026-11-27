@@ -121,11 +121,19 @@ const scrollInfo = computed<ScrollPaginationInfo>(() => ({
 
 async function loadMore(): Promise<void> {
   if (loading.value || windowEnd.value >= matchingCount.value) return
+  const container = containerRef.value
+  const scrollTopBefore = container?.scrollTop ?? 0
+  const rowHeight = container?.querySelector('.grid-row')?.getBoundingClientRect().height ?? 0
+
   windowEnd.value = Math.min(windowEnd.value + PAGE_SIZE, matchingCount.value)
-  if (windowEnd.value - windowStart.value > BUFFER_SIZE) {
-    windowStart.value += PAGE_SIZE
-  }
+  const shift = Math.max(0, windowEnd.value - windowStart.value - BUFFER_SIZE)
+  windowStart.value += shift
   await productProvider.refresh()
+  await nextTick()
+
+  if (container && rowHeight > 0 && shift > 0) {
+    container.scrollTop = scrollTopBefore - shift * rowHeight
+  }
 }
 
 async function loadEarlier(): Promise<void> {

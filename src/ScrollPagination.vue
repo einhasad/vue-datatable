@@ -94,6 +94,11 @@ watch(sentinelRef, (el) => {
   detach()
   if (el) attach()
 })
+watch(() => props.loading, (loading) => {
+  if (loading || !observer || !sentinelRef.value) return
+  observer.unobserve(sentinelRef.value)
+  observer.observe(sentinelRef.value)
+})
 onBeforeUnmount(detach)
 </script>
 
