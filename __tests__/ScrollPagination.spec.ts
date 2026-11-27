@@ -118,6 +118,34 @@ describe('ScrollPagination', () => {
     vi.restoreAllMocks()
   })
 
+  it('re-checks the sentinel after loading ends so a sentinel that stayed in view loads again', async () => {
+    let observerCallback: (entries: IntersectionObserverEntry[]) => void
+    const observe = vi.fn((target: Element) => {
+      queueMicrotask(() => observerCallback([{ isIntersecting: true, target } as unknown as IntersectionObserverEntry]))
+    })
+    const unobserve = vi.fn()
+    const disconnect = vi.fn()
+
+    vi.stubGlobal('IntersectionObserver', vi.fn().mockImplementation((cb) => {
+      observerCallback = cb
+      return { observe, unobserve, disconnect }
+    }))
+
+    const wrapper = mount(ScrollPagination, {
+      props: { pagination: createPagination(true), loading: true }
+    })
+    await new Promise(r => setTimeout(r, 0))
+    expect(wrapper.emitted('loadMore')).toBeFalsy()
+    const observeCallsWhileLoading = observe.mock.calls.length
+
+    await wrapper.setProps({ loading: false })
+    await new Promise(r => setTimeout(r, 0))
+
+    expect(unobserve).toHaveBeenCalledTimes(1)
+    expect(observe).toHaveBeenCalledTimes(observeCallsWhileLoading + 1)
+    expect(wrapper.emitted('loadMore')).toHaveLength(1)
+  })
+
   it('does not emit loadMore when entry is not intersecting', async () => {
     let observerCallback: (entries: IntersectionObserverEntry[]) => void
     const observe = vi.fn()
