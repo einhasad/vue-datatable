@@ -190,7 +190,7 @@ export function buildAttributes(options: Record<string, unknown>): Record<string
     } else if (key === 'style') {
       attrs.style = normalizeStyle(value as string | Record<string, string> | undefined)
     } else {
-      attrs[key] = value
+      Object.defineProperty(attrs, key, { value, enumerable: true, writable: true, configurable: true })
     }
   }
 
