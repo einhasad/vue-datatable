@@ -182,7 +182,7 @@
   box-sizing: border-box;
 }
 
-.grid-search-input:focus {
+.grid-search-input-wrap .grid-search-input:focus {
   outline: none;
 }
 

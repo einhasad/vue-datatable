@@ -10,9 +10,11 @@ Before 1.0, a behaviour change bumps the minor version and a fix bumps the patch
 
 ### Fixed
 - `ScrollPagination` checks the sentinel again when `loading` turns false, so it keeps loading when the sentinel is still in view after a load; before, scrolling stopped until the user scrolled away and back.
+- The column filter input shows one focus ring (on `.grid-search-input-wrap`) even when the page has its own global `:focus-visible` outline.
 
 ### Demo site
 - Infinite Scroll example keeps the visible rows in place when its 100-row window slides forward, so reaching the bottom loads one page instead of jumping.
+- Filter inputs show a single focus ring in the demo theme.
 
 ## [0.5.0] - 2026-11-27
 
