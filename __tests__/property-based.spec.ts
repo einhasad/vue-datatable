@@ -201,6 +201,16 @@ describe('buildAttributes (property-based)', () => {
     )
   })
 
+  it('keeps a "__proto__" key as an own attribute without changing the prototype', () => {
+    const polluting = { polluted: true }
+    const result = buildAttributes({ ['__proto__']: polluting })
+
+    expect(Object.getPrototypeOf(result)).toBe(Object.prototype)
+    expect(Object.prototype.hasOwnProperty.call(result, '__proto__')).toBe(true)
+    expect(Object.getOwnPropertyDescriptor(result, '__proto__')?.value).toBe(polluting)
+    expect((result as { polluted?: boolean }).polluted).toBeUndefined()
+  })
+
   it('"class" key is always a string in output', () => {
     fc.assert(
       fc.property(fcClassInput, (classInput) => {
