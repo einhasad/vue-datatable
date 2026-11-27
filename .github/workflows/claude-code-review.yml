@@ -42,3 +42,8 @@ jobs:
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
 
+      - name: Show review error
+        if: failure() && steps.claude-review.outputs.execution_file != ''
+        env:
+          EXECUTION_FILE: ${{ steps.claude-review.outputs.execution_file }}
+        run: jq -r '(if type == "array" then .[] else . end) | select(.type == "result") | .result // .errors // "no result message"' "$EXECUTION_FILE"
