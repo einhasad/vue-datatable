@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 Before 1.0, a behaviour change bumps the minor version and a fix bumps the patch version.
 
-## [Unreleased]
+## [0.5.1] - 2026-11-27
 
 ### Fixed
 - `ScrollPagination` checks the sentinel again when `loading` turns false, so it keeps loading when the sentinel is still in view after a load; before, scrolling stopped until the user scrolled away and back.
